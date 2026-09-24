@@ -6,11 +6,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'services/auth_service.dart';
+import 'services/report_service.dart';
 
 class CodCheckApp extends StatelessWidget {
-  CodCheckApp({super.key, required this.authService});
+  CodCheckApp({
+    super.key,
+    required this.authService,
+    required this.reportService,
+  });
 
   final AuthService authService;
+  final ReportService reportService;
   final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
@@ -21,7 +27,11 @@ class CodCheckApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
-      home: AuthGate(authService: authService, navigatorKey: _navigatorKey),
+      home: AuthGate(
+        authService: authService,
+        reportService: reportService,
+        navigatorKey: _navigatorKey,
+      ),
     );
   }
 }
@@ -32,10 +42,12 @@ class AuthGate extends StatefulWidget {
   const AuthGate({
     super.key,
     required this.authService,
+    required this.reportService,
     required this.navigatorKey,
   });
 
   final AuthService authService;
+  final ReportService reportService;
   final GlobalKey<NavigatorState> navigatorKey;
 
   @override
@@ -78,6 +90,7 @@ class _AuthGateState extends State<AuthGate> {
     return HomePage(
       key: ValueKey(session.user.id),
       authService: widget.authService,
+      reportService: widget.reportService,
     );
   }
 }

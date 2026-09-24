@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../services/report_service.dart';
 import 'check_customer_page.dart';
 import 'report_customer_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.authService});
+  const HomePage({
+    super.key,
+    required this.authService,
+    required this.reportService,
+  });
 
   final AuthService authService;
+  final ReportService reportService;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -52,7 +58,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 12),
                   FilledButton.tonalIcon(
-                    onPressed: () => _open(const ReportCustomerPage()),
+                    onPressed: () => _open(
+                        ReportCustomerPage(reportService: widget.reportService)),
                     icon: const Icon(Icons.report_outlined),
                     label: const Text('รายงานลูกค้า'),
                   ),

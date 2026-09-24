@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'services/auth_service.dart';
+import 'services/report_service.dart';
 
 // รับค่าผ่าน --dart-define ตอน build/run ห้ามเขียนค่าจริงลงในโค้ด
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
@@ -21,7 +22,11 @@ Future<void> main() async {
     publishableKey: supabaseAnonKey,
     debug: false, // ไม่ให้ log ของ Supabase พิมพ์ token ออกมา
   );
-  runApp(CodCheckApp(authService: AuthService(Supabase.instance.client.auth)));
+  final client = Supabase.instance.client;
+  runApp(CodCheckApp(
+    authService: AuthService(client.auth),
+    reportService: ReportService(client.functions),
+  ));
 }
 
 class _MissingConfigApp extends StatelessWidget {
