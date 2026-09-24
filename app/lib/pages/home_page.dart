@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../services/check_service.dart';
 import '../services/report_service.dart';
 import 'check_customer_page.dart';
 import 'report_customer_page.dart';
@@ -9,10 +10,12 @@ class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
     required this.authService,
+    required this.checkService,
     required this.reportService,
   });
 
   final AuthService authService;
+  final CheckService checkService;
   final ReportService reportService;
 
   @override
@@ -52,7 +55,8 @@ class _HomePageState extends State<HomePage> {
                       style: textTheme.headlineSmall),
                   const SizedBox(height: 32),
                   FilledButton.icon(
-                    onPressed: () => _open(const CheckCustomerPage()),
+                    onPressed: () => _open(
+                        CheckCustomerPage(checkService: widget.checkService)),
                     icon: const Icon(Icons.search),
                     label: const Text('ตรวจสอบลูกค้า'),
                   ),

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'services/auth_service.dart';
+import 'services/check_service.dart';
 import 'services/report_service.dart';
 
 // รับค่าผ่าน --dart-define ตอน build/run ห้ามเขียนค่าจริงลงในโค้ด
@@ -25,6 +26,7 @@ Future<void> main() async {
   final client = Supabase.instance.client;
   runApp(CodCheckApp(
     authService: AuthService(client.auth),
+    checkService: CheckService(client.functions),
     reportService: ReportService(client.functions),
   ));
 }

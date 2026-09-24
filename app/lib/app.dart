@@ -6,16 +6,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'services/auth_service.dart';
+import 'services/check_service.dart';
 import 'services/report_service.dart';
 
 class CodCheckApp extends StatelessWidget {
   CodCheckApp({
     super.key,
     required this.authService,
+    required this.checkService,
     required this.reportService,
   });
 
   final AuthService authService;
+  final CheckService checkService;
   final ReportService reportService;
   final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -29,6 +32,7 @@ class CodCheckApp extends StatelessWidget {
       ),
       home: AuthGate(
         authService: authService,
+        checkService: checkService,
         reportService: reportService,
         navigatorKey: _navigatorKey,
       ),
@@ -42,11 +46,13 @@ class AuthGate extends StatefulWidget {
   const AuthGate({
     super.key,
     required this.authService,
+    required this.checkService,
     required this.reportService,
     required this.navigatorKey,
   });
 
   final AuthService authService;
+  final CheckService checkService;
   final ReportService reportService;
   final GlobalKey<NavigatorState> navigatorKey;
 
@@ -90,6 +96,7 @@ class _AuthGateState extends State<AuthGate> {
     return HomePage(
       key: ValueKey(session.user.id),
       authService: widget.authService,
+      checkService: widget.checkService,
       reportService: widget.reportService,
     );
   }
