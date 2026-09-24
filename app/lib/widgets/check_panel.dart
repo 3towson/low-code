@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../services/check_service.dart';
 import '../theme.dart';
+import '../utils/order_splitter.dart';
 import '../utils/phone_utils.dart';
 
-enum _Mode { text, phone }
+enum _Mode { text, phone, multi }
 
 /// ช่องวางข้อความออเดอร์ ปุ่มตรวจสอบ และผลการตรวจในหน้าเดียวกัน
 /// (ใช้ในหน้า Home แทนการเปิดหน้า CheckCustomerPage)
+/// วางหลายออเดอร์คั่นด้วยบรรทัดว่างได้ จะตรวจทีละออเดอร์และแสดงผลเป็นรายการ
 class CheckPanel extends StatefulWidget {
   const CheckPanel({super.key, required this.checkService});
 
@@ -35,6 +37,11 @@ class _CheckPanelState extends State<CheckPanel> {
   /// แสดงช่องกรอกเบอร์เองหลังจากข้อความไม่มีเบอร์
   bool _showPhoneInput = false;
 
+  /// ผลสะสมของการตรวจหลายออเดอร์ (null = ไม่ได้ตรวจแบบหลายออเดอร์)
+  List<MultiCheckResult>? _multiResults;
+  int _multiTotal = 0;
+  bool _multiTruncated = false;
+
   @override
   void dispose() {
     _textController.dispose();
@@ -53,7 +60,36 @@ class _CheckPanelState extends State<CheckPanel> {
       _showPhoneInput = false;
       _phoneError = null;
     });
-    _run(_Mode.text, text);
+    final orders = splitOrders(text);
+    if (orders.length > 1) {
+      _runMultiple(orders, truncated: exceedsOrderLimit(text));
+    } else {
+      _run(_Mode.text, text);
+    }
+  }
+
+  Future<void> _runMultiple(
+    List<String> orders, {
+    required bool truncated,
+  }) async {
+    if (_loading != null) return;
+    FocusScope.of(context).unfocus();
+    final results = <MultiCheckResult>[];
+    setState(() {
+      _loading = _Mode.multi;
+      _lastMode = null;
+      _result = null;
+      _multiResults = results;
+      _multiTotal = orders.length;
+      _multiTruncated = truncated;
+    });
+    await widget.checkService.checkMultiple(
+      orders,
+      onResult: (r) {
+        if (mounted) setState(() => results.add(r));
+      },
+    );
+    if (mounted) setState(() => _loading = null);
   }
 
   void _checkPhone() {
@@ -73,6 +109,7 @@ class _CheckPanelState extends State<CheckPanel> {
       _lastMode = mode;
       _lastValue = value;
       _result = null;
+      _multiResults = null;
     });
     final result = mode == _Mode.text
         ? await widget.checkService.checkText(value)
@@ -112,7 +149,7 @@ class _CheckPanelState extends State<CheckPanel> {
         FilledButton.icon(
           key: const Key('check-submit'),
           onPressed: busy ? null : _checkText,
-          icon: _loading == _Mode.text
+          icon: _loading == _Mode.text || _loading == _Mode.multi
               ? const _ButtonSpinner()
               : const Icon(Icons.shield_outlined),
           label: const Text('ตรวจสอบความเสี่ยง'),
@@ -124,6 +161,15 @@ class _CheckPanelState extends State<CheckPanel> {
         if (_result != null) ...[
           const SizedBox(height: AppSpacing.section),
           _resultView(_result!),
+        ],
+        if (_multiResults != null) ...[
+          const SizedBox(height: AppSpacing.section),
+          _MultiResultList(
+            results: _multiResults!,
+            total: _multiTotal,
+            truncated: _multiTruncated,
+            running: _loading == _Mode.multi,
+          ),
         ],
       ],
     );
@@ -434,6 +480,209 @@ class _AiUnavailableNote extends StatelessWidget {
               ?.copyWith(color: app.muted),
         ),
       ],
+    );
+  }
+}
+
+/// คำแนะนำสั้นๆ 1 บรรทัดในรายการผลหลายออเดอร์ (คำแนะนำเต็มอยู่ตอนกดขยาย)
+const _shortAdvice = {
+  RiskLevel.green: 'ส่งได้ตามปกติ',
+  RiskLevel.yellow: 'ยืนยันกับลูกค้าก่อนแพ็ก',
+  RiskLevel.red: 'ให้โอนก่อน ไม่ส่ง COD',
+};
+
+const multiTruncatedMessage =
+    'ตรวจได้สูงสุด 10 ออเดอร์ต่อครั้ง ระบบตรวจ 10 รายการแรกแล้ว';
+
+/// สถานะ progress และรายการผลของการตรวจหลายออเดอร์
+class _MultiResultList extends StatelessWidget {
+  const _MultiResultList({
+    required this.results,
+    required this.total,
+    required this.truncated,
+    required this.running,
+  });
+
+  final List<MultiCheckResult> results;
+  final int total;
+  final bool truncated;
+  final bool running;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final done = results.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (truncated) ...[
+          _StatusBox(
+            background: app.warningBackground,
+            border: app.warning,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: app.warning),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    multiTruncatedMessage,
+                    key: const Key('multi-truncated'),
+                    style: textTheme.bodyLarge,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        Text(
+          running
+              ? 'พบ $total ออเดอร์ กำลังตรวจสอบ... ${done + 1}/$total'
+              : 'ตรวจแล้ว $total ออเดอร์',
+          key: const Key('multi-status'),
+          style: textTheme.titleMedium,
+        ),
+        if (running) ...[
+          const SizedBox(height: 8),
+          LinearProgressIndicator(
+            key: const Key('multi-progress'),
+            value: total == 0 ? null : done / total,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ],
+        for (var i = 0; i < results.length; i++) ...[
+          const SizedBox(height: 12),
+          _OrderResultTile(index: i, item: results[i]),
+        ],
+      ],
+    );
+  }
+}
+
+/// ผลหนึ่งออเดอร์ กดขยายเพื่อดูคำแนะนำเต็ม จำนวนรายงาน และข้อความออเดอร์
+class _OrderResultTile extends StatelessWidget {
+  const _OrderResultTile({required this.index, required this.item});
+
+  final int index;
+  final MultiCheckResult item;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final result = item.result;
+    final firstLine = item.orderText.trim().split('\n').first;
+
+    final Color background;
+    final Color foreground;
+    final IconData icon;
+    final String title;
+    final List<String> summary;
+    final List<Widget> details;
+    switch (result) {
+      case CheckOk():
+        final style = _styleOf(app, result.level);
+        background = style.background;
+        foreground = style.foreground;
+        icon = style.icon;
+        title = result.customerName ?? 'ไม่ทราบชื่อลูกค้า';
+        summary = [
+          result.phoneMasked,
+          '${result.level.label} · ${_shortAdvice[result.level]}',
+        ];
+        details = [
+          Text(result.recommendation, style: textTheme.titleSmall),
+          const SizedBox(height: 8),
+          _InfoRow(
+            icon: Icons.flag_outlined,
+            child: Text(
+              'จำนวนรายงาน: ${result.countedReports} รายงาน',
+              key: Key('multi-count-$index'),
+              style: textTheme.bodyLarge,
+            ),
+          ),
+          if (result.aiUnavailable) ...[
+            const SizedBox(height: 8),
+            const _AiUnavailableNote(),
+          ],
+        ];
+      case CheckNoPhone():
+        background = app.neutralBackground;
+        foreground = app.muted;
+        icon = Icons.phone_disabled_outlined;
+        title = firstLine;
+        summary = ['ไม่พบเบอร์โทรในออเดอร์นี้'];
+        details = const [];
+      case CheckInvalidPhone(:final message):
+      case CheckNoInternet(:final message):
+      case CheckError(:final message):
+        background = app.dangerBackground;
+        foreground = app.danger;
+        icon = Icons.error_outline;
+        title = firstLine;
+        summary = ['ตรวจไม่สำเร็จ: $message'];
+        details = const [];
+    }
+
+    return Card(
+      key: Key('multi-item-$index'),
+      color: background,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        side: BorderSide(color: foreground, width: 1.5),
+      ),
+      child: ExpansionTile(
+        shape: const Border(),
+        collapsedShape: const Border(),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: foreground.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: foreground, size: 24),
+        ),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: textTheme.titleMedium,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (i, line) in summary.indexed)
+              Text(
+                line,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: i == summary.length - 1
+                    ? textTheme.bodyMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      )
+                    : textTheme.bodyMedium?.copyWith(color: app.muted),
+              ),
+          ],
+        ),
+        children: [
+          ...details,
+          if (details.isNotEmpty) const SizedBox(height: 12),
+          Text(
+            item.orderText,
+            maxLines: 6,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.bodySmall?.copyWith(color: app.muted),
+          ),
+        ],
+      ),
     );
   }
 }

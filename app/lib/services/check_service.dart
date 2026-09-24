@@ -81,6 +81,15 @@ const noPhoneMessage = 'ไม่พบเบอร์โทรในข้อ�
 const invalidPhoneMessage = 'เบอร์โทรไม่ถูกต้อง ต้องเป็นเบอร์มือถือไทย 10 หลัก';
 const _genericMessage = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
 
+/// ผลตรวจของหนึ่งออเดอร์เมื่อตรวจหลายออเดอร์พร้อมกัน
+class MultiCheckResult {
+  const MultiCheckResult({required this.orderText, required this.result});
+
+  /// ข้อความออเดอร์ชุดนั้นตามที่ผู้ใช้วาง
+  final String orderText;
+  final CheckResult result;
+}
+
 /// เรียก Edge Function check-customer (token ของผู้ใช้แนบให้อัตโนมัติ)
 /// ทดสอบ widget ได้โดยสร้าง fake ที่ implements CheckService
 class CheckService {
@@ -96,6 +105,24 @@ class CheckService {
 
   /// ส่งเบอร์ตามที่ผู้ใช้กรอก server เป็นคน normalize และ hash
   Future<CheckResult> checkPhone(String phone) => _invoke({'phone': phone});
+
+  /// ตรวจหลายออเดอร์ทีละออเดอร์ตามลำดับ (ไม่ส่งพร้อมกันเพราะติด rate limit)
+  /// [onResult] ถูกเรียกทุกครั้งที่ได้ผลหนึ่งออเดอร์ ใช้แสดงผลสะสมระหว่างรอ
+  Future<List<MultiCheckResult>> checkMultiple(
+    List<String> orders, {
+    void Function(MultiCheckResult result)? onResult,
+  }) async {
+    final results = <MultiCheckResult>[];
+    for (final order in orders) {
+      final result = MultiCheckResult(
+        orderText: order,
+        result: await checkText(order),
+      );
+      results.add(result);
+      onResult?.call(result);
+    }
+    return results;
+  }
 
   Future<CheckResult> _invoke(Map<String, String> body) async {
     try {
