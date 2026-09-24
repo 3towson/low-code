@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../theme.dart';
 import '../utils/validators.dart';
+import '../widgets/error_banner.dart';
+import '../widgets/page_body.dart';
 
 /// สมัครสำเร็จแล้ว pop กลับหน้า Login พร้อมคืนอีเมลที่สมัคร
 class SignupPage extends StatefulWidget {
@@ -73,97 +76,94 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final app = AppColors.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('สมัครสมาชิก')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _shopNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'ชื่อร้าน',
-                        border: OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.next,
-                      validator: validateShopName,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'อีเมล',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      textInputAction: TextInputAction.next,
-                      validator: validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'รหัสผ่าน',
-                        helperText: 'อย่างน้อย $minPasswordLength ตัวอักษร',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
-                      obscureText: _obscurePassword,
-                      autofillHints: const [AutofillHints.newPassword],
-                      textInputAction: TextInputAction.next,
-                      validator: validatePassword,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _confirmController,
-                      decoration: const InputDecoration(
-                        labelText: 'ยืนยันรหัสผ่าน',
-                        border: OutlineInputBorder(),
-                      ),
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _loading ? null : _submit(),
-                      validator: (value) => validateConfirmPassword(
-                          value, _passwordController.text),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.error),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('สมัครสมาชิก'),
-                    ),
-                  ],
-                ),
+      appBar: AppBar(),
+      body: PageBody(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('สมัครสมาชิก', style: textTheme.headlineMedium),
+              const SizedBox(height: 4),
+              Text(
+                'สร้างบัญชีร้านค้าเพื่อเริ่มตรวจสอบลูกค้า',
+                style: textTheme.bodyLarge?.copyWith(color: app.muted),
               ),
-            ),
+              const SizedBox(height: AppSpacing.section),
+              TextFormField(
+                controller: _shopNameController,
+                decoration: const InputDecoration(
+                  labelText: 'ชื่อร้าน',
+                  prefixIcon: Icon(Icons.storefront_outlined),
+                ),
+                textInputAction: TextInputAction.next,
+                validator: validateShopName,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'อีเมล',
+                  prefixIcon: Icon(Icons.mail_outline),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                textInputAction: TextInputAction.next,
+                validator: validateEmail,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'รหัสผ่าน',
+                  helperText: 'อย่างน้อย $minPasswordLength ตัวอักษร',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
+                    icon: Icon(_obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                obscureText: _obscurePassword,
+                autofillHints: const [AutofillHints.newPassword],
+                textInputAction: TextInputAction.next,
+                validator: validatePassword,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _confirmController,
+                decoration: const InputDecoration(
+                  labelText: 'ยืนยันรหัสผ่าน',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+                obscureText: _obscurePassword,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _loading ? null : _submit(),
+                validator: (value) =>
+                    validateConfirmPassword(value, _passwordController.text),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                ErrorBanner(message: _error!),
+              ],
+              const SizedBox(height: AppSpacing.section),
+              FilledButton(
+                onPressed: _loading ? null : _submit,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('สมัครสมาชิก'),
+              ),
+            ],
           ),
         ),
       ),

@@ -8,6 +8,7 @@ import 'pages/login_page.dart';
 import 'services/auth_service.dart';
 import 'services/check_service.dart';
 import 'services/report_service.dart';
+import 'theme.dart';
 
 class CodCheckApp extends StatelessWidget {
   CodCheckApp({
@@ -27,9 +28,7 @@ class CodCheckApp extends StatelessWidget {
     return MaterialApp(
       title: 'ตรวจสอบลูกค้า COD',
       navigatorKey: _navigatorKey,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-      ),
+      theme: AppTheme.light(),
       home: AuthGate(
         authService: authService,
         checkService: checkService,

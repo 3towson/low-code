@@ -5,6 +5,7 @@ import 'app.dart';
 import 'services/auth_service.dart';
 import 'services/check_service.dart';
 import 'services/report_service.dart';
+import 'theme.dart';
 
 // รับค่าผ่าน --dart-define ตอน build/run ห้ามเขียนค่าจริงลงในโค้ด
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
@@ -36,8 +37,9 @@ class _MissingConfigApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
+    return MaterialApp(
+      theme: AppTheme.light(),
+      home: const Scaffold(
         body: Center(
           child: Padding(
             padding: EdgeInsets.all(24),

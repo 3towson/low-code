@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../theme.dart';
 import '../utils/validators.dart';
+import '../widgets/error_banner.dart';
+import '../widgets/page_body.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -61,79 +64,95 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
+    final app = AppColors.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('เข้าสู่ระบบ')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'อีเมล',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      textInputAction: TextInputAction.next,
-                      validator: validateEmail,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'รหัสผ่าน',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
-                      obscureText: _obscurePassword,
-                      autofillHints: const [AutofillHints.password],
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _loading ? null : _submit(),
-                      validator: validateLoginPassword,
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.error),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('เข้าสู่ระบบ'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _loading ? null : _openSignup,
-                      child: const Text('ยังไม่มีบัญชี? สมัครสมาชิก'),
-                    ),
-                  ],
+      body: PageBody(
+        centerVertically: true,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(Icons.verified_user_rounded,
+                      size: 40, color: colors.onPrimary),
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+              Text(
+                'COD Check',
+                textAlign: TextAlign.center,
+                style: textTheme.headlineLarge?.copyWith(color: colors.primary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'ระบบตรวจสอบประวัติลูกค้า COD',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyLarge?.copyWith(color: app.muted),
+              ),
+              const SizedBox(height: 32),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'อีเมล',
+                  prefixIcon: Icon(Icons.mail_outline),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                textInputAction: TextInputAction.next,
+                validator: validateEmail,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'รหัสผ่าน',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword ? 'แสดงรหัสผ่าน' : 'ซ่อนรหัสผ่าน',
+                    icon: Icon(_obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                obscureText: _obscurePassword,
+                autofillHints: const [AutofillHints.password],
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _loading ? null : _submit(),
+                validator: validateLoginPassword,
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                ErrorBanner(message: _error!),
+              ],
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _loading ? null : _submit,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('เข้าสู่ระบบ'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: _loading ? null : _openSignup,
+                child: const Text('ยังไม่มีบัญชี? สมัครสมาชิก'),
+              ),
+            ],
           ),
         ),
       ),

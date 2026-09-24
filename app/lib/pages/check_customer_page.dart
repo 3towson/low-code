@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../services/check_service.dart';
+import '../theme.dart';
 import '../utils/phone_utils.dart';
+import '../widgets/page_body.dart';
 
 enum _Mode { text, phone }
 
@@ -92,85 +94,93 @@ class _CheckCustomerPageState extends State<CheckCustomerPage> {
     final busy = _loading != null;
     return Scaffold(
       appBar: AppBar(title: const Text('ตรวจสอบลูกค้า')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    key: const Key('check-text'),
-                    controller: _textController,
-                    enabled: !busy,
-                    minLines: 5,
-                    maxLines: 10,
-                    keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
-                      labelText: 'ข้อความออเดอร์',
-                      hintText: 'วางข้อความออเดอร์ที่มีชื่อและเบอร์โทรลูกค้า',
-                      alignLabelWithHint: true,
-                      border: const OutlineInputBorder(),
-                      errorText: _textError,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    key: const Key('check-submit'),
-                    onPressed: busy ? null : _checkText,
-                    child: _loading == _Mode.text
-                        ? const _ButtonSpinner()
-                        : const Text('ตรวจสอบ'),
-                  ),
-                  if (_showPhoneInput) ..._phoneSection(busy),
-                  if (_result != null) ...[
-                    const SizedBox(height: 24),
-                    _resultView(_result!),
-                  ],
-                ],
+      body: PageBody(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: const Key('check-text'),
+              controller: _textController,
+              enabled: !busy,
+              minLines: 4,
+              maxLines: 10,
+              keyboardType: TextInputType.multiline,
+              decoration: InputDecoration(
+                hintText: 'วางข้อความออเดอร์ที่นี่...',
+                errorText: _textError,
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              key: const Key('check-submit'),
+              onPressed: busy ? null : _checkText,
+              icon: _loading == _Mode.text
+                  ? const _ButtonSpinner()
+                  : const Icon(Icons.search),
+              label: const Text('ตรวจสอบ'),
+            ),
+            if (_showPhoneInput) ...[
+              const SizedBox(height: AppSpacing.section),
+              _phoneSection(busy),
+            ],
+            if (_result != null) ...[
+              const SizedBox(height: AppSpacing.section),
+              _resultView(_result!),
+            ],
+          ],
         ),
       ),
     );
   }
 
-  List<Widget> _phoneSection(bool busy) {
-    return [
-      const SizedBox(height: 24),
-      Text(noPhoneMessage,
-          key: const Key('check-no-phone'),
-          style: Theme.of(context).textTheme.bodyLarge),
-      const SizedBox(height: 12),
-      TextField(
-        key: const Key('check-phone'),
-        controller: _phoneController,
-        enabled: !busy,
-        keyboardType: TextInputType.phone,
-        decoration: InputDecoration(
-          labelText: 'เบอร์โทรลูกค้า',
-          hintText: 'เช่น 081-234-5678',
-          border: const OutlineInputBorder(),
-          errorText: _phoneError,
-        ),
-        onSubmitted: (_) => _checkPhone(),
+  Widget _phoneSection(bool busy) {
+    final app = AppColors.of(context);
+    return _StatusBox(
+      background: app.neutralBackground,
+      border: app.border,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.phone_disabled_outlined, color: app.muted),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(noPhoneMessage,
+                    key: const Key('check-no-phone'),
+                    style: Theme.of(context).textTheme.bodyLarge),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            key: const Key('check-phone'),
+            controller: _phoneController,
+            enabled: !busy,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              labelText: 'เบอร์โทรลูกค้า',
+              hintText: 'เช่น 081-234-5678',
+              prefixIcon: const Icon(Icons.phone_outlined),
+              errorText: _phoneError,
+            ),
+            onSubmitted: (_) => _checkPhone(),
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            key: const Key('check-phone-submit'),
+            onPressed: busy ? null : _checkPhone,
+            child: _loading == _Mode.phone
+                ? const _ButtonSpinner()
+                : const Text('ตรวจสอบด้วยเบอร์'),
+          ),
+        ],
       ),
-      const SizedBox(height: 12),
-      FilledButton.tonal(
-        key: const Key('check-phone-submit'),
-        onPressed: busy ? null : _checkPhone,
-        child: _loading == _Mode.phone
-            ? const _ButtonSpinner()
-            : const Text('ตรวจสอบด้วยเบอร์'),
-      ),
-    ];
+    );
   }
 
   Widget _resultView(CheckResult result) {
-    final colors = Theme.of(context).colorScheme;
     switch (result) {
       case CheckOk():
         return _RiskCard(result: result);
@@ -178,25 +188,17 @@ class _CheckCustomerPageState extends State<CheckCustomerPage> {
         // ข้อความและช่องกรอกเบอร์แสดงใน _phoneSection แล้ว
         return const SizedBox.shrink();
       case CheckInvalidPhone(:final message):
-        return Text(message,
-            key: const Key('check-message'),
-            style: TextStyle(color: colors.error));
+        return _ErrorBox(message: message);
       case CheckNoInternet(:final message):
       case CheckError(:final message):
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(message,
-                key: const Key('check-message'),
-                style: TextStyle(color: colors.error)),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              key: const Key('check-retry'),
-              onPressed: _loading != null ? null : _retry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('ลองใหม่'),
-            ),
-          ],
+        return _ErrorBox(
+          message: message,
+          action: OutlinedButton.icon(
+            key: const Key('check-retry'),
+            onPressed: _loading != null ? null : _retry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('ลองใหม่'),
+          ),
         );
     }
   }
@@ -215,23 +217,93 @@ class _ButtonSpinner extends StatelessWidget {
   }
 }
 
-/// สีพื้น สีเข้ม และไอคอนของแต่ละระดับ สีเข้มใช้กับตัวอักษรบนพื้นสีอ่อนจึงอ่านง่าย
-({Color background, Color foreground, IconData icon}) _styleOf(RiskLevel level) {
+/// กล่องสถานะที่ไม่ใช่ผลความเสี่ยง
+/// ไม่ใช้ Card เพื่อให้หน้านี้มี Card เดียวคือการ์ดผลตรวจ
+class _StatusBox extends StatelessWidget {
+  const _StatusBox({
+    required this.background,
+    required this.border,
+    required this.child,
+  });
+
+  final Color background;
+  final Color border;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(color: border),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _ErrorBox extends StatelessWidget {
+  const _ErrorBox({required this.message, this.action});
+
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppColors.of(context);
+    return _StatusBox(
+      background: app.dangerBackground,
+      border: app.danger,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline, color: app.danger),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  key: const Key('check-message'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: app.danger),
+                ),
+              ),
+            ],
+          ),
+          if (action != null) ...[
+            const SizedBox(height: 16),
+            action!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// สีพื้น สีหลัก และไอคอนของแต่ละระดับ
+({Color background, Color foreground, IconData icon}) _styleOf(
+    AppColors app, RiskLevel level) {
   return switch (level) {
     RiskLevel.green => (
-        background: const Color(0xFFE8F5E9),
-        foreground: const Color(0xFF1B5E20),
-        icon: Icons.check_circle,
+        background: app.successBackground,
+        foreground: app.success,
+        icon: Icons.check_rounded,
       ),
     RiskLevel.yellow => (
-        background: const Color(0xFFFFF8E1),
-        foreground: const Color(0xFF7A4F00),
+        background: app.warningBackground,
+        foreground: app.warning,
         icon: Icons.warning_amber_rounded,
       ),
     RiskLevel.red => (
-        background: const Color(0xFFFFEBEE),
-        foreground: const Color(0xFFB71C1C),
-        icon: Icons.dangerous,
+        background: app.dangerBackground,
+        foreground: app.danger,
+        icon: Icons.close_rounded,
       ),
   };
 }
@@ -243,65 +315,133 @@ class _RiskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _styleOf(result.level);
+    final app = AppColors.of(context);
+    final style = _styleOf(app, result.level);
     final textTheme = Theme.of(context).textTheme;
-    const body = TextStyle(color: Colors.black87);
     return Card(
       key: Key('check-card-${result.level.value}'),
       color: style.background,
-      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: style.foreground, width: 2),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        side: BorderSide(color: style.foreground, width: 1.5),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(style.icon, color: style.foreground, size: 32),
-                const SizedBox(width: 12),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: style.foreground.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(style.icon, color: style.foreground, size: 30),
+                ),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     result.level.label,
                     key: const Key('check-level'),
-                    style: textTheme.titleLarge?.copyWith(
-                      color: style.foreground,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: textTheme.headlineSmall
+                        ?.copyWith(color: style.foreground),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            if (result.aiUnavailable) ...[
+              const SizedBox(height: 12),
+              const _AiUnavailableNote(),
+            ],
+            const SizedBox(height: 16),
             Text(
               result.recommendation,
               key: const Key('check-recommendation'),
-              style: textTheme.titleMedium?.copyWith(color: Colors.black87),
+              style: textTheme.titleMedium,
             ),
-            const Divider(height: 24),
-            Text('จำนวนรายงาน: ${result.countedReports} รายงาน',
-                key: const Key('check-count'), style: body),
-            const SizedBox(height: 4),
-            Text('ชื่อลูกค้า: ${result.customerName ?? '-'}',
-                key: const Key('check-name'), style: body),
-            const SizedBox(height: 4),
-            Text('เบอร์โทร: ${result.phoneMasked}',
-                key: const Key('check-phone-masked'), style: body),
-            if (result.aiUnavailable) ...[
-              const SizedBox(height: 12),
-              Text(
-                'หมายเหตุ: ระบบแยกชื่ออัตโนมัติไม่พร้อมใช้งานในขณะนี้ '
-                'ผลความเสี่ยงยังตรวจจากเบอร์โทรตามปกติ',
-                key: const Key('check-ai-note'),
-                style: textTheme.bodySmall?.copyWith(color: Colors.black54),
+            Divider(
+              height: 32,
+              color: style.foreground.withValues(alpha: 0.3),
+            ),
+            _InfoRow(
+              icon: Icons.flag_outlined,
+              child: Text(
+                'จำนวนรายงาน: ${result.countedReports} รายงาน',
+                key: const Key('check-count'),
+                style: textTheme.bodyLarge,
               ),
-            ],
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              icon: Icons.person_outline,
+              child: Text(
+                'ชื่อลูกค้า: ${result.customerName ?? '-'}',
+                key: const Key('check-name'),
+                style: textTheme.bodyLarge,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _InfoRow(
+              icon: Icons.phone_outlined,
+              child: Text(
+                'เบอร์โทร: ${result.phoneMasked}',
+                key: const Key('check-phone-masked'),
+                style: textTheme.bodyLarge,
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.icon, required this.child});
+
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.of(context).muted),
+        const SizedBox(width: 10),
+        Expanded(child: child),
+      ],
+    );
+  }
+}
+
+/// chip "AI ไม่พร้อมใช้งาน" พร้อมคำอธิบายสั้นๆ
+class _AiUnavailableNote extends StatelessWidget {
+  const _AiUnavailableNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppColors.of(context);
+    return Column(
+      key: const Key('check-ai-note'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Chip(
+          avatar: Icon(Icons.auto_awesome_outlined, size: 16, color: app.muted),
+          label: const Text('AI ไม่พร้อมใช้งาน'),
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'ระบบแยกชื่ออัตโนมัติไม่พร้อมใช้งานในขณะนี้ '
+          'ผลความเสี่ยงยังตรวจจากเบอร์โทรตามปกติ',
+          style:
+              Theme.of(context).textTheme.bodySmall?.copyWith(color: app.muted),
+        ),
+      ],
     );
   }
 }
