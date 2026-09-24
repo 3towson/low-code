@@ -295,20 +295,29 @@ void main() {
     expect(_enabled(tester, _retry), isTrue);
   });
 
-  testWidgets('กดตรวจสอบลูกค้าที่หน้า Home แล้วเปิดหน้าตรวจสอบ',
+  testWidgets('หน้า Home ตรวจสอบได้ในหน้าเดียว ไม่เปิดหน้าตรวจสอบแยก',
       (tester) async {
+    final service = FakeCheckService();
     await tester.pumpWidget(MaterialApp(
       home: HomePage(
         authService: _FakeAuthService(),
-        checkService: FakeCheckService(),
+        checkService: service,
         reportService: _FakeReportService(),
+        signedIn: false,
       ),
     ));
 
-    await tester.tap(find.text('ตรวจสอบลูกค้า'));
+    await _checkText(tester, service, const CheckOk(
+      level: RiskLevel.red,
+      countedReports: 2,
+      recommendation: 'ไม่แนะนำให้ส่งแบบเก็บเงินปลายทาง ควรให้ลูกค้าโอนชำระก่อน',
+      phoneMasked: '080-XXX-0002',
+    ));
     await tester.pumpAndSettle();
 
-    expect(find.byType(CheckCustomerPage), findsOneWidget);
-    expect(find.byKey(const Key('check-text')), findsOneWidget);
+    expect(service.calls, ['text:$_order']);
+    expect(find.byType(CheckCustomerPage), findsNothing);
+    expect(find.byType(HomePage), findsOneWidget);
+    expect(find.byKey(const Key('check-card-red')), findsOneWidget);
   });
 }

@@ -55,6 +55,19 @@ class AppColors extends ThemeExtension<AppColors> {
     neutralBackground: Color(0xFFF3F4F6),
   );
 
+  static const dark = AppColors(
+    border: Color(0xFF334155),
+    muted: Color(0xFF94A3B8),
+    card: Color(0xFF1E293B),
+    success: Color(0xFF22C55E),
+    successBackground: Color(0xFF052E16),
+    warning: Color(0xFFF59E0B),
+    warningBackground: Color(0xFF1C0A00),
+    danger: Color(0xFFEF4444),
+    dangerBackground: Color(0xFF1C0505),
+    neutralBackground: Color(0xFF1E293B),
+  );
+
   /// ถ้า theme ไม่มี extension นี้ (เช่นในเทสต์) ใช้ค่า light
   static AppColors of(BuildContext context) =>
       Theme.of(context).extension<AppColors>() ?? light;
@@ -94,46 +107,83 @@ class AppColors extends ThemeExtension<AppColors> {
       muted: Color.lerp(muted, other.muted, t)!,
       card: Color.lerp(card, other.card, t)!,
       success: Color.lerp(success, other.success, t)!,
-      successBackground:
-          Color.lerp(successBackground, other.successBackground, t)!,
+      successBackground: Color.lerp(
+        successBackground,
+        other.successBackground,
+        t,
+      )!,
       warning: Color.lerp(warning, other.warning, t)!,
-      warningBackground:
-          Color.lerp(warningBackground, other.warningBackground, t)!,
+      warningBackground: Color.lerp(
+        warningBackground,
+        other.warningBackground,
+        t,
+      )!,
       danger: Color.lerp(danger, other.danger, t)!,
-      dangerBackground: Color.lerp(dangerBackground, other.dangerBackground, t)!,
-      neutralBackground:
-          Color.lerp(neutralBackground, other.neutralBackground, t)!,
+      dangerBackground: Color.lerp(
+        dangerBackground,
+        other.dangerBackground,
+        t,
+      )!,
+      neutralBackground: Color.lerp(
+        neutralBackground,
+        other.neutralBackground,
+        t,
+      )!,
     );
   }
 }
 
 abstract final class AppTheme {
-  static const _primary = Color(0xFF1A56DB);
   static const _onPrimary = Color(0xFFFFFFFF);
-  static const _surface = Color(0xFFF8FAFF);
-  static const _onSurface = Color(0xFF1C1F26);
 
-  static ThemeData light() {
-    const app = AppColors.light;
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: _primary,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: _primary,
-      onPrimary: _onPrimary,
-      surface: _surface,
-      onSurface: _onSurface,
-      onSurfaceVariant: app.muted,
-      surfaceContainerLowest: app.card,
-      surfaceTint: Colors.transparent,
-      outline: app.border,
-      outlineVariant: app.border,
-      error: app.danger,
-      onError: _onPrimary,
-    );
+  static ThemeData light() => _build(
+    brightness: Brightness.light,
+    app: AppColors.light,
+    primary: const Color(0xFF1A56DB),
+    surface: const Color(0xFFF8FAFF),
+    onSurface: const Color(0xFF1C1F26),
+  );
+
+  /// primary สว่างขึ้นเพื่อให้มองเห็นบนพื้นเข้ม
+  static ThemeData dark() => _build(
+    brightness: Brightness.dark,
+    app: AppColors.dark,
+    primary: const Color(0xFF3B82F6),
+    surface: const Color(0xFF0F172A),
+    onSurface: const Color(0xFFF1F5F9),
+  );
+
+  static ThemeData _build({
+    required Brightness brightness,
+    required AppColors app,
+    required Color primary,
+    required Color surface,
+    required Color onSurface,
+  }) {
+    final isDark = brightness == Brightness.dark;
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: primary,
+          brightness: brightness,
+        ).copyWith(
+          primary: primary,
+          onPrimary: _onPrimary,
+          surface: surface,
+          onSurface: onSurface,
+          onSurfaceVariant: app.muted,
+          surfaceContainerLowest: app.card,
+          surfaceTint: Colors.transparent,
+          outline: app.border,
+          outlineVariant: app.border,
+          error: app.danger,
+          onError: _onPrimary,
+          // SnackBar ใช้ inverseSurface: บนพื้นเข้มให้เป็นพื้นสว่าง ตัวอักษรเข้ม
+          inverseSurface: isDark ? onSurface : null,
+          onInverseSurface: isDark ? surface : _onPrimary,
+        );
 
     final base = ThemeData(useMaterial3: true, colorScheme: colorScheme);
-    final textTheme = _textTheme(base.textTheme);
+    final textTheme = _textTheme(base.textTheme, onSurface);
 
     final controlShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppSpacing.controlRadius),
@@ -151,17 +201,17 @@ abstract final class AppTheme {
     }
 
     return base.copyWith(
-      scaffoldBackgroundColor: _surface,
+      scaffoldBackgroundColor: surface,
       textTheme: textTheme,
-      extensions: const [app],
+      extensions: [app],
       appBarTheme: AppBarTheme(
-        backgroundColor: _surface,
-        foregroundColor: _onSurface,
+        backgroundColor: surface,
+        foregroundColor: onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
-        titleTextStyle: textTheme.titleLarge?.copyWith(color: _onSurface),
+        titleTextStyle: textTheme.titleLarge?.copyWith(color: onSurface),
       ),
       cardTheme: CardThemeData(
         color: app.card,
@@ -185,7 +235,7 @@ abstract final class AppTheme {
           minimumSize: controlSize,
           shape: controlShape,
           textStyle: buttonText,
-          side: const BorderSide(color: _primary, width: 1.5),
+          side: BorderSide(color: primary, width: 1.5),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -197,20 +247,24 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: app.card,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 15,
+        ),
         hintStyle: textTheme.bodyLarge?.copyWith(color: app.muted),
         helperStyle: textTheme.bodySmall?.copyWith(color: app.muted),
         border: inputBorder(app.border),
         enabledBorder: inputBorder(app.border),
         disabledBorder: inputBorder(app.border),
-        focusedBorder: inputBorder(_primary, 2),
+        focusedBorder: inputBorder(primary, 2),
         errorBorder: inputBorder(app.danger),
         focusedErrorBorder: inputBorder(app.danger, 2),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        contentTextStyle: textTheme.bodyLarge?.copyWith(color: _onPrimary),
+        contentTextStyle: textTheme.bodyLarge?.copyWith(
+          color: colorScheme.onInverseSurface,
+        ),
         shape: controlShape,
       ),
       dialogTheme: DialogThemeData(
@@ -231,7 +285,7 @@ abstract final class AppTheme {
   }
 
   /// Sarabun: 400 เนื้อหา, 600 label, 700 หัวข้อ
-  static TextTheme _textTheme(TextTheme base) {
+  static TextTheme _textTheme(TextTheme base, Color onSurface) {
     final t = GoogleFonts.sarabunTextTheme(base);
     TextStyle? w(TextStyle? s, FontWeight weight) =>
         s?.copyWith(fontWeight: weight);
@@ -253,6 +307,6 @@ abstract final class AppTheme {
           bodyMedium: w(t.bodyMedium, FontWeight.w400),
           bodySmall: w(t.bodySmall, FontWeight.w400),
         )
-        .apply(bodyColor: _onSurface, displayColor: _onSurface);
+        .apply(bodyColor: onSurface, displayColor: onSurface);
   }
 }

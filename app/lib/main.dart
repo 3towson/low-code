@@ -25,11 +25,13 @@ Future<void> main() async {
     debug: false, // ไม่ให้ log ของ Supabase พิมพ์ token ออกมา
   );
   final client = Supabase.instance.client;
-  runApp(CodCheckApp(
-    authService: AuthService(client.auth),
-    checkService: CheckService(client.functions),
-    reportService: ReportService(client.functions),
-  ));
+  runApp(
+    CodCheckApp(
+      authService: AuthService(client.auth),
+      checkService: CheckService(client.functions),
+      reportService: ReportService(client.functions),
+    ),
+  );
 }
 
 class _MissingConfigApp extends StatelessWidget {
@@ -39,6 +41,8 @@ class _MissingConfigApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark,
       home: const Scaffold(
         body: Center(
           child: Padding(

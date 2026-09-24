@@ -1,24 +1,32 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/auth_service.dart';
 import '../services/check_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
+import '../widgets/check_panel.dart';
 import '../widgets/page_body.dart';
-import 'check_customer_page.dart';
+import 'login_page.dart';
 import 'report_customer_page.dart';
 
+/// หน้าแรกของแอป ใช้ตรวจสอบลูกค้าได้โดยไม่ต้อง login
+/// การรายงานลูกค้าต้อง login ก่อน
 class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
     required this.authService,
     required this.checkService,
     required this.reportService,
+    required this.signedIn,
   });
 
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
+  final bool signedIn;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -29,71 +37,76 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _signOut() async {
     setState(() => _signingOut = true);
-    // สำเร็จแล้ว AuthGate จะสลับกลับไปหน้า Login เอง
+    // สำเร็จแล้ว AuthGate จะส่ง signedIn = false มาเอง
     await widget.authService.signOut();
+    if (mounted) setState(() => _signingOut = false);
   }
 
-  void _open(Widget page) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  /// เปิดหน้า Login เมื่อ login สำเร็จจะไปหน้า [next] แทน หรือกลับหน้านี้ถ้าไม่ระบุ
+  void _openLogin({WidgetBuilder? next}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _LoginThen(authService: widget.authService, next: next),
+      ),
+    );
+  }
+
+  void _openReport() {
+    Widget report(BuildContext _) =>
+        ReportCustomerPage(reportService: widget.reportService);
+    if (widget.signedIn) {
+      Navigator.of(context).push(MaterialPageRoute(builder: report));
+    } else {
+      _openLogin(next: report);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).colorScheme;
     final app = AppColors.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text('COD Check',
-            style: textTheme.titleLarge?.copyWith(color: colors.primary)),
-        actions: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 160),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.storefront_outlined, size: 18, color: app.muted),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    widget.authService.shopName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.labelLarge?.copyWith(color: app.muted),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'ออกจากระบบ',
-            onPressed: _signingOut ? null : _signOut,
-            icon: const Icon(Icons.logout),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
       body: PageBody(
-        centerVertically: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ActionCard(
-              icon: Icons.search,
-              color: colors.primary,
-              title: 'ตรวจสอบลูกค้า',
-              subtitle: 'วางข้อความออเดอร์เพื่อตรวจสอบ',
-              onTap: () =>
-                  _open(CheckCustomerPage(checkService: widget.checkService)),
+            Row(
+              children: [
+                const _Logo(),
+                const Spacer(),
+                if (widget.signedIn)
+                  _AccountBar(
+                    shopName: widget.authService.shopName,
+                    onSignOut: _signingOut ? null : _signOut,
+                  )
+                else
+                  TextButton.icon(
+                    key: const Key('home-login'),
+                    onPressed: _openLogin,
+                    icon: const Icon(Icons.login),
+                    label: const Text('เข้าสู่ระบบ'),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
-            _ActionCard(
-              icon: Icons.report_outlined,
-              color: app.danger,
-              title: 'รายงานลูกค้า',
-              subtitle: 'บันทึกลูกค้าที่มีประวัติปฏิเสธรับสินค้า',
-              onTap: () => _open(
-                  ReportCustomerPage(reportService: widget.reportService)),
+            Text('COD Risk Shield', style: textTheme.headlineMedium),
+            const SizedBox(height: 4),
+            Text(
+              'ตรวจก่อนส่ง ป้องกันพัสดุตีกลับ',
+              style: textTheme.bodyLarge?.copyWith(color: app.muted),
+            ),
+            const SizedBox(height: AppSpacing.section),
+            const _StatsRow(),
+            const SizedBox(height: AppSpacing.section),
+            Text('ตรวจสอบลูกค้า', style: textTheme.titleMedium),
+            const SizedBox(height: 8),
+            CheckPanel(checkService: widget.checkService),
+            const SizedBox(height: 32),
+            OutlinedButton.icon(
+              key: const Key('home-report'),
+              onPressed: _openReport,
+              icon: const Icon(Icons.report_outlined),
+              label: const Text('รายงานลูกค้า'),
             ),
           ],
         ),
@@ -102,61 +115,183 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// การ์ดเมนูขนาดใหญ่ แตะได้ทั้งใบ
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+class _Logo extends StatelessWidget {
+  const _Logo();
 
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(Icons.verified_user_rounded, color: colors.onPrimary),
+    );
+  }
+}
+
+/// ชื่อร้านและปุ่มออกจากระบบ มุมขวาบน
+class _AccountBar extends StatelessWidget {
+  const _AccountBar({required this.shopName, required this.onSignOut});
+
+  final String shopName;
+  final VoidCallback? onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppColors.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.storefront_outlined, size: 18, color: app.muted),
+        const SizedBox(width: 4),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 160),
+          child: Text(
+            shopName,
+            key: const Key('home-shop-name'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: app.muted),
+          ),
+        ),
+        IconButton(
+          key: const Key('home-logout'),
+          tooltip: 'ออกจากระบบ',
+          onPressed: onSignOut,
+          icon: const Icon(Icons.logout),
+        ),
+      ],
+    );
+  }
+}
+
+/// ตัวเลขสรุปของเครือข่าย (hardcode ไว้ก่อน)
+class _StatsRow extends StatelessWidget {
+  const _StatsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Expanded(
+          child: _StatTile(value: '2,480+', label: 'ร้านค้า'),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: _StatTile(value: '18,340 ชิ้น', label: 'ป้องกันแล้ว'),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: _StatTile(value: '฿917,000', label: 'ประหยัดได้'),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.value, required this.label});
+
+  final String value;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
     final app = AppColors.of(context);
     return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, size: 32, color: color),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        child: Column(
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: textTheme.titleLarge?.copyWith(color: colors.primary),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: textTheme.titleLarge),
-                    const SizedBox(height: 4),
-                    Text(subtitle,
-                        style: textTheme.bodyMedium?.copyWith(color: app.muted)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: app.muted),
-            ],
-          ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: textTheme.bodySmall?.copyWith(color: app.muted),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// ห่อหน้า Login (ซึ่งไม่ปิดตัวเองเมื่อ login สำเร็จ) รอฟังสถานะ login
+/// แล้วแทนที่ตัวเองด้วยหน้า [next] หรือปิดตัวเองกลับหน้าก่อนหน้า
+class _LoginThen extends StatefulWidget {
+  const _LoginThen({required this.authService, this.next});
+
+  final AuthService authService;
+  final WidgetBuilder? next;
+
+  @override
+  State<_LoginThen> createState() => _LoginThenState();
+}
+
+class _LoginThenState extends State<_LoginThen> {
+  late final StreamSubscription<AuthState> _subscription;
+  bool _done = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = widget.authService.onAuthStateChange.listen((state) {
+      if (state.session != null) _leave();
+    }, onError: (Object _) {});
+  }
+
+  void _leave() {
+    if (_done || !mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isActive) return;
+    _done = true;
+    final nav = Navigator.of(context);
+    final next = widget.next;
+    if (next == null) {
+      route.isCurrent ? nav.pop() : nav.removeRoute(route);
+    } else if (route.isCurrent) {
+      nav.pushReplacement(MaterialPageRoute(builder: next));
+    } else {
+      nav.replace(
+        oldRoute: route,
+        newRoute: MaterialPageRoute(builder: next),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // หน้า Login ไม่มี AppBar จึงเพิ่มปุ่มย้อนกลับไว้มุมซ้ายบน
+    return Stack(
+      children: [
+        LoginPage(authService: widget.authService),
+        const SafeArea(
+          child: Material(
+            type: MaterialType.transparency,
+            child: Padding(padding: EdgeInsets.all(4), child: BackButton()),
+          ),
+        ),
+      ],
     );
   }
 }

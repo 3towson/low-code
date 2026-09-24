@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'pages/home_page.dart';
-import 'pages/login_page.dart';
 import 'services/auth_service.dart';
 import 'services/check_service.dart';
 import 'services/report_service.dart';
@@ -16,11 +15,13 @@ class CodCheckApp extends StatelessWidget {
     required this.authService,
     required this.checkService,
     required this.reportService,
+    this.themeMode = ThemeMode.dark,
   });
 
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
+  final ThemeMode themeMode;
   final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
@@ -29,6 +30,8 @@ class CodCheckApp extends StatelessWidget {
       title: 'ตรวจสอบลูกค้า COD',
       navigatorKey: _navigatorKey,
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       home: AuthGate(
         authService: authService,
         checkService: checkService,
@@ -39,7 +42,8 @@ class CodCheckApp extends StatelessWidget {
   }
 }
 
-/// ตัดสินว่าจะแสดง Login หรือ Home จาก onAuthStateChange
+/// ติดตามสถานะ login จาก onAuthStateChange แล้วส่งให้หน้า Home
+/// (หน้า Home ใช้งานได้โดยไม่ต้อง login)
 /// session ถูกเก็บในเครื่องโดย supabase_flutter จึงยังอยู่ในระบบหลังปิดเปิดแอป
 class AuthGate extends StatefulWidget {
   const AuthGate({
@@ -70,8 +74,9 @@ class _AuthGateState extends State<AuthGate> {
       (state) {
         final wasSignedIn = _session != null;
         setState(() => _session = state.session);
-        // สถานะเปลี่ยน (เช่น session หมดอายุตอนอยู่หน้าย่อย) ให้ปิดหน้าที่ซ้อนอยู่ทั้งหมด
-        if (wasSignedIn != (state.session != null)) {
+        // ออกจากระบบ (เช่น session หมดอายุตอนอยู่หน้ารายงาน) ให้ปิดหน้าที่ซ้อนอยู่ทั้งหมด
+        // ตอน login ไม่ต้องปิด หน้า Login ที่เปิดจากหน้า Home จะพาไปหน้าถัดไปเอง
+        if (wasSignedIn && state.session == null) {
           widget.navigatorKey.currentState?.popUntil((route) => route.isFirst);
         }
       },
@@ -88,15 +93,11 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    final session = _session;
-    if (session == null) {
-      return LoginPage(authService: widget.authService);
-    }
     return HomePage(
-      key: ValueKey(session.user.id),
       authService: widget.authService,
       checkService: widget.checkService,
       reportService: widget.reportService,
+      signedIn: _session != null,
     );
   }
 }

@@ -1,8 +1,9 @@
 // Edge Function: ตรวจสอบระดับความเสี่ยงของลูกค้า COD
 // body: { text: string } (ข้อความออเดอร์) หรือ { phone: string } (ผู้ใช้กรอกเบอร์เอง)
+// ใช้ได้โดยไม่ต้อง login
 // ห้าม log ข้อความออเดอร์ ชื่อ เบอร์โทร หรือ hash และห้ามส่ง hash หรือข้อมูลผู้รายงานกลับไป
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type User } from "npm:@supabase/supabase-js@2";
 import { extractOrderInfo, geminiClientFromEnv } from "../_shared/extract.ts";
 import { hashPhone, maskPhone, normalizeThaiPhone } from "../_shared/phone.ts";
 
@@ -35,16 +36,21 @@ const admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
+// token ไม่มีหรือใช้ไม่ได้ (เช่นแอปที่ยังไม่ login ส่ง anon key มา) ถือว่าเป็นผู้ใช้ทั่วไป
+async function optionalUser(req: Request): Promise<User | null> {
+  const token = req.headers.get("Authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return null;
+  const { data, error } = await admin.auth.getUser(token);
+  return error ? null : data.user;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "POST") return json(405, { error: "ไม่รองรับคำขอนี้" });
 
   try {
-    // 1) ตรวจผู้ใช้
-    const token = req.headers.get("Authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
-    if (!token) return json(401, { error: "กรุณาเข้าสู่ระบบก่อนใช้งาน" });
-    const { data: auth, error: authError } = await admin.auth.getUser(token);
-    if (authError || !auth.user) return json(401, { error: "กรุณาเข้าสู่ระบบก่อนใช้งาน" });
+    // 1) อ่านผู้ใช้ถ้ามี (ไม่บังคับ login) ตอนนี้ยังไม่ได้ใช้ค่านี้
+    const _user = await optionalUser(req);
 
     // 2) อ่าน body: ต้องมี text หรือ phone อย่างใดอย่างหนึ่งที่ไม่ว่าง
     let body: unknown;
