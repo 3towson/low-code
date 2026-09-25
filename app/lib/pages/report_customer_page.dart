@@ -59,6 +59,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
   final _chatController = TextEditingController();
+  final _otherPlatformController = TextEditingController();
+  final _otherReasonController = TextEditingController();
   ReportPlatform? _platform;
   ReportReason? _reason;
   bool _submitting = false;
@@ -71,6 +73,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
+    _otherPlatformController.dispose();
+    _otherReasonController.dispose();
     super.dispose();
   }
 
@@ -96,6 +100,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         _formKey.currentState!.reset();
         _platform = null;
         _reason = null;
+        _otherPlatformController.clear();
+        _otherReasonController.clear();
         _aiMessage = null;
       }
     });
@@ -307,10 +313,33 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                         ],
                         onChanged: _submitting
                             ? null
-                            : (v) => setState(() => _platform = v),
+                            : (v) => setState(() {
+                                  _platform = v;
+                                  if (v != ReportPlatform.other) {
+                                    _otherPlatformController.clear();
+                                  }
+                                }),
                         validator: (v) =>
                             v == null ? 'กรุณาเลือกแพลตฟอร์ม' : null,
                       ),
+                      if (_platform == ReportPlatform.other) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          key: const Key('report-platform-other'),
+                          controller: _otherPlatformController,
+                          enabled: !_submitting,
+                          decoration: const InputDecoration(
+                            labelText: 'ระบุแพลตฟอร์ม',
+                            hintText: 'เช่น Instagram, เว็บไซต์, หน้าร้าน',
+                            prefixIcon: Icon(Icons.edit_note_outlined),
+                          ),
+                          textInputAction: TextInputAction.next,
+                          validator: (v) => _platform == ReportPlatform.other &&
+                                  (v == null || v.trim().isEmpty)
+                              ? 'กรุณาระบุแพลตฟอร์ม'
+                              : null,
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       DropdownButtonFormField<ReportReason>(
                         key: const Key('report-reason'),
@@ -327,10 +356,33 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                         ],
                         onChanged: _submitting
                             ? null
-                            : (v) => setState(() => _reason = v),
+                            : (v) => setState(() {
+                                  _reason = v;
+                                  if (v != ReportReason.other) {
+                                    _otherReasonController.clear();
+                                  }
+                                }),
                         validator: (v) =>
                             v == null ? 'กรุณาเลือกเหตุผล' : null,
                       ),
+                      if (_reason == ReportReason.other) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          key: const Key('report-reason-other'),
+                          controller: _otherReasonController,
+                          enabled: !_submitting,
+                          decoration: const InputDecoration(
+                            labelText: 'ระบุเหตุผลเพิ่มเติม',
+                            hintText: 'เช่น สั่งเล่น, ไม่สะดวกรับ, ขอยกเลิก',
+                            prefixIcon: Icon(Icons.edit_note_outlined),
+                          ),
+                          textInputAction: TextInputAction.next,
+                          validator: (v) => _reason == ReportReason.other &&
+                                  (v == null || v.trim().isEmpty)
+                              ? 'กรุณาระบุเหตุผล'
+                              : null,
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       TextFormField(
                         key: const Key('report-amount'),
