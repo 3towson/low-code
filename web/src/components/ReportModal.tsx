@@ -13,7 +13,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [platform, setPlatform] = useState("shopee");
+  const [otherPlatform, setOtherPlatform] = useState("");
   const [reason, setReason] = useState("refused_delivery");
+  const [otherReason, setOtherReason] = useState("");
   const [amount, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +35,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
       setError("กรุณากรอกเบอร์โทรศัพท์");
       return;
     }
+    if (platform === "other" && !otherPlatform.trim()) {
+      setError("กรุณาระบุแพลตฟอร์ม");
+      return;
+    }
+    if (reason === "other" && !otherReason.trim()) {
+      setError("กรุณาระบุเหตุผล");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -49,6 +59,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
         setSuccess(false);
         setName("");
         setPhone("");
+        setOtherPlatform("");
+        setOtherReason("");
         setAmount("");
         onClose();
       }, 1500);
@@ -118,7 +130,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                 <select
                   className="select-input"
                   value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
+                  onChange={(e) => {
+                    setPlatform(e.target.value);
+                    if (e.target.value !== "other") setOtherPlatform("");
+                  }}
                 >
                   <option value="shopee">Shopee</option>
                   <option value="lazada">Lazada</option>
@@ -134,7 +149,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                 <select
                   className="select-input"
                   value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  onChange={(e) => {
+                    setReason(e.target.value);
+                    if (e.target.value !== "other") setOtherReason("");
+                  }}
                 >
                   <option value="refused_delivery">{strings.reasonRefused}</option>
                   <option value="unreachable">{strings.reasonUnreachable}</option>
@@ -143,6 +161,36 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                 </select>
               </div>
             </div>
+
+            {/* ช่องกรอกเพิ่มเติมเมื่อเลือกแพลตฟอร์มอื่นๆ */}
+            {platform === "other" && (
+              <div className="form-group animate-slide-down">
+                <label className="field-label">ระบุแพลตฟอร์ม *</label>
+                <input
+                  type="text"
+                  className="text-input"
+                  placeholder="เช่น Instagram, เว็บไซต์, หน้าร้าน"
+                  value={otherPlatform}
+                  onChange={(e) => setOtherPlatform(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {/* ช่องกรอกเพิ่มเติมเมื่อเลือกเหตุผลอื่นๆ */}
+            {reason === "other" && (
+              <div className="form-group animate-slide-down">
+                <label className="field-label">ระบุเหตุผล *</label>
+                <input
+                  type="text"
+                  className="text-input"
+                  placeholder="เช่น สั่งเล่น, แกล้งสั่ง, คืนสินค้าชำรุด"
+                  value={otherReason}
+                  onChange={(e) => setOtherReason(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <label className="field-label">{strings.amount}</label>
