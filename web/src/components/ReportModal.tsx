@@ -36,11 +36,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
       return;
     }
     if (platform === "other" && !otherPlatform.trim()) {
-      setError("กรุณาระบุแพลตฟอร์ม");
+      setError(strings.specifyPlatformReq);
       return;
     }
     if (reason === "other" && !otherReason.trim()) {
-      setError("กรุณาระบุเหตุผล");
+      setError(strings.specifyReasonReq);
       return;
     }
 
@@ -165,11 +165,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
             {/* ช่องกรอกเพิ่มเติมเมื่อเลือกแพลตฟอร์มอื่นๆ */}
             {platform === "other" && (
               <div className="form-group animate-slide-down">
-                <label className="field-label">ระบุแพลตฟอร์ม *</label>
+                <label className="field-label">{strings.specifyPlatform} *</label>
                 <input
                   type="text"
                   className="text-input"
-                  placeholder="เช่น Instagram, เว็บไซต์, หน้าร้าน"
+                  placeholder={strings.specifyPlatformHint}
                   value={otherPlatform}
                   onChange={(e) => setOtherPlatform(e.target.value)}
                   required
@@ -180,11 +180,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
             {/* ช่องกรอกเพิ่มเติมเมื่อเลือกเหตุผลอื่นๆ */}
             {reason === "other" && (
               <div className="form-group animate-slide-down">
-                <label className="field-label">ระบุเหตุผล *</label>
+                <label className="field-label">{strings.specifyReason} *</label>
                 <input
                   type="text"
                   className="text-input"
-                  placeholder="เช่น สั่งเล่น, แกล้งสั่ง, คืนสินค้าชำรุด"
+                  placeholder={strings.specifyReasonHint}
                   value={otherReason}
                   onChange={(e) => setOtherReason(e.target.value)}
                   required

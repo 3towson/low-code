@@ -65,6 +65,12 @@ export const translations = {
     reasonUnreachable: "ติดต่อไม่ได้",
     reasonFakeAddress: "ที่อยู่ปลอมหรือผิด",
     reasonOther: "อื่นๆ",
+    specifyPlatform: "ระบุแพลตฟอร์ม",
+    specifyPlatformHint: "เช่น Instagram, เว็บไซต์, หน้าร้าน",
+    specifyPlatformReq: "กรุณาระบุแพลตฟอร์ม",
+    specifyReason: "ระบุเหตุผล",
+    specifyReasonHint: "เช่น สั่งเล่น, แกล้งสั่ง, คืนสินค้าชำรุด",
+    specifyReasonReq: "กรุณาระบุเหตุผล",
   },
   en: {
     appTitle: "COD Risk Shield",
@@ -125,6 +131,12 @@ export const translations = {
     reasonUnreachable: "Unreachable",
     reasonFakeAddress: "Fake / wrong address",
     reasonOther: "Other",
+    specifyPlatform: "Specify Platform",
+    specifyPlatformHint: "e.g. Instagram, Website, Storefront",
+    specifyPlatformReq: "Please specify platform",
+    specifyReason: "Specify Reason",
+    specifyReasonHint: "e.g. Prank order, damaged return",
+    specifyReasonReq: "Please specify reason",
   },
 };
 
