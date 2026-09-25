@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter (Windows)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "windows",
+        "--dart-define-from-file",
+        ".env.flutter"
+      ]
+    },
+    {
+      "name": "Flutter (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--dart-define-from-file",
+        ".env.flutter"
+      ]
+    },
+    {
+      "name": "Flutter (Web Server 8080)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "web-server",
+        "--web-port",
+        "8080",
+        "--dart-define-from-file",
+        ".env.flutter"
+      ]
+    }
+  ]
+}

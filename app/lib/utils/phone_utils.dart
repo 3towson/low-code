@@ -8,8 +8,9 @@ final RegExp _nonDigit = RegExp(r'\D');
 
 /// แปลงเลขไทย ๐-๙ (U+0E50-U+0E59) เป็น 0-9
 String _thaiDigitsToArabic(String s) {
-  return String.fromCharCodes(s.runes.map(
-      (c) => c >= 0x0E50 && c <= 0x0E59 ? c - 0x0E50 + 0x30 : c));
+  return String.fromCharCodes(
+    s.runes.map((c) => c >= 0x0E50 && c <= 0x0E59 ? c - 0x0E50 + 0x30 : c),
+  );
 }
 
 /// คืนเบอร์มือถือไทยรูปแบบ 0XXXXXXXXX หรือ null ถ้าไม่ใช่เบอร์มือถือไทย

@@ -20,6 +20,11 @@ class AppStrings {
     required this.appSubtitle,
     required this.signIn,
     required this.signOut,
+    required this.signUp,
+    required this.emailLabel,
+    required this.passwordLabel,
+    required this.shopNameLabel,
+    required this.checking,
     required this.shopsCount,
     required this.shopsLabel,
     required this.protectedCount,
@@ -88,6 +93,11 @@ class AppStrings {
   final String appSubtitle;
   final String signIn;
   final String signOut;
+  final String signUp;
+  final String emailLabel;
+  final String passwordLabel;
+  final String shopNameLabel;
+  final String checking;
   final String shopsCount;
   final String shopsLabel;
   final String protectedCount;
@@ -185,6 +195,11 @@ class AppStrings {
     appSubtitle: 'ตรวจก่อนส่ง ป้องกันพัสดุตีกลับ',
     signIn: 'เข้าสู่ระบบ',
     signOut: 'ออกจากระบบ',
+    signUp: 'สมัครสมาชิก',
+    emailLabel: 'อีเมล',
+    passwordLabel: 'รหัสผ่าน',
+    shopNameLabel: 'ชื่อร้านค้า',
+    checking: 'กำลังตรวจสอบ...',
     shopsCount: '2,480+',
     shopsLabel: 'ร้านค้า',
     protectedCount: '18,340 ชิ้น',
@@ -254,6 +269,11 @@ class AppStrings {
     appSubtitle: 'Check before shipping, prevent returned parcels',
     signIn: 'Sign In',
     signOut: 'Sign Out',
+    signUp: 'Sign Up',
+    emailLabel: 'Email',
+    passwordLabel: 'Password',
+    shopNameLabel: 'Shop Name',
+    checking: 'Checking...',
     shopsCount: '2,480+',
     shopsLabel: 'Shops',
     protectedCount: '18,340 pcs',

@@ -10,8 +10,9 @@ abstract final class AppSpacing {
     horizontal: pageHorizontal,
     vertical: section,
   );
-  static const double controlHeight = 52;
-  static const double cardRadius = 16;
+  static const double controlHeight = 48;
+  static const double cardRadius = 18;
+  static const double modalRadius = 20;
   static const double controlRadius = 12;
 }
 
@@ -22,6 +23,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.border,
     required this.muted,
     required this.card,
+    required this.cardHover,
     required this.success,
     required this.successBackground,
     required this.warning,
@@ -34,6 +36,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color border;
   final Color muted;
   final Color card;
+  final Color cardHover;
   final Color success;
   final Color successBackground;
   final Color warning;
@@ -44,21 +47,23 @@ class AppColors extends ThemeExtension<AppColors> {
 
   static const light = AppColors(
     border: Color(0xFFE2E8F0),
-    muted: Color(0xFF6B7280),
+    muted: Color(0xFF64748B),
     card: Color(0xFFFFFFFF),
+    cardHover: Color(0xFFFFFFFF),
     success: Color(0xFF16A34A),
     successBackground: Color(0xFFF0FDF4),
     warning: Color(0xFFD97706),
     warningBackground: Color(0xFFFFFBEB),
     danger: Color(0xFFDC2626),
     dangerBackground: Color(0xFFFEF2F2),
-    neutralBackground: Color(0xFFF3F4F6),
+    neutralBackground: Color(0xFFF1F5F9),
   );
 
   static const dark = AppColors(
     border: Color(0xFF22304A),
     muted: Color(0xFF94A3B8),
     card: Color(0xFF131D31),
+    cardHover: Color(0xFF192640),
     success: Color(0xFF10B981),
     successBackground: Color(0xFF042B1F),
     warning: Color(0xFFF59E0B),
@@ -77,6 +82,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? border,
     Color? muted,
     Color? card,
+    Color? cardHover,
     Color? success,
     Color? successBackground,
     Color? warning,
@@ -89,6 +95,7 @@ class AppColors extends ThemeExtension<AppColors> {
       border: border ?? this.border,
       muted: muted ?? this.muted,
       card: card ?? this.card,
+      cardHover: cardHover ?? this.cardHover,
       success: success ?? this.success,
       successBackground: successBackground ?? this.successBackground,
       warning: warning ?? this.warning,
@@ -106,6 +113,7 @@ class AppColors extends ThemeExtension<AppColors> {
       border: Color.lerp(border, other.border, t)!,
       muted: Color.lerp(muted, other.muted, t)!,
       card: Color.lerp(card, other.card, t)!,
+      cardHover: Color.lerp(cardHover, other.cardHover, t)!,
       success: Color.lerp(success, other.success, t)!,
       successBackground: Color.lerp(
         successBackground,
@@ -139,9 +147,9 @@ abstract final class AppTheme {
   static ThemeData light() => _build(
     brightness: Brightness.light,
     app: AppColors.light,
-    primary: const Color(0xFF1A56DB),
+    primary: const Color(0xFF2563EB),
     surface: const Color(0xFFF8FAFF),
-    onSurface: const Color(0xFF1C1F26),
+    onSurface: const Color(0xFF0F172A),
   );
 
   /// primary สว่างขึ้นเพื่อให้มองเห็นบนพื้นเข้ม
@@ -231,7 +239,9 @@ abstract final class AppTheme {
           shape: controlShape,
           textStyle: buttonText,
           elevation: isDark ? 2 : 0,
-          shadowColor: isDark ? primary.withOpacity(0.35) : Colors.transparent,
+          shadowColor: isDark
+              ? primary.withValues(alpha: 0.35)
+              : Colors.transparent,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -240,7 +250,7 @@ abstract final class AppTheme {
           shape: controlShape,
           textStyle: buttonText,
           side: BorderSide(
-            color: isDark ? primary.withOpacity(0.7) : primary,
+            color: isDark ? primary.withValues(alpha: 0.7) : primary,
             width: 1.5,
           ),
         ),
@@ -256,7 +266,7 @@ abstract final class AppTheme {
         fillColor: app.card,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 15,
+          vertical: 14,
         ),
         hintStyle: textTheme.bodyLarge?.copyWith(color: app.muted),
         helperStyle: textTheme.bodySmall?.copyWith(color: app.muted),
@@ -275,10 +285,11 @@ abstract final class AppTheme {
         shape: controlShape,
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: app.card,
+        backgroundColor: app.cardHover,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+          borderRadius: BorderRadius.circular(AppSpacing.modalRadius),
+          side: BorderSide(color: app.border),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -291,9 +302,9 @@ abstract final class AppTheme {
     );
   }
 
-  /// Sarabun: 400 เนื้อหา, 600 label, 700 หัวข้อ
+  /// Prompt: 400 เนื้อหา, 600 label, 700 หัวข้อ
   static TextTheme _textTheme(TextTheme base, Color onSurface) {
-    final t = GoogleFonts.sarabunTextTheme(base);
+    final t = GoogleFonts.promptTextTheme(base);
     TextStyle? w(TextStyle? s, FontWeight weight) =>
         s?.copyWith(fontWeight: weight);
     return t

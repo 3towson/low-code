@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { AppProvider, useApp } from "./context/AppContext";
+import { AppProvider } from "./context/AppProvider";
+import { useApp } from "./context/AppContext";
 import { Navbar } from "./components/Navbar";
 import { CheckPanel } from "./components/CheckPanel";
 import { SettingsModal } from "./components/SettingsModal";

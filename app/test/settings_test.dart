@@ -1,5 +1,4 @@
 import 'package:cod_customer_check/app.dart';
-import 'package:cod_customer_check/pages/home_page.dart';
 import 'package:cod_customer_check/services/app_settings.dart';
 import 'package:cod_customer_check/services/auth_service.dart';
 import 'package:cod_customer_check/services/check_service.dart';

@@ -41,7 +41,10 @@ class PageBody extends StatelessWidget {
             builder: (context, constraints) {
               final isDesktop = constraints.maxWidth >= 640;
               final minHeight = centerVertically
-                  ? math.max(0.0, constraints.maxHeight - AppSpacing.page.vertical)
+                  ? math.max(
+                      0.0,
+                      constraints.maxHeight - AppSpacing.page.vertical,
+                    )
                   : 0.0;
               return SingleChildScrollView(
                 padding: isDesktop
@@ -61,20 +64,22 @@ class PageBody extends StatelessWidget {
                           ? Container(
                               padding: const EdgeInsets.all(28),
                               decoration: BoxDecoration(
-                                color: (theme.cardTheme.color ?? const Color(0xFF131D31))
-                                    .withOpacity(0.9),
+                                color:
+                                    (theme.cardTheme.color ??
+                                            const Color(0xFF131D31))
+                                        .withValues(alpha: 0.9),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.08),
+                                  color: Colors.white.withValues(alpha: 0.08),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.4),
+                                    color: Colors.black.withValues(alpha: 0.4),
                                     blurRadius: 36,
                                     offset: const Offset(0, 12),
                                   ),
                                   BoxShadow(
-                                    color: primary.withOpacity(0.05),
+                                    color: primary.withValues(alpha: 0.05),
                                     blurRadius: 40,
                                     spreadRadius: 2,
                                   ),
@@ -111,8 +116,8 @@ class _AmbientGlowPainter extends CustomPainter {
         center: const Alignment(0, -0.9),
         radius: 1.2,
         colors: [
-          primary.withOpacity(topOpacity),
-          primary.withOpacity(midOpacity),
+          primary.withValues(alpha: topOpacity),
+          primary.withValues(alpha: midOpacity),
           Colors.transparent,
         ],
         stops: const [0.0, 0.45, 1.0],

@@ -147,9 +147,11 @@ class _CheckCustomerPageState extends State<CheckCustomerPage> {
               Icon(Icons.phone_disabled_outlined, color: app.muted),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(noPhoneMessage,
-                    key: const Key('check-no-phone'),
-                    style: Theme.of(context).textTheme.bodyLarge),
+                child: Text(
+                  noPhoneMessage,
+                  key: const Key('check-no-phone'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
               ),
             ],
           ),
@@ -268,18 +270,13 @@ class _ErrorBox extends StatelessWidget {
                 child: Text(
                   message,
                   key: const Key('check-message'),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
+                  style: Theme.of(context).textTheme.bodyLarge
                       ?.copyWith(color: app.danger),
                 ),
               ),
             ],
           ),
-          if (action != null) ...[
-            const SizedBox(height: 16),
-            action!,
-          ],
+          if (action != null) ...[const SizedBox(height: 16), action!],
         ],
       ),
     );
@@ -288,23 +285,25 @@ class _ErrorBox extends StatelessWidget {
 
 /// สีพื้น สีหลัก และไอคอนของแต่ละระดับ
 ({Color background, Color foreground, IconData icon}) _styleOf(
-    AppColors app, RiskLevel level) {
+  AppColors app,
+  RiskLevel level,
+) {
   return switch (level) {
     RiskLevel.green => (
-        background: app.successBackground,
-        foreground: app.success,
-        icon: Icons.check_rounded,
-      ),
+      background: app.successBackground,
+      foreground: app.success,
+      icon: Icons.check_rounded,
+    ),
     RiskLevel.yellow => (
-        background: app.warningBackground,
-        foreground: app.warning,
-        icon: Icons.warning_amber_rounded,
-      ),
+      background: app.warningBackground,
+      foreground: app.warning,
+      icon: Icons.warning_amber_rounded,
+    ),
     RiskLevel.red => (
-        background: app.dangerBackground,
-        foreground: app.danger,
-        icon: Icons.close_rounded,
-      ),
+      background: app.dangerBackground,
+      foreground: app.danger,
+      icon: Icons.close_rounded,
+    ),
   };
 }
 
@@ -346,8 +345,9 @@ class _RiskCard extends StatelessWidget {
                   child: Text(
                     result.level.label,
                     key: const Key('check-level'),
-                    style: textTheme.headlineSmall
-                        ?.copyWith(color: style.foreground),
+                    style: textTheme.headlineSmall?.copyWith(
+                      color: style.foreground,
+                    ),
                   ),
                 ),
               ],
@@ -362,10 +362,7 @@ class _RiskCard extends StatelessWidget {
               key: const Key('check-recommendation'),
               style: textTheme.titleMedium,
             ),
-            Divider(
-              height: 32,
-              color: style.foreground.withValues(alpha: 0.3),
-            ),
+            Divider(height: 32, color: style.foreground.withValues(alpha: 0.3)),
             _InfoRow(
               icon: Icons.flag_outlined,
               child: Text(
@@ -438,8 +435,8 @@ class _AiUnavailableNote extends StatelessWidget {
         Text(
           'ระบบแยกชื่ออัตโนมัติไม่พร้อมใช้งานในขณะนี้ '
           'ผลความเสี่ยงยังตรวจจากเบอร์โทรตามปกติ',
-          style:
-              Theme.of(context).textTheme.bodySmall?.copyWith(color: app.muted),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: app.muted),
         ),
       ],
     );

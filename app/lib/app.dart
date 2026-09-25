@@ -40,7 +40,8 @@ class _CodCheckAppState extends State<CodCheckApp> {
   void initState() {
     super.initState();
     _ownsSettings = widget.settingsController == null;
-    _settings = widget.settingsController ??
+    _settings =
+        widget.settingsController ??
         AppSettingsController(
           themeMode: widget.themeMode,
           language: AppLanguage.th,

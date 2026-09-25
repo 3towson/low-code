@@ -190,7 +190,10 @@ CheckResult checkResultFromData(Object? data) {
       final count = data['counted_reports'];
       final recommendation = _nonEmptyString(data['recommendation']);
       final masked = _nonEmptyString(data['phone_masked']);
-      if (level == null || count is! num || recommendation == null || masked == null) {
+      if (level == null ||
+          count is! num ||
+          recommendation == null ||
+          masked == null) {
         return const CheckError(_genericMessage);
       }
       return CheckOk(

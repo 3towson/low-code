@@ -9,8 +9,10 @@ class AppSettingsController extends ChangeNotifier {
   AppSettingsController({
     ThemeMode themeMode = ThemeMode.dark,
     AppLanguage language = AppLanguage.th,
-  })  : _themeMode = themeMode,
-        _language = language;
+    // ignore: prefer_initializing_formals
+  }) : _themeMode = themeMode,
+       // ignore: prefer_initializing_formals
+       _language = language;
 
   ThemeMode _themeMode;
   AppLanguage _language;
@@ -27,7 +29,9 @@ class AppSettingsController extends ChangeNotifier {
   }
 
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    _themeMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
     notifyListeners();
   }
 
@@ -80,6 +84,5 @@ extension AppSettingsContextX on BuildContext {
   AppSettingsController? get appSettings => AppSettingsScope.maybeOf(this);
   AppStrings get strings => AppSettingsScope.stringsOf(this);
   bool get isDarkMode =>
-      appSettings?.isDarkMode ??
-      (Theme.of(this).brightness == Brightness.dark);
+      appSettings?.isDarkMode ?? (Theme.of(this).brightness == Brightness.dark);
 }

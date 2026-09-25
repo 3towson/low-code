@@ -68,12 +68,12 @@ class ReportInput {
   final num? amount;
 
   Map<String, dynamic> toJson() => {
-        'customer_name': customerName.trim(),
-        'phone': phone,
-        'platform': platform.value,
-        'reason': reason.value,
-        if (amount != null) 'amount': amount,
-      };
+    'customer_name': customerName.trim(),
+    'phone': phone,
+    'platform': platform.value,
+    'reason': reason.value,
+    if (amount != null) 'amount': amount,
+  };
 }
 
 /// ผลการส่งรายงาน
@@ -128,7 +128,8 @@ class ReportService {
           .invoke('report-customer', body: input.toJson())
           .timeout(timeout);
       final data = res.data;
-      if (data is Map && data['status'] == 'CREATED') return const ReportSuccess();
+      if (data is Map && data['status'] == 'CREATED')
+        return const ReportSuccess();
       return const ReportError(_genericMessage);
     } on FunctionsFetchException {
       // ส่ง request ไม่ถึง server
@@ -155,7 +156,9 @@ ReportResult reportResultFromError(int status, Object? details) {
   final body = details is Map ? details : const {};
 
   if (status == 409 || body['status'] == 'DUPLICATE') {
-    return ReportDuplicate(_nonEmptyString(body['message']) ?? _duplicateFallback);
+    return ReportDuplicate(
+      _nonEmptyString(body['message']) ?? _duplicateFallback,
+    );
   }
 
   if (status == 400 || body['status'] == 'INVALID_INPUT') {
@@ -166,7 +169,9 @@ ReportResult reportResultFromError(int status, Object? details) {
           if (e is Map && _nonEmptyString(e['message']) != null)
             _nonEmptyString(e['message'])!,
     ];
-    return ReportInvalid(messages.isEmpty ? const [_invalidFallback] : messages);
+    return ReportInvalid(
+      messages.isEmpty ? const [_invalidFallback] : messages,
+    );
   }
 
   // 401/403/405/500 server ส่งข้อความภาษาไทยมาใน error

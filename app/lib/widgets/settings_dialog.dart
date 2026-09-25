@@ -17,7 +17,8 @@ class SettingsDialog extends StatelessWidget {
     final colors = theme.colorScheme;
     final app = AppColors.of(context);
 
-    final isDark = settings?.isDarkMode ?? (theme.brightness == Brightness.dark);
+    final isDark =
+        settings?.isDarkMode ?? (theme.brightness == Brightness.dark);
     final currentLang = settings?.language ?? AppLanguage.th;
 
     return Dialog(
@@ -29,7 +30,7 @@ class SettingsDialog extends StatelessWidget {
       backgroundColor: app.card,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: 440),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -43,10 +44,14 @@ class SettingsDialog extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.12),
+                      color: colors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.settings_outlined, color: colors.primary, size: 22),
+                    child: Icon(
+                      Icons.settings_outlined,
+                      color: colors.primary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -58,12 +63,24 @@ class SettingsDialog extends StatelessWidget {
                       ),
                     ),
                   ),
-                  IconButton(
-                    key: const Key('settings-close'),
-                    tooltip: strings.close,
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    visualDensity: VisualDensity.compact,
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: app.border),
+                    ),
+                    child: IconButton(
+                      key: const Key('settings-close'),
+                      tooltip: strings.close,
+                      onPressed: () => Navigator.of(context).pop(),
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: app.muted,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -74,11 +91,13 @@ class SettingsDialog extends StatelessWidget {
               // ส่วนที่ 1: ธีมการแสดงผล (Theme)
               Row(
                 children: [
-                  Icon(Icons.palette_outlined, size: 18, color: colors.primary),
+                  Icon(Icons.palette_outlined, size: 17, color: colors.primary),
                   const SizedBox(width: 8),
                   Text(
                     strings.themeSection,
-                    style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -117,11 +136,17 @@ class SettingsDialog extends StatelessWidget {
               // ส่วนที่ 2: ภาษา (Language)
               Row(
                 children: [
-                  Icon(Icons.translate_rounded, size: 18, color: colors.primary),
+                  Icon(
+                    Icons.translate_rounded,
+                    size: 17,
+                    color: colors.primary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     strings.languageSection,
-                    style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -156,10 +181,39 @@ class SettingsDialog extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-              FilledButton(
-                key: const Key('settings-done'),
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(strings.close),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: FilledButton(
+                  key: const Key('settings-done'),
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    minimumSize: const Size.fromHeight(46),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    strings.close,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -193,7 +247,9 @@ class _OptionTile extends StatelessWidget {
 
     final borderColor = selected ? colors.primary : app.border;
     final bgColor = selected
-        ? colors.primary.withOpacity(theme.brightness == Brightness.dark ? 0.2 : 0.08)
+        ? colors.primary.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.2 : 0.08,
+          )
         : app.neutralBackground;
 
     return Material(

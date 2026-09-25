@@ -7,7 +7,6 @@ import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../services/check_service.dart';
 import '../services/report_service.dart';
-import '../theme.dart';
 import '../widgets/check_panel.dart';
 import '../widgets/page_body.dart';
 import '../widgets/settings_dialog.dart';
@@ -44,11 +43,33 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() => _signingOut = false);
   }
 
+  Route<T> _modalRoute<T>(WidgetBuilder builder) {
+    return PageRouteBuilder<T>(
+      opaque: false,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      pageBuilder: (context, anim, secAnim) => builder(context),
+      transitionsBuilder: (context, anim, secAnim, child) {
+        final curved = CurvedAnimation(
+          parent: anim,
+          curve: const Cubic(0.16, 1, 0.3, 1),
+        );
+        return FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   /// เปิดหน้า Login เมื่อ login สำเร็จจะไปหน้า [next] แทน หรือกลับหน้านี้ถ้าไม่ระบุ
   void _openLogin({WidgetBuilder? next}) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _LoginThen(authService: widget.authService, next: next),
+      _modalRoute(
+        (_) => _LoginThen(authService: widget.authService, next: next),
       ),
     );
   }
@@ -59,7 +80,7 @@ class _HomePageState extends State<HomePage> {
       checkService: widget.checkService,
     );
     if (widget.signedIn) {
-      Navigator.of(context).push(MaterialPageRoute(builder: report));
+      Navigator.of(context).push(_modalRoute(report));
     } else {
       _openLogin(next: report);
     }
@@ -71,23 +92,29 @@ class _HomePageState extends State<HomePage> {
     final isDark = context.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFF),
+      backgroundColor: isDark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF8FAFF),
       body: PageBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Floating Top Navbar
+            // 1. Top Navbar
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xE6131D31) : Colors.white.withOpacity(0.9),
+                color: isDark
+                    ? const Color(0xE6131D31)
+                    : Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                  color: isDark
+                      ? const Color(0xFF22304A)
+                      : const Color(0xFFE2E8F0),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -100,19 +127,34 @@ class _HomePageState extends State<HomePage> {
                   // Quick Theme Toggle
                   IconButton(
                     key: const Key('theme-toggle-button'),
-                    tooltip: isDark ? strings.switchToLight : strings.switchToDark,
+                    tooltip: isDark
+                        ? strings.switchToLight
+                        : strings.switchToDark,
                     onPressed: () => context.appSettings?.toggleTheme(),
                     style: IconButton.styleFrom(
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       minimumSize: const Size(28, 28),
                       padding: const EdgeInsets.all(4),
+                      side: BorderSide(
+                        color: isDark
+                            ? const Color(0xFF22304A)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     icon: Icon(
-                      isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                      size: 18,
-                      color: isDark ? const Color(0xFFF59E0B) : const Color(0xFF64748B),
+                      isDark
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded,
+                      size: 16,
+                      color: isDark
+                          ? const Color(0xFFF59E0B)
+                          : const Color(0xFF64748B),
                     ),
                   ),
+                  const SizedBox(width: 6),
                   IconButton(
                     key: const Key('settings-button'),
                     tooltip: strings.settings,
@@ -124,13 +166,24 @@ class _HomePageState extends State<HomePage> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       minimumSize: const Size(28, 28),
                       padding: const EdgeInsets.all(4),
+                      side: BorderSide(
+                        color: isDark
+                            ? const Color(0xFF22304A)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     icon: Icon(
                       Icons.settings_outlined,
-                      size: 18,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      size: 16,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
                     ),
                   ),
+                  const SizedBox(width: 6),
                   if (widget.signedIn)
                     _AccountBar(
                       shopName: widget.authService.shopName,
@@ -142,11 +195,25 @@ class _HomePageState extends State<HomePage> {
                       onPressed: _openLogin,
                       style: TextButton.styleFrom(
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        minimumSize: const Size(0, 32),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        minimumSize: const Size(0, 28),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: isDark
+                                ? const Color(0xFF22304A)
+                                : const Color(0xFFE2E8F0),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      icon: const Icon(Icons.login, size: 16),
-                      label: Text(strings.signIn),
+                      icon: const Icon(Icons.login, size: 15),
+                      label: Text(
+                        strings.signIn,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -158,11 +225,18 @@ class _HomePageState extends State<HomePage> {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF16233B) : const Color(0xFFF1F5F9),
+                    color: isDark
+                        ? const Color(0xFF16233B)
+                        : const Color(0xFFF1F5F9),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                      color: isDark
+                          ? const Color(0xFF22304A)
+                          : const Color(0xFFE2E8F0),
                     ),
                     borderRadius: BorderRadius.circular(9999),
                   ),
@@ -199,7 +273,9 @@ class _HomePageState extends State<HomePage> {
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
-                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                color: isDark
+                    ? const Color(0xFFF1F5F9)
+                    : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 4),
@@ -208,7 +284,9 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
               ),
             ),
             const SizedBox(height: 22),
@@ -221,14 +299,18 @@ class _HomePageState extends State<HomePage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xE6131D31) : Colors.white.withOpacity(0.9),
+                color: isDark
+                    ? const Color(0xE6131D31)
+                    : Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                  color: isDark
+                      ? const Color(0xFF22304A)
+                      : const Color(0xFFE2E8F0),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -246,24 +328,37 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                            color: isDark
+                                ? const Color(0xFFF1F5F9)
+                                : const Color(0xFF0F172A),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF16233B) : const Color(0xFFEFF6FF),
+                          color: isDark
+                              ? const Color(0xFF16233B)
+                              : const Color(0xFFEFF6FF),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFBFDBFE),
+                            color: isDark
+                                ? const Color(0xFF1E3A8A)
+                                : const Color(0xFFBFDBFE),
                           ),
                           borderRadius: BorderRadius.circular(9999),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.shield_outlined, size: 13, color: Color(0xFF3B82F6)),
+                            Icon(
+                              Icons.shield_outlined,
+                              size: 13,
+                              color: Color(0xFF3B82F6),
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'AI Powered',
@@ -299,7 +394,11 @@ class _HomePageState extends State<HomePage> {
                     ? const Color(0x20DC2626)
                     : const Color(0x0CDC2626),
               ),
-              icon: const Icon(Icons.error_outline_rounded, size: 18, color: Color(0xFFDC2626)),
+              icon: const Icon(
+                Icons.error_outline_rounded,
+                size: 18,
+                color: Color(0xFFDC2626),
+              ),
               label: Text(
                 strings.reportCustomer,
                 style: const TextStyle(
@@ -317,7 +416,9 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                color: isDark
+                    ? const Color(0xFF64748B)
+                    : const Color(0xFF94A3B8),
               ),
             ),
             const SizedBox(height: 16),
@@ -334,27 +435,28 @@ class _Logo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 34,
+      height: 34,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF2563EB),
-            Color(0xFF3B82F6),
-          ],
+          colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: const [
           BoxShadow(
             color: Color(0x402563EB),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      child: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 22),
+      child: const Icon(
+        Icons.verified_user_rounded,
+        color: Colors.white,
+        size: 18,
+      ),
     );
   }
 }
@@ -469,22 +571,25 @@ class _StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDarkMode;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xE6131D31) : Colors.white.withOpacity(0.9),
+        color: isDark
+            ? const Color(0xE6131D31)
+            : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             width: 36,
@@ -495,29 +600,31 @@ class _StatTile extends StatelessWidget {
             ),
             child: Icon(icon, size: 18, color: const Color(0xFF3B82F6)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? const Color(0xFFF1F5F9)
+                    : const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B),
+              ),
             ),
           ),
         ],
@@ -560,11 +667,36 @@ class _LoginThenState extends State<_LoginThen> {
     if (next == null) {
       route.isCurrent ? nav.pop() : nav.removeRoute(route);
     } else if (route.isCurrent) {
-      nav.pushReplacement(MaterialPageRoute(builder: next));
+      nav.pushReplacement(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black.withValues(alpha: 0.65),
+          pageBuilder: (ctx, anim, secAnim) => next(ctx),
+          transitionsBuilder: (ctx, anim, secAnim, child) {
+            final curved = CurvedAnimation(
+              parent: anim,
+              curve: const Cubic(0.16, 1, 0.3, 1),
+            );
+            return FadeTransition(
+              opacity: anim,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
+                child: child,
+              ),
+            );
+          },
+        ),
+      );
     } else {
       nav.replace(
         oldRoute: route,
-        newRoute: MaterialPageRoute(builder: next),
+        newRoute: PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black.withValues(alpha: 0.65),
+          pageBuilder: (ctx, anim, secAnim) => next(ctx),
+        ),
       );
     }
   }

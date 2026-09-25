@@ -147,44 +147,75 @@ class _CheckPanelState extends State<CheckPanel> {
             hintText: strings.orderHint,
             errorText: _textError,
             filled: true,
-            fillColor: isDark ? const Color(0xFF16233B) : const Color(0xFFF8FAFF),
+            fillColor: isDark
+                ? const Color(0xFF16233B)
+                : const Color(0xFFF8FAFF),
             contentPadding: const EdgeInsets.all(16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF22304A)
+                    : const Color(0xFFE2E8F0),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF22304A)
+                    : const Color(0xFFE2E8F0),
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF3B82F6),
+                width: 1.5,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        FilledButton.icon(
-          key: const Key('check-submit'),
-          onPressed: busy ? null : _checkText,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF2563EB),
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: busy
+                ? null
+                : const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: busy
+                ? null
+                : const [
+                    BoxShadow(
+                      color: Color(0x4D2563EB),
+                      blurRadius: 14,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
           ),
-          icon: _loading == _Mode.text || _loading == _Mode.multi
-              ? const _ButtonSpinner()
-              : const Icon(Icons.search_rounded, size: 18),
-          label: Text(
-            strings.checkRiskButton,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          child: FilledButton.icon(
+            key: const Key('check-submit'),
+            onPressed: busy ? null : _checkText,
+            style: FilledButton.styleFrom(
+              backgroundColor: busy ? null : Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: _loading == _Mode.text || _loading == _Mode.multi
+                ? const _ButtonSpinner()
+                : const Icon(Icons.search_rounded, size: 18),
+            label: Text(
+              strings.checkRiskButton,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
           ),
         ),
         if (_showPhoneInput) ...[
@@ -211,27 +242,50 @@ class _CheckPanelState extends State<CheckPanel> {
   Widget _phoneSection(bool busy) {
     final app = AppColors.of(context);
     final strings = context.strings;
-    return _StatusBox(
-      background: app.neutralBackground,
-      border: app.border,
+    final isDark = context.isDarkMode;
+
+    final warningBg = isDark
+        ? const Color(0x1AF59E0B)
+        : const Color(0xFFFFFBEB);
+    final warningBorder = isDark
+        ? const Color(0x40F59E0B)
+        : const Color(0xFFFDE68A);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: warningBg,
+        border: Border.all(color: warningBorder),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.phone_disabled_outlined, color: app.muted),
-              const SizedBox(width: 12),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Color(0xFFF59E0B),
+                size: 20,
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   strings.isThai ? noPhoneMessage : strings.noPhoneFound,
                   key: const Key('check-no-phone'),
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? const Color(0xFFFDE68A)
+                        : const Color(0xFF92400E),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           TextField(
             key: const Key('check-phone'),
             controller: _phoneController,
@@ -240,18 +294,64 @@ class _CheckPanelState extends State<CheckPanel> {
             decoration: InputDecoration(
               labelText: strings.customerPhoneLabel,
               hintText: strings.customerPhoneHint,
-              prefixIcon: const Icon(Icons.phone_outlined),
+              prefixIcon: const Icon(Icons.phone_outlined, size: 18),
               errorText: _phoneError,
+              filled: true,
+              fillColor: isDark ? const Color(0xFF16233B) : Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark
+                      ? const Color(0xFF22304A)
+                      : const Color(0xFFE2E8F0),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: isDark
+                      ? const Color(0xFF22304A)
+                      : const Color(0xFFE2E8F0),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF3B82F6),
+                  width: 1.5,
+                ),
+              ),
             ),
             onSubmitted: (_) => _checkPhone(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           FilledButton(
             key: const Key('check-phone-submit'),
             onPressed: busy ? null : _checkPhone,
+            style: FilledButton.styleFrom(
+              backgroundColor: isDark
+                  ? const Color(0xFF22304A)
+                  : const Color(0xFFE2E8F0),
+              foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size.fromHeight(44),
+            ),
             child: _loading == _Mode.phone
                 ? const _ButtonSpinner()
-                : Text(strings.checkWithPhoneButton),
+                : Text(
+                    strings.checkWithPhoneButton,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -392,94 +492,150 @@ class _RiskCard extends StatelessWidget {
     final app = AppColors.of(context);
     final strings = context.strings;
     final style = _styleOf(app, result.level);
-    final textTheme = Theme.of(context).textTheme;
-    return Card(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
       key: Key('check-card-${result.level.value}'),
-      color: style.background,
-      shape: RoundedRectangleBorder(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: style.background,
         borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        side: BorderSide(color: style.foreground, width: 1.5),
+        border: Border.all(color: style.foreground, width: 2),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: style.foreground.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(style.icon, color: style.foreground, size: 30),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: style.foreground.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    strings.localizeRiskLevel(result.level.label),
-                    key: const Key('check-level'),
-                    style: textTheme.headlineSmall?.copyWith(
-                      color: style.foreground,
+                child: Icon(style.icon, color: style.foreground, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: style.foreground,
+                        borderRadius: BorderRadius.circular(9999),
+                      ),
+                      child: Text(
+                        strings.localizeRiskLevel(result.level.label),
+                        key: const Key('check-level'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            if (result.aiUnavailable) ...[
-              const SizedBox(height: 12),
-              const _AiUnavailableNote(),
-            ],
-            const SizedBox(height: 16),
-            Text(
-              strings.localizeRecommendation(result.recommendation),
-              key: const Key('check-recommendation'),
-              style: textTheme.titleMedium,
-            ),
-            Divider(height: 32, color: style.foreground.withValues(alpha: 0.3)),
-            _InfoRow(
-              icon: Icons.flag_outlined,
-              child: Text(
-                strings.isThai
-                    ? 'จำนวนรายงาน: ${result.countedReports} รายงาน'
-                    : '${strings.reportCountLabel}: ${result.countedReports}',
-                key: const Key('check-count'),
-                style: textTheme.bodyLarge,
-              ),
-            ),
-            if (result.lastReportPeriod case final period?) ...[
-              const SizedBox(height: 8),
-              _InfoRow(
-                icon: Icons.schedule_outlined,
-                child: Text(
-                  '${strings.latestReportLabel}: ${period.label}',
-                  key: const Key('check-last-report'),
-                  style: textTheme.bodyLarge,
+                    const SizedBox(height: 6),
+                    Text(
+                      strings.localizeRecommendation(result.recommendation),
+                      key: const Key('check-recommendation'),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        color: isDark
+                            ? const Color(0xFFF1F5F9)
+                            : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-            const SizedBox(height: 8),
-            _InfoRow(
-              icon: Icons.person_outline,
-              child: Text(
-                '${strings.customerNameLabel}: ${result.customerName ?? '-'}',
-                key: const Key('check-name'),
-                style: textTheme.bodyLarge,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _InfoRow(
-              icon: Icons.phone_outlined,
-              child: Text(
-                '${strings.phoneLabel}: ${result.phoneMasked}',
-                key: const Key('check-phone-masked'),
-                style: textTheme.bodyLarge,
-              ),
-            ),
+          ),
+          if (result.aiUnavailable) ...[
+            const SizedBox(height: 12),
+            const _AiUnavailableNote(),
           ],
-        ),
+          Divider(
+            height: 32,
+            color: isDark
+                ? const Color(0xFF22304A)
+                : const Color(0xFFE2E8F0).withValues(alpha: 0.8),
+          ),
+          // 2-column info grid
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _InfoRow(
+                      icon: Icons.flag_outlined,
+                      child: Text(
+                        strings.isThai
+                            ? 'จำนวนรายงาน: ${result.countedReports} รายงาน'
+                            : '${strings.reportCountLabel}: ${result.countedReports}',
+                        key: const Key('check-count'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _InfoRow(
+                      icon: Icons.person_outline,
+                      child: Text(
+                        '${strings.customerNameLabel}: ${result.customerName ?? '-'}',
+                        key: const Key('check-name'),
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _InfoRow(
+                      icon: Icons.phone_outlined,
+                      child: Text(
+                        '${strings.phoneLabel}: ${result.phoneMasked}',
+                        key: const Key('check-phone-masked'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (result.lastReportPeriod case final period?) ...[
+                      const SizedBox(height: 10),
+                      _InfoRow(
+                        icon: Icons.calendar_today_outlined,
+                        child: Text(
+                          '${strings.latestReportLabel}: ${period.label}',
+                          key: const Key('check-last-report'),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
