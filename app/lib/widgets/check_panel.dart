@@ -132,6 +132,7 @@ class _CheckPanelState extends State<CheckPanel> {
   Widget build(BuildContext context) {
     final busy = _loading != null;
     final strings = context.strings;
+    final isDark = context.isDarkMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -145,16 +146,46 @@ class _CheckPanelState extends State<CheckPanel> {
           decoration: InputDecoration(
             hintText: strings.orderHint,
             errorText: _textError,
+            filled: true,
+            fillColor: isDark ? const Color(0xFF16233B) : const Color(0xFFF8FAFF),
+            contentPadding: const EdgeInsets.all(16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+            ),
           ),
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
           key: const Key('check-submit'),
           onPressed: busy ? null : _checkText,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF2563EB),
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
           icon: _loading == _Mode.text || _loading == _Mode.multi
               ? const _ButtonSpinner()
-              : const Icon(Icons.shield_outlined),
-          label: Text(strings.checkRiskButton),
+              : const Icon(Icons.search_rounded, size: 18),
+          label: Text(
+            strings.checkRiskButton,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          ),
         ),
         if (_showPhoneInput) ...[
           const SizedBox(height: AppSpacing.section),

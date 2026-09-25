@@ -57,6 +57,29 @@ class AppStrings {
     required this.switchToLight,
     required this.switchToDark,
     required this.close,
+    required this.reportModalTitle,
+    required this.platform,
+    required this.reason,
+    required this.amount,
+    required this.amountHint,
+    required this.specifyPlatform,
+    required this.specifyPlatformHint,
+    required this.specifyPlatformReq,
+    required this.specifyReason,
+    required this.specifyReasonHint,
+    required this.specifyReasonReq,
+    required this.reasonRefused,
+    required this.reasonUnreachable,
+    required this.reasonFakeAddress,
+    required this.reasonOther,
+    required this.submit,
+    required this.submitting,
+    required this.reportSuccess,
+    required this.customerNameHint,
+    required this.customerNameReq,
+    required this.phoneHint,
+    required this.platformReq,
+    required this.reasonReq,
   });
 
   final AppLanguage language;
@@ -102,6 +125,29 @@ class AppStrings {
   final String switchToLight;
   final String switchToDark;
   final String close;
+  final String reportModalTitle;
+  final String platform;
+  final String reason;
+  final String amount;
+  final String amountHint;
+  final String specifyPlatform;
+  final String specifyPlatformHint;
+  final String specifyPlatformReq;
+  final String specifyReason;
+  final String specifyReasonHint;
+  final String specifyReasonReq;
+  final String reasonRefused;
+  final String reasonUnreachable;
+  final String reasonFakeAddress;
+  final String reasonOther;
+  final String submit;
+  final String submitting;
+  final String reportSuccess;
+  final String customerNameHint;
+  final String customerNameReq;
+  final String phoneHint;
+  final String platformReq;
+  final String reasonReq;
 
   bool get isThai => language == AppLanguage.th;
 
@@ -176,6 +222,29 @@ class AppStrings {
     switchToLight: 'เปลี่ยนเป็นธีมสว่าง',
     switchToDark: 'เปลี่ยนเป็นธีมมืด',
     close: 'ปิด',
+    reportModalTitle: 'รายงานลูกค้า COD',
+    platform: 'แพลตฟอร์ม',
+    reason: 'เหตุผล',
+    amount: 'มูลค่าความเสียหาย (บาท)',
+    amountHint: 'เช่น 350 (ไม่บังคับ)',
+    specifyPlatform: 'ระบุแพลตฟอร์ม',
+    specifyPlatformHint: 'เช่น Instagram, เว็บไซต์, หน้าร้าน',
+    specifyPlatformReq: 'กรุณาระบุแพลตฟอร์ม',
+    specifyReason: 'ระบุเหตุผล',
+    specifyReasonHint: 'เช่น สั่งเล่น, แกล้งสั่ง, คืนสินค้าชำรุด',
+    specifyReasonReq: 'กรุณาระบุเหตุผล',
+    reasonRefused: 'ปฏิเสธรับสินค้า',
+    reasonUnreachable: 'ติดต่อไม่ได้',
+    reasonFakeAddress: 'ที่อยู่ปลอมหรือผิด',
+    reasonOther: 'อื่นๆ',
+    submit: 'ส่งข้อมูล',
+    submitting: 'กำลังส่ง...',
+    reportSuccess: 'ส่งรายงานลูกค้าเรียบร้อยแล้ว',
+    customerNameHint: 'เช่น สมชาย ใจดี',
+    customerNameReq: 'กรุณากรอกชื่อลูกค้า',
+    phoneHint: 'เช่น 081-234-5678',
+    platformReq: 'กรุณาเลือกแพลตฟอร์ม',
+    reasonReq: 'กรุณาเลือกเหตุผล',
   );
 
   static const AppStrings en = AppStrings._(
@@ -222,6 +291,29 @@ class AppStrings {
     switchToLight: 'Switch to light mode',
     switchToDark: 'Switch to dark mode',
     close: 'Close',
+    reportModalTitle: 'Report COD Customer',
+    platform: 'Platform',
+    reason: 'Reason',
+    amount: 'Damage Amount (THB)',
+    amountHint: 'e.g. 350 (optional)',
+    specifyPlatform: 'Specify Platform',
+    specifyPlatformHint: 'e.g. Instagram, Website, Storefront',
+    specifyPlatformReq: 'Please specify platform',
+    specifyReason: 'Specify Reason',
+    specifyReasonHint: 'e.g. Prank order, damaged return',
+    specifyReasonReq: 'Please specify reason',
+    reasonRefused: 'Refused delivery',
+    reasonUnreachable: 'Unreachable',
+    reasonFakeAddress: 'Fake / wrong address',
+    reasonOther: 'Other',
+    submit: 'Submit',
+    submitting: 'Submitting...',
+    reportSuccess: 'Report submitted successfully',
+    customerNameHint: 'e.g. John Doe',
+    customerNameReq: 'Please enter customer name',
+    phoneHint: 'e.g. 081-234-5678',
+    platformReq: 'Please select platform',
+    reasonReq: 'Please select reason',
   );
 
   static AppStrings of(AppLanguage lang) {

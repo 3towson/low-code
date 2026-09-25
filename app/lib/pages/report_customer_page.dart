@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/app_settings.dart';
 import '../services/check_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
@@ -252,9 +253,10 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.strings;
     final dropdownRadius = BorderRadius.circular(AppSpacing.controlRadius);
     return Scaffold(
-      appBar: AppBar(title: const Text('รายงานลูกค้า')),
+      appBar: AppBar(title: Text(strings.reportModalTitle)),
       body: PageBody(
         child: Form(
           key: _formKey,
@@ -275,23 +277,24 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                         key: const Key('report-name'),
                         controller: _nameController,
                         enabled: !_submitting,
-                        decoration: const InputDecoration(
-                          labelText: 'ชื่อลูกค้า',
-                          prefixIcon: Icon(Icons.person_outline),
+                        decoration: InputDecoration(
+                          labelText: '${strings.customerNameLabel} *',
+                          hintText: strings.customerNameHint,
+                          prefixIcon: const Icon(Icons.person_outline),
                         ),
                         maxLength: maxCustomerNameLength,
                         textInputAction: TextInputAction.next,
-                        validator: validateCustomerName,
+                        validator: (v) => validateCustomerName(v),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         key: const Key('report-phone'),
                         controller: _phoneController,
                         enabled: !_submitting,
-                        decoration: const InputDecoration(
-                          labelText: 'เบอร์โทร',
-                          hintText: 'เช่น 081-234-5678',
-                          prefixIcon: Icon(Icons.phone_outlined),
+                        decoration: InputDecoration(
+                          labelText: '${strings.phoneLabel} *',
+                          hintText: strings.phoneHint,
+                          prefixIcon: const Icon(Icons.phone_outlined),
                         ),
                         keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.next,
@@ -303,13 +306,16 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                         initialValue: _platform,
                         isExpanded: true,
                         borderRadius: dropdownRadius,
-                        decoration: const InputDecoration(
-                          labelText: 'แพลตฟอร์ม',
-                          prefixIcon: Icon(Icons.storefront_outlined),
+                        decoration: InputDecoration(
+                          labelText: '${strings.platform} *',
+                          prefixIcon: const Icon(Icons.storefront_outlined),
                         ),
                         items: [
                           for (final p in ReportPlatform.values)
-                            DropdownMenuItem(value: p, child: Text(p.label)),
+                            DropdownMenuItem(
+                              value: p,
+                              child: Text(p.localizedLabel(strings)),
+                            ),
                         ],
                         onChanged: _submitting
                             ? null
@@ -320,7 +326,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                                   }
                                 }),
                         validator: (v) =>
-                            v == null ? 'กรุณาเลือกแพลตฟอร์ม' : null,
+                            v == null ? strings.platformReq : null,
                       ),
                       if (_platform == ReportPlatform.other) ...[
                         const SizedBox(height: 12),
@@ -328,15 +334,15 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                           key: const Key('report-platform-other'),
                           controller: _otherPlatformController,
                           enabled: !_submitting,
-                          decoration: const InputDecoration(
-                            labelText: 'ระบุแพลตฟอร์ม',
-                            hintText: 'เช่น Instagram, เว็บไซต์, หน้าร้าน',
-                            prefixIcon: Icon(Icons.edit_note_outlined),
+                          decoration: InputDecoration(
+                            labelText: '${strings.specifyPlatform} *',
+                            hintText: strings.specifyPlatformHint,
+                            prefixIcon: const Icon(Icons.edit_note_outlined),
                           ),
                           textInputAction: TextInputAction.next,
                           validator: (v) => _platform == ReportPlatform.other &&
                                   (v == null || v.trim().isEmpty)
-                              ? 'กรุณาระบุแพลตฟอร์ม'
+                              ? strings.specifyPlatformReq
                               : null,
                         ),
                       ],
@@ -346,13 +352,16 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                         initialValue: _reason,
                         isExpanded: true,
                         borderRadius: dropdownRadius,
-                        decoration: const InputDecoration(
-                          labelText: 'เหตุผล',
-                          prefixIcon: Icon(Icons.help_outline),
+                        decoration: InputDecoration(
+                          labelText: '${strings.reason} *',
+                          prefixIcon: const Icon(Icons.help_outline),
                         ),
                         items: [
                           for (final r in ReportReason.values)
-                            DropdownMenuItem(value: r, child: Text(r.label)),
+                            DropdownMenuItem(
+                              value: r,
+                              child: Text(r.localizedLabel(strings)),
+                            ),
                         ],
                         onChanged: _submitting
                             ? null
@@ -363,7 +372,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                                   }
                                 }),
                         validator: (v) =>
-                            v == null ? 'กรุณาเลือกเหตุผล' : null,
+                            v == null ? strings.reasonReq : null,
                       ),
                       if (_reason == ReportReason.other) ...[
                         const SizedBox(height: 12),
@@ -371,15 +380,15 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                           key: const Key('report-reason-other'),
                           controller: _otherReasonController,
                           enabled: !_submitting,
-                          decoration: const InputDecoration(
-                            labelText: 'ระบุเหตุผลเพิ่มเติม',
-                            hintText: 'เช่น สั่งเล่น, ไม่สะดวกรับ, ขอยกเลิก',
-                            prefixIcon: Icon(Icons.edit_note_outlined),
+                          decoration: InputDecoration(
+                            labelText: '${strings.specifyReason} *',
+                            hintText: strings.specifyReasonHint,
+                            prefixIcon: const Icon(Icons.edit_note_outlined),
                           ),
                           textInputAction: TextInputAction.next,
                           validator: (v) => _reason == ReportReason.other &&
                                   (v == null || v.trim().isEmpty)
-                              ? 'กรุณาระบุเหตุผล'
+                              ? strings.specifyReasonReq
                               : null,
                         ),
                       ],
@@ -388,10 +397,11 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                         key: const Key('report-amount'),
                         controller: _amountController,
                         enabled: !_submitting,
-                        decoration: const InputDecoration(
-                          labelText: 'มูลค่าความเสียหาย (บาท)',
+                        decoration: InputDecoration(
+                          labelText: strings.amount,
+                          hintText: strings.amountHint,
                           helperText: 'ไม่บังคับ',
-                          prefixIcon: Icon(Icons.payments_outlined),
+                          prefixIcon: const Icon(Icons.payments_outlined),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
@@ -409,13 +419,36 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
               FilledButton(
                 key: const Key('report-submit'),
                 onPressed: _submitting || _extracting ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.of(context).danger,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.controlRadius),
+                  ),
+                ),
                 child: _submitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                        ],
                       )
-                    : const Text('บันทึกรายงาน'),
+                    : Text(
+                        strings.submit,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ],
           ),

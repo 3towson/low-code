@@ -67,88 +67,260 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final app = AppColors.of(context);
     final strings = context.strings;
     final isDark = context.isDarkMode;
 
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFF),
       body: PageBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const _Logo(),
-                const Spacer(),
-                IconButton(
-                  key: const Key('theme-toggle-button'),
-                  tooltip: isDark ? strings.switchToLight : strings.switchToDark,
-                  onPressed: () => context.appSettings?.toggleTheme(),
-                  style: IconButton.styleFrom(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    minimumSize: const Size(28, 28),
-                    padding: const EdgeInsets.all(4),
-                  ),
-                  icon: Icon(
-                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                    size: 18,
-                    color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF64748B),
-                  ),
+            // 1. Floating Top Navbar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xE6131D31) : Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
                 ),
-                IconButton(
-                  key: const Key('settings-button'),
-                  tooltip: strings.settings,
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (_) => const SettingsDialog(),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  style: IconButton.styleFrom(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    minimumSize: const Size(28, 28),
-                    padding: const EdgeInsets.all(4),
-                  ),
-                  icon: const Icon(Icons.settings_outlined, size: 18),
-                ),
-                if (widget.signedIn)
-                  _AccountBar(
-                    shopName: widget.authService.shopName,
-                    onSignOut: _signingOut ? null : _signOut,
-                  )
-                else
-                  TextButton.icon(
-                    key: const Key('home-login'),
-                    onPressed: _openLogin,
-                    style: TextButton.styleFrom(
+                ],
+              ),
+              child: Row(
+                children: [
+                  const _Logo(),
+                  const Spacer(),
+                  // Quick Theme Toggle
+                  IconButton(
+                    key: const Key('theme-toggle-button'),
+                    tooltip: isDark ? strings.switchToLight : strings.switchToDark,
+                    onPressed: () => context.appSettings?.toggleTheme(),
+                    style: IconButton.styleFrom(
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      minimumSize: const Size(0, 32),
+                      minimumSize: const Size(28, 28),
+                      padding: const EdgeInsets.all(4),
                     ),
-                    icon: const Icon(Icons.login, size: 16),
-                    label: Text(strings.signIn),
+                    icon: Icon(
+                      isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                      size: 18,
+                      color: isDark ? const Color(0xFFF59E0B) : const Color(0xFF64748B),
+                    ),
                   ),
-              ],
+                  IconButton(
+                    key: const Key('settings-button'),
+                    tooltip: strings.settings,
+                    onPressed: () => showDialog(
+                      context: context,
+                      builder: (_) => const SettingsDialog(),
+                    ),
+                    style: IconButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: const Size(28, 28),
+                      padding: const EdgeInsets.all(4),
+                    ),
+                    icon: Icon(
+                      Icons.settings_outlined,
+                      size: 18,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    ),
+                  ),
+                  if (widget.signedIn)
+                    _AccountBar(
+                      shopName: widget.authService.shopName,
+                      onSignOut: _signingOut ? null : _signOut,
+                    )
+                  else
+                    TextButton.icon(
+                      key: const Key('home-login'),
+                      onPressed: _openLogin,
+                      style: TextButton.styleFrom(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        minimumSize: const Size(0, 32),
+                      ),
+                      icon: const Icon(Icons.login, size: 16),
+                      label: Text(strings.signIn),
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text('COD Risk Shield', style: textTheme.headlineMedium),
+
+            // 2. Centered Hero Header
+            const SizedBox(height: 20),
+            Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF16233B) : const Color(0xFFF1F5F9),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                    ),
+                    borderRadius: BorderRadius.circular(9999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF3B82F6),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'AI Risk Protection for Online Merchants',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF3B82F6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'COD Risk Shield',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               strings.appSubtitle,
-              style: textTheme.bodyLarge?.copyWith(color: app.muted),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
             ),
-            const SizedBox(height: AppSpacing.section),
+            const SizedBox(height: 22),
+
+            // 3. Stats Row
             const _StatsRow(),
-            const SizedBox(height: AppSpacing.section),
-            Text(strings.checkCustomer, style: textTheme.titleMedium),
-            const SizedBox(height: 8),
-            CheckPanel(checkService: widget.checkService),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
+
+            // 4. Check Customer Panel Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xE6131D31) : Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          strings.checkCustomer,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF16233B) : const Color(0xFFEFF6FF),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFBFDBFE),
+                          ),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shield_outlined, size: 13, color: Color(0xFF3B82F6)),
+                            SizedBox(width: 4),
+                            Text(
+                              'AI Powered',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF3B82F6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  CheckPanel(checkService: widget.checkService),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // 5. Report Customer CTA Button
             OutlinedButton.icon(
               key: const Key('home-report'),
               onPressed: _openReport,
-              icon: const Icon(Icons.report_outlined),
-              label: Text(strings.reportCustomer),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                side: const BorderSide(color: Color(0xFFDC2626), width: 1.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                backgroundColor: isDark
+                    ? const Color(0x20DC2626)
+                    : const Color(0x0CDC2626),
+              ),
+              icon: const Icon(Icons.error_outline_rounded, size: 18, color: Color(0xFFDC2626)),
+              label: Text(
+                strings.reportCustomer,
+                style: const TextStyle(
+                  color: Color(0xFFDC2626),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
             ),
+
+            // 6. Footer
+            const SizedBox(height: 32),
+            Text(
+              '© 2026 COD Risk Shield — ระบบตรวจสอบและป้องกันพัสดุตีกลับสำหรับร้านค้าออนไลน์',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -161,29 +333,28 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Container(
-      width: 46,
-      height: 46,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            colors.primary,
-            const Color(0xFF3B82F6),
+            Color(0xFF2563EB),
+            Color(0xFF3B82F6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
           BoxShadow(
-            color: colors.primary.withOpacity(0.4),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: Color(0x402563EB),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
-      child: Icon(Icons.verified_user_rounded, color: colors.onPrimary, size: 26),
+      child: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 22),
     );
   }
 }
@@ -197,33 +368,51 @@ class _AccountBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app = AppColors.of(context);
+    final isDark = context.isDarkMode;
     final strings = context.strings;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.storefront_outlined, size: 18, color: app.muted),
-        const SizedBox(width: 4),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 80),
-          child: Text(
-            shopName,
-            key: const Key('home-shop-name'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge
-                ?.copyWith(color: app.muted),
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.only(left: 10, right: 4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF16233B) : const Color(0xFFF1F5F9),
+        border: Border.all(
+          color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
+        ),
+        borderRadius: BorderRadius.circular(9999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.storefront_outlined,
+            size: 15,
+            color: isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB),
           ),
-        ),
-        IconButton(
-          key: const Key('home-logout'),
-          tooltip: strings.signOut,
-          onPressed: onSignOut,
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          icon: const Icon(Icons.logout, size: 18),
-        ),
-      ],
+          const SizedBox(width: 5),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 80),
+            child: Text(
+              shopName,
+              key: const Key('home-shop-name'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
+          IconButton(
+            key: const Key('home-logout'),
+            tooltip: strings.signOut,
+            onPressed: onSignOut,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            icon: Icon(
+              Icons.logout_rounded,
+              size: 15,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -244,7 +433,7 @@ class _StatsRow extends StatelessWidget {
             icon: Icons.storefront_outlined,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: _StatTile(
             value: strings.protectedCount,
@@ -252,7 +441,7 @@ class _StatsRow extends StatelessWidget {
             icon: Icons.shield_outlined,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: _StatTile(
             value: strings.savedCount,
@@ -278,50 +467,60 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).colorScheme;
-    final app = AppColors.of(context);
-    return Card(
-      elevation: 0,
-      color: app.card.withOpacity(0.85),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: app.border.withOpacity(0.8)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: colors.primary.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 16, color: colors.primary),
-            ),
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colors.onSurface,
-                ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: textTheme.bodySmall?.copyWith(
-                color: app.muted,
-                fontSize: 11,
-              ),
-            ),
-          ],
+    final isDark = context.isDarkMode;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xE6131D31) : Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF16233B) : const Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: const Color(0xFF3B82F6)),
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

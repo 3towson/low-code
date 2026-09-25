@@ -10,12 +10,16 @@ class PageBody extends StatelessWidget {
     super.key,
     required this.child,
     this.centerVertically = false,
+    this.wrapInCard = false,
   });
 
   final Widget child;
 
   /// จัดเนื้อหาให้อยู่กลางจอแนวตั้งเมื่อเนื้อหาสั้นกว่าจอ
   final bool centerVertically;
+
+  /// ครอบเนื้อหาทั้งหมดในการ์ดใหญ่บนจอ desktop (เช่น หน้า Login/Register)
+  final bool wrapInCard;
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +29,13 @@ class PageBody extends StatelessWidget {
 
     return Stack(
       children: [
-        if (isDark)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _AmbientGlowPainter(primary: primary),
-              ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _AmbientGlowPainter(primary: primary, isDark: isDark),
             ),
           ),
+        ),
         SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -54,7 +57,7 @@ class PageBody extends StatelessWidget {
                       constraints: const BoxConstraints(
                         maxWidth: AppSpacing.maxContentWidth,
                       ),
-                      child: isDesktop
+                      child: (isDesktop && wrapInCard)
                           ? Container(
                               padding: const EdgeInsets.all(28),
                               decoration: BoxDecoration(
@@ -93,39 +96,31 @@ class PageBody extends StatelessWidget {
 }
 
 class _AmbientGlowPainter extends CustomPainter {
-  const _AmbientGlowPainter({required this.primary});
+  const _AmbientGlowPainter({required this.primary, required this.isDark});
   final Color primary;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    final topOpacity = isDark ? 0.22 : 0.08;
+    final midOpacity = isDark ? 0.06 : 0.02;
+
     final paint1 = Paint()
       ..shader = RadialGradient(
         center: const Alignment(0, -0.9),
         radius: 1.2,
         colors: [
-          primary.withOpacity(0.18),
-          primary.withOpacity(0.05),
+          primary.withOpacity(topOpacity),
+          primary.withOpacity(midOpacity),
           Colors.transparent,
         ],
-        stops: const [0.0, 0.4, 1.0],
+        stops: const [0.0, 0.45, 1.0],
       ).createShader(rect);
     canvas.drawRect(rect, paint1);
-
-    final paint2 = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(0.8, 0.8),
-        radius: 1.0,
-        colors: [
-          const Color(0xFF06B6D4).withOpacity(0.08),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 1.0],
-      ).createShader(rect);
-    canvas.drawRect(rect, paint2);
   }
 
   @override
   bool shouldRepaint(covariant _AmbientGlowPainter oldDelegate) =>
-      oldDelegate.primary != primary;
+      oldDelegate.primary != primary || oldDelegate.isDark != isDark;
 }

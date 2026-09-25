@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../localization/app_strings.dart';
+
 /// ค่า platform ที่ Edge Function รับ ([value] คือค่าที่ส่งจริง)
 enum ReportPlatform {
   shopee('shopee', 'Shopee'),
@@ -15,6 +17,11 @@ enum ReportPlatform {
 
   final String value;
   final String label;
+
+  String localizedLabel(AppStrings strings) {
+    if (this == other) return strings.reasonOther;
+    return label;
+  }
 }
 
 /// ค่า reason ที่ Edge Function รับ ([value] คือค่าที่ส่งจริง)
@@ -28,6 +35,19 @@ enum ReportReason {
 
   final String value;
   final String label;
+
+  String localizedLabel(AppStrings strings) {
+    switch (this) {
+      case refusedDelivery:
+        return strings.reasonRefused;
+      case unreachable:
+        return strings.reasonUnreachable;
+      case fakeAddress:
+        return strings.reasonFakeAddress;
+      case other:
+        return strings.reasonOther;
+    }
+  }
 }
 
 class ReportInput {

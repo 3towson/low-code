@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// ระยะและขนาดที่ใช้ร่วมกันทุกหน้า
 abstract final class AppSpacing {
-  static const double maxContentWidth = 480;
+  static const double maxContentWidth = 680;
   static const double pageHorizontal = 20;
   static const double section = 24;
   static const EdgeInsets page = EdgeInsets.symmetric(
