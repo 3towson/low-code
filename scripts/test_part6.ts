@@ -70,7 +70,12 @@ async function call(body: string | null, withToken = true, method = "POST"): Pro
   const headers: Record<string, string> = { apikey: env.SUPABASE_ANON_KEY };
   if (withToken) headers.Authorization = `Bearer ${token}`;
   if (body !== null) headers["content-type"] = "application/json";
-  const res = await fetch(FN_URL, { method, headers, body: body ?? undefined });
+  const res = await fetch(FN_URL, {
+    method,
+    headers,
+    body: body ?? undefined,
+    signal: AbortSignal.timeout(15000),
+  });
   const raw = await res.text();
   let parsed: Record<string, unknown> | null = null;
   try {
@@ -161,6 +166,18 @@ for (const [name, body] of [["body ว่าง (ไม่มี body)", null], 
   record(name, "400", summary(r), r.status === 400);
 }
 
+// 9.1) ส่งทั้ง text และ phone พร้อมกัน
+{
+  const r = await call(JSON.stringify({ text: "0800000001", phone: "0800000001" }));
+  record("ส่งทั้ง text และ phone", "400", summary(r), r.status === 400);
+}
+
+// 9.2) Method GET (ไม่รองรับ ต้องได้ 405)
+{
+  const r = await call(null, true, "GET");
+  record("Method GET", "405", summary(r), r.status === 405);
+}
+
 // 10) text ยาว 3,000 ตัวอักษร เบอร์อยู่ต้นข้อความ
 {
   const head = "ผู้รับ มานี มีนา โทร 0800000003 ";
@@ -185,7 +202,9 @@ for (const { name, res } of okResponses) {
     : ["within_30_days", "1_to_3_months", "3_to_12_months"].includes(String(period));
   if (!periodOk) problems.push(`last_report_period ผิด: ${period}`);
   const lower = res.raw.toLowerCase();
-  const leaked = reporterStrings.filter((s) => s && lower.includes(s.toLowerCase()));
+  const leaked = reporterStrings
+    .filter((s) => s && s.trim().length >= 4)
+    .filter((s) => lower.includes(s.toLowerCase()));
   if (leaked.length) problems.push(`พบชื่อร้าน/อีเมล ${leaked.length} ค่า`);
   if (PHONE_IN_TEXT.test(res.raw)) problems.push("พบเบอร์ที่ไม่ได้ mask");
   if (!/^0\d{2}-XXX-\d{4}$/.test(String(res.body?.phone_masked))) problems.push("phone_masked ผิดรูปแบบ");

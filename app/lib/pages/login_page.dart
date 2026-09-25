@@ -77,14 +77,28 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Center(
                 child: Container(
-                  width: 72,
-                  height: 72,
+                  width: 76,
+                  height: 76,
                   decoration: BoxDecoration(
-                    color: colors.primary,
-                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      colors: [
+                        colors.primary,
+                        const Color(0xFF3B82F6),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.primary.withOpacity(0.4),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Icon(Icons.verified_user_rounded,
-                      size: 40, color: colors.onPrimary),
+                      size: 42, color: colors.onPrimary),
                 ),
               ),
               const SizedBox(height: 16),

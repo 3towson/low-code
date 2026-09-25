@@ -56,16 +56,16 @@ class AppColors extends ThemeExtension<AppColors> {
   );
 
   static const dark = AppColors(
-    border: Color(0xFF334155),
+    border: Color(0xFF22304A),
     muted: Color(0xFF94A3B8),
-    card: Color(0xFF1E293B),
-    success: Color(0xFF22C55E),
-    successBackground: Color(0xFF052E16),
+    card: Color(0xFF131D31),
+    success: Color(0xFF10B981),
+    successBackground: Color(0xFF042B1F),
     warning: Color(0xFFF59E0B),
-    warningBackground: Color(0xFF1C0A00),
+    warningBackground: Color(0xFF281802),
     danger: Color(0xFFEF4444),
-    dangerBackground: Color(0xFF1C0505),
-    neutralBackground: Color(0xFF1E293B),
+    dangerBackground: Color(0xFF2E090F),
+    neutralBackground: Color(0xFF16233B),
   );
 
   /// ถ้า theme ไม่มี extension นี้ (เช่นในเทสต์) ใช้ค่า light
@@ -225,9 +225,13 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: _onPrimary,
           minimumSize: controlSize,
           shape: controlShape,
           textStyle: buttonText,
+          elevation: isDark ? 2 : 0,
+          shadowColor: isDark ? primary.withOpacity(0.35) : Colors.transparent,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -235,7 +239,10 @@ abstract final class AppTheme {
           minimumSize: controlSize,
           shape: controlShape,
           textStyle: buttonText,
-          side: BorderSide(color: primary, width: 1.5),
+          side: BorderSide(
+            color: isDark ? primary.withOpacity(0.7) : primary,
+            width: 1.5,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(

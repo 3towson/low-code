@@ -124,13 +124,27 @@ class _Logo extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      width: 44,
-      height: 44,
+      width: 46,
+      height: 46,
       decoration: BoxDecoration(
-        color: colors.primary,
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            colors.primary,
+            const Color(0xFF3B82F6),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: colors.primary.withOpacity(0.4),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Icon(Icons.verified_user_rounded, color: colors.onPrimary),
+      child: Icon(Icons.verified_user_rounded, color: colors.onPrimary, size: 26),
     );
   }
 }
@@ -181,15 +195,27 @@ class _StatsRow extends StatelessWidget {
     return const Row(
       children: [
         Expanded(
-          child: _StatTile(value: '2,480+', label: 'ร้านค้า'),
+          child: _StatTile(
+            value: '2,480+',
+            label: 'ร้านค้า',
+            icon: Icons.storefront_outlined,
+          ),
         ),
         SizedBox(width: 8),
         Expanded(
-          child: _StatTile(value: '18,340 ชิ้น', label: 'ป้องกันแล้ว'),
+          child: _StatTile(
+            value: '18,340 ชิ้น',
+            label: 'ป้องกันแล้ว',
+            icon: Icons.shield_outlined,
+          ),
         ),
         SizedBox(width: 8),
         Expanded(
-          child: _StatTile(value: '฿917,000', label: 'ประหยัดได้'),
+          child: _StatTile(
+            value: '฿917,000',
+            label: 'ประหยัดได้',
+            icon: Icons.trending_up_rounded,
+          ),
         ),
       ],
     );
@@ -197,10 +223,15 @@ class _StatsRow extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.value, required this.label});
+  const _StatTile({
+    required this.value,
+    required this.label,
+    required this.icon,
+  });
 
   final String value;
   final String label;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -208,22 +239,43 @@ class _StatTile extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final app = AppColors.of(context);
     return Card(
+      elevation: 0,
+      color: app.card.withOpacity(0.85),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: app.border.withOpacity(0.8)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
         child: Column(
           children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: colors.primary.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: colors.primary),
+            ),
+            const SizedBox(height: 6),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
-                style: textTheme.titleLarge?.copyWith(color: colors.primary),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: textTheme.bodySmall?.copyWith(color: app.muted),
+              style: textTheme.bodySmall?.copyWith(
+                color: app.muted,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
