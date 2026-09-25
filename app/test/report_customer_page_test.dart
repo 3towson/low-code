@@ -161,4 +161,56 @@ void main() {
     // ล้างแล้วต้องไม่มีข้อความเตือนค้าง
     expect(find.text('กรุณากรอกชื่อลูกค้า'), findsNothing);
   });
+
+  testWidgets(
+      'เลือกแพลตฟอร์มหรือเหตุผลเป็นอื่นๆ จะมีช่องกรอกข้อความเพิ่มขึ้นมาและต้องกรอก',
+      (tester) async {
+    final service = FakeReportService();
+    await _pumpPage(tester, service);
+
+    // ยังไม่ได้เลือก 'อื่นๆ' ต้องยังไม่เจอช่องกรอกเพิ่ม
+    expect(find.byKey(const Key('report-platform-other')), findsNothing);
+    expect(find.byKey(const Key('report-reason-other')), findsNothing);
+
+    // กรอกข้อมูลทั่วไป
+    await tester.enterText(find.byKey(const Key('report-name')), 'สมชาย ทดสอบ');
+    await tester.enterText(find.byKey(const Key('report-phone')), '081-234-5678');
+
+    // เลือกแพลตฟอร์มเป็น 'อื่นๆ'
+    await _select(tester, 'report-platform', 'อื่นๆ');
+    expect(find.byKey(const Key('report-platform-other')), findsOneWidget);
+
+    // เลือกเหตุผลเป็น 'อื่นๆ'
+    await _select(tester, 'report-reason', 'อื่นๆ');
+    expect(find.byKey(const Key('report-reason-other')), findsOneWidget);
+
+    // กดส่งขณะที่ยังไม่ได้กรอกช่องอื่นๆ
+    await _tapSubmit(tester);
+    expect(find.text('กรุณาระบุแพลตฟอร์ม'), findsOneWidget);
+    expect(find.text('กรุณาระบุเหตุผล'), findsOneWidget);
+    expect(service.inputs, isEmpty);
+
+    // กรอกช่องอื่นๆ
+    await tester.enterText(
+        find.byKey(const Key('report-platform-other')), 'Instagram');
+    await tester.enterText(
+        find.byKey(const Key('report-reason-other')), 'เปลี่ยนใจไม่รับ');
+
+    await _tapSubmit(tester);
+    expect(service.inputs, hasLength(1));
+    expect(service.inputs.single.toJson(), {
+      'customer_name': 'สมชาย ทดสอบ',
+      'phone': '081-234-5678',
+      'platform': 'other',
+      'reason': 'other',
+    });
+
+    service.respond(const ReportSuccess());
+    await tester.pump();
+
+    // หลังส่งสำเร็จ ฟอร์มต้องถูกรีเซ็ต
+    expect(find.byKey(const Key('report-platform-other')), findsNothing);
+    expect(find.byKey(const Key('report-reason-other')), findsNothing);
+  });
 }
+
