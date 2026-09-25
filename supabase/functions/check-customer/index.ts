@@ -5,6 +5,7 @@
 
 import { createClient, type User } from "npm:@supabase/supabase-js@2";
 import { extractOrderInfo, geminiClientFromEnv } from "../_shared/extract.ts";
+import { reportPeriod } from "../_shared/period.ts";
 import { hashPhone, maskPhone, normalizeThaiPhone } from "../_shared/phone.ts";
 
 const CORS_HEADERS = {
@@ -101,6 +102,8 @@ Deno.serve(async (req) => {
       recommendation: RECOMMENDATION[risk.level],
       customer_name: customerName,
       phone_masked: maskPhone(normalized),
+      // ส่งแค่ช่วงเวลา ห้ามส่ง last_report_at จริง
+      last_report_period: reportPeriod(risk.last_report_at),
       ai_unavailable: aiUnavailable,
     });
   } catch (e) {

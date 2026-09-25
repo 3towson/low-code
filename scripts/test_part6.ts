@@ -19,6 +19,7 @@ const ALLOWED_KEYS = [
   "recommendation",
   "customer_name",
   "phone_masked",
+  "last_report_period",
   "ai_unavailable",
 ].sort();
 
@@ -176,6 +177,13 @@ for (const { name, res } of okResponses) {
   }
   if (/[0-9a-f]{64}/i.test(res.raw)) problems.push("พบ hex 64 ตัว");
   if (EMAIL.test(res.raw)) problems.push("พบอีเมล");
+  // ต้องเป็นช่วงเวลาเท่านั้น ห้ามมีวันที่ของรายงาน
+  if (/\d{4}-\d{2}-\d{2}/.test(res.raw)) problems.push("พบวันที่");
+  const period = res.body?.last_report_period;
+  const periodOk = res.body?.level === "green"
+    ? period === null
+    : ["within_30_days", "1_to_3_months", "3_to_12_months"].includes(String(period));
+  if (!periodOk) problems.push(`last_report_period ผิด: ${period}`);
   const lower = res.raw.toLowerCase();
   const leaked = reporterStrings.filter((s) => s && lower.includes(s.toLowerCase()));
   if (leaked.length) problems.push(`พบชื่อร้าน/อีเมล ${leaked.length} ค่า`);

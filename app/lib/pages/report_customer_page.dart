@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/check_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
 import '../utils/phone_utils.dart';
@@ -37,9 +38,16 @@ String? validateDamageAmount(String? value) {
 }
 
 class ReportCustomerPage extends StatefulWidget {
-  const ReportCustomerPage({super.key, required this.reportService});
+  const ReportCustomerPage({
+    super.key,
+    required this.reportService,
+    this.checkService,
+  });
 
   final ReportService reportService;
+
+  /// ใช้กับปุ่ม "AI สกัดข้อมูล" ถ้าไม่ส่งมาจะไม่แสดงช่องวางแชท
+  final CheckService? checkService;
 
   @override
   State<ReportCustomerPage> createState() => _ReportCustomerPageState();
@@ -50,12 +58,16 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
+  final _chatController = TextEditingController();
   ReportPlatform? _platform;
   ReportReason? _reason;
   bool _submitting = false;
+  bool _extracting = false;
+  _AiMessage? _aiMessage;
 
   @override
   void dispose() {
+    _chatController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
@@ -64,7 +76,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
 
   Future<void> _submit() async {
     // ตั้ง _submitting ก่อน await ใดๆ กดรัวๆ จึงส่งได้ครั้งเดียว
-    if (_submitting) return;
+    if (_submitting || _extracting) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     if (!_formKey.currentState!.validate()) return;
 
@@ -84,6 +96,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         _formKey.currentState!.reset();
         _platform = null;
         _reason = null;
+        _aiMessage = null;
       }
     });
     switch (result) {
@@ -98,6 +111,63 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
       case ReportNoInternet(:final message):
         _showMessage(message, isError: true);
     }
+  }
+
+  /// ส่งข้อความแชทให้ check-customer แยกชื่อและเบอร์ แล้วกรอกลงฟอร์มให้
+  /// ผู้ใช้แก้ไขต่อได้ตามปกติ ไม่กรอกทับช่องที่ server ไม่ได้ส่งค่ามา
+  Future<void> _extract() async {
+    final service = widget.checkService;
+    if (service == null || _extracting || _submitting) return;
+    final text = _chatController.text.trim();
+    if (text.isEmpty) {
+      setState(() => _aiMessage =
+          const _AiMessage('กรุณาวางข้อความแชทก่อน', _AiTone.error));
+      return;
+    }
+
+    setState(() {
+      _extracting = true;
+      _aiMessage = null;
+    });
+    final result = await service.checkText(text);
+    if (!mounted) return;
+
+    setState(() {
+      _extracting = false;
+      _aiMessage = switch (result) {
+        CheckOk(:final customerName, :final phone, :final phoneMasked) =>
+          _fillFromAi(customerName, phone, phoneMasked),
+        CheckNoPhone() => const _AiMessage(
+          'ไม่พบเบอร์โทรในข้อความ กรุณากรอกเอง',
+          _AiTone.warning,
+        ),
+        CheckInvalidPhone(:final message) => _AiMessage(message, _AiTone.error),
+        CheckNoInternet(:final message) => _AiMessage(message, _AiTone.error),
+        CheckError(:final message) => _AiMessage(message, _AiTone.error),
+      };
+    });
+  }
+
+  _AiMessage _fillFromAi(String? name, String? phone, String phoneMasked) {
+    if (name != null) _nameController.text = name.trim();
+    if (phone != null) _phoneController.text = phone.trim();
+
+    final filled = [
+      if (name != null) 'ชื่อ',
+      if (phone != null) 'เบอร์โทร',
+    ].join('และ');
+    if (phone != null) {
+      return _AiMessage(
+        'กรอก$filledให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
+        _AiTone.success,
+      );
+    }
+    // server ส่งมาแค่เบอร์ที่ mask แล้ว ผู้ใช้ต้องกรอกเบอร์เต็มเอง
+    final prefix = filled.isEmpty ? '' : 'กรอก$filledให้แล้ว ';
+    return _AiMessage(
+      '$prefixพบเบอร์ $phoneMasked กรุณากรอกเบอร์เต็มเอง',
+      _AiTone.warning,
+    );
   }
 
   /// ผลการส่ง: สำเร็จเป็น SnackBar สีเขียว error เป็นสีแดง
@@ -127,6 +197,53 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
       ));
   }
 
+  /// ช่องวางแชทลูกค้าและปุ่มให้ AI ช่วยกรอกชื่อและเบอร์
+  Widget _buildAiCard(BuildContext context) {
+    final busy = _extracting || _submitting;
+    final message = _aiMessage;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextFormField(
+              key: const Key('report-chat'),
+              controller: _chatController,
+              enabled: !busy,
+              minLines: 3,
+              maxLines: 6,
+              keyboardType: TextInputType.multiline,
+              decoration: const InputDecoration(
+                labelText: 'วางข้อความแชทลูกค้า',
+                hintText: 'วางแชทหรือข้อความออเดอร์ที่นี่...',
+                helperText: 'AI จะช่วยกรอกชื่อและเบอร์ให้ แก้ไขเองได้ภายหลัง',
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('report-ai-extract'),
+              onPressed: busy ? null : _extract,
+              icon: _extracting
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome_outlined),
+              label: Text(_extracting ? 'กำลังสกัดข้อมูล...' : 'AI สกัดข้อมูล'),
+            ),
+            if (message != null) ...[
+              const SizedBox(height: 12),
+              _AiMessageView(message: message),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dropdownRadius = BorderRadius.circular(AppSpacing.controlRadius);
@@ -138,6 +255,10 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.checkService != null) ...[
+                _buildAiCard(context),
+                const SizedBox(height: 16),
+              ],
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -235,7 +356,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
               const SizedBox(height: AppSpacing.section),
               FilledButton(
                 key: const Key('report-submit'),
-                onPressed: _submitting ? null : _submit,
+                onPressed: _submitting || _extracting ? null : _submit,
                 child: _submitting
                     ? const SizedBox(
                         height: 20,
@@ -248,6 +369,47 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+enum _AiTone { success, warning, error }
+
+/// ข้อความผลการสกัดข้อมูล แสดงใต้ปุ่ม "AI สกัดข้อมูล"
+class _AiMessage {
+  const _AiMessage(this.text, this.tone);
+
+  final String text;
+  final _AiTone tone;
+}
+
+class _AiMessageView extends StatelessWidget {
+  const _AiMessageView({required this.message});
+
+  final _AiMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppColors.of(context);
+    final (color, icon) = switch (message.tone) {
+      _AiTone.success => (app.success, Icons.check_circle_outline),
+      _AiTone.warning => (app.warning, Icons.info_outline),
+      _AiTone.error => (app.danger, Icons.error_outline),
+    };
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message.text,
+            key: const Key('report-ai-message'),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }

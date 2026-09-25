@@ -37,6 +37,7 @@ const ALLOWED_CHECK_FIELDS = new Set([
   "recommendation",
   "customer_name",
   "phone_masked",
+  "last_report_period",
   "ai_unavailable",
 ]);
 

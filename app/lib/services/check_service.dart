@@ -25,6 +25,26 @@ enum RiskLevel {
   }
 }
 
+/// ช่วงเวลาของรายงานล่าสุด server ส่งมาแค่ช่วงคร่าวๆ ไม่ส่งวันที่จริง
+/// เพื่อไม่ให้เดาได้ว่าร้านไหนเป็นผู้รายงาน
+enum ReportPeriod {
+  within30Days('within_30_days', 'ภายใน 30 วันที่ผ่านมา'),
+  oneToThreeMonths('1_to_3_months', '1–3 เดือนที่แล้ว'),
+  threeToTwelveMonths('3_to_12_months', '3–12 เดือนที่แล้ว');
+
+  const ReportPeriod(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  static ReportPeriod? fromValue(Object? v) {
+    for (final p in values) {
+      if (p.value == v) return p;
+    }
+    return null;
+  }
+}
+
 /// ผลการตรวจสอบลูกค้า
 sealed class CheckResult {
   const CheckResult();
@@ -37,6 +57,8 @@ class CheckOk extends CheckResult {
     required this.recommendation,
     required this.phoneMasked,
     this.customerName,
+    this.phone,
+    this.lastReportPeriod,
     this.aiUnavailable = false,
   });
 
@@ -49,6 +71,13 @@ class CheckOk extends CheckResult {
 
   /// ชื่อที่แยกได้จากข้อความของผู้ใช้เอง (null เมื่อตรวจด้วยเบอร์ หรือแยกชื่อไม่ได้)
   final String? customerName;
+
+  /// เบอร์เต็มที่แยกได้จากข้อความของผู้ใช้เอง ถ้า server ส่งมา
+  /// (ตอนนี้ check-customer ส่งมาแค่ [phoneMasked] ค่านี้จึงเป็น null)
+  final String? phone;
+
+  /// ช่วงเวลาของรายงานล่าสุด (null เมื่อไม่มีรายงานที่นับ)
+  final ReportPeriod? lastReportPeriod;
 
   /// true เมื่อระบบแยกชื่ออัตโนมัติ (AI) ใช้ไม่ได้ ผลจึงมาจาก regex อย่างเดียว
   final bool aiUnavailable;
@@ -170,6 +199,8 @@ CheckResult checkResultFromData(Object? data) {
         recommendation: recommendation,
         phoneMasked: masked,
         customerName: _nonEmptyString(data['customer_name']),
+        phone: _nonEmptyString(data['phone']),
+        lastReportPeriod: ReportPeriod.fromValue(data['last_report_period']),
         aiUnavailable: data['ai_unavailable'] == true,
       );
     default:

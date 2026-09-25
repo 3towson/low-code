@@ -412,6 +412,17 @@ class _RiskCard extends StatelessWidget {
                 style: textTheme.bodyLarge,
               ),
             ),
+            if (result.lastReportPeriod case final period?) ...[
+              const SizedBox(height: 8),
+              _InfoRow(
+                icon: Icons.schedule_outlined,
+                child: Text(
+                  'รายงานล่าสุด: ${period.label}',
+                  key: const Key('check-last-report'),
+                  style: textTheme.bodyLarge,
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             _InfoRow(
               icon: Icons.person_outline,
@@ -603,6 +614,17 @@ class _OrderResultTile extends StatelessWidget {
               style: textTheme.bodyLarge,
             ),
           ),
+          if (result.lastReportPeriod case final period?) ...[
+            const SizedBox(height: 8),
+            _InfoRow(
+              icon: Icons.schedule_outlined,
+              child: Text(
+                'รายงานล่าสุด: ${period.label}',
+                key: Key('multi-last-report-$index'),
+                style: textTheme.bodyLarge,
+              ),
+            ),
+          ],
           if (result.aiUnavailable) ...[
             const SizedBox(height: 8),
             const _AiUnavailableNote(),

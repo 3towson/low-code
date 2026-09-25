@@ -52,8 +52,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openReport() {
-    Widget report(BuildContext _) =>
-        ReportCustomerPage(reportService: widget.reportService);
+    Widget report(BuildContext _) => ReportCustomerPage(
+      reportService: widget.reportService,
+      checkService: widget.checkService,
+    );
     if (widget.signedIn) {
       Navigator.of(context).push(MaterialPageRoute(builder: report));
     } else {
