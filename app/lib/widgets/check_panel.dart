@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/app_settings.dart';
 import '../services/check_service.dart';
 import '../theme.dart';
 import '../utils/order_splitter.dart';
@@ -52,7 +53,7 @@ class _CheckPanelState extends State<CheckPanel> {
   void _checkText() {
     final text = _textController.text;
     if (text.trim().isEmpty) {
-      setState(() => _textError = 'กรุณาวางข้อความออเดอร์');
+      setState(() => _textError = context.strings.orderEmptyError);
       return;
     }
     setState(() {
@@ -130,6 +131,7 @@ class _CheckPanelState extends State<CheckPanel> {
   @override
   Widget build(BuildContext context) {
     final busy = _loading != null;
+    final strings = context.strings;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -141,7 +143,7 @@ class _CheckPanelState extends State<CheckPanel> {
           maxLines: 10,
           keyboardType: TextInputType.multiline,
           decoration: InputDecoration(
-            hintText: 'วางข้อความออเดอร์ แชตลูกค้า หรือที่อยู่จัดส่งที่นี่...',
+            hintText: strings.orderHint,
             errorText: _textError,
           ),
         ),
@@ -152,7 +154,7 @@ class _CheckPanelState extends State<CheckPanel> {
           icon: _loading == _Mode.text || _loading == _Mode.multi
               ? const _ButtonSpinner()
               : const Icon(Icons.shield_outlined),
-          label: const Text('ตรวจสอบความเสี่ยง'),
+          label: Text(strings.checkRiskButton),
         ),
         if (_showPhoneInput) ...[
           const SizedBox(height: AppSpacing.section),
@@ -177,6 +179,7 @@ class _CheckPanelState extends State<CheckPanel> {
 
   Widget _phoneSection(bool busy) {
     final app = AppColors.of(context);
+    final strings = context.strings;
     return _StatusBox(
       background: app.neutralBackground,
       border: app.border,
@@ -190,7 +193,7 @@ class _CheckPanelState extends State<CheckPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  noPhoneMessage,
+                  strings.isThai ? noPhoneMessage : strings.noPhoneFound,
                   key: const Key('check-no-phone'),
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
@@ -204,8 +207,8 @@ class _CheckPanelState extends State<CheckPanel> {
             enabled: !busy,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
-              labelText: 'เบอร์โทรลูกค้า',
-              hintText: 'เช่น 081-234-5678',
+              labelText: strings.customerPhoneLabel,
+              hintText: strings.customerPhoneHint,
               prefixIcon: const Icon(Icons.phone_outlined),
               errorText: _phoneError,
             ),
@@ -217,7 +220,7 @@ class _CheckPanelState extends State<CheckPanel> {
             onPressed: busy ? null : _checkPhone,
             child: _loading == _Mode.phone
                 ? const _ButtonSpinner()
-                : const Text('ตรวจสอบด้วยเบอร์'),
+                : Text(strings.checkWithPhoneButton),
           ),
         ],
       ),
@@ -241,7 +244,7 @@ class _CheckPanelState extends State<CheckPanel> {
             key: const Key('check-retry'),
             onPressed: _loading != null ? null : _retry,
             icon: const Icon(Icons.refresh),
-            label: const Text('ลองใหม่'),
+            label: Text(context.strings.retry),
           ),
         );
     }
@@ -356,6 +359,7 @@ class _RiskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppColors.of(context);
+    final strings = context.strings;
     final style = _styleOf(app, result.level);
     final textTheme = Theme.of(context).textTheme;
     return Card(
@@ -384,7 +388,7 @@ class _RiskCard extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    result.level.label,
+                    strings.localizeRiskLevel(result.level.label),
                     key: const Key('check-level'),
                     style: textTheme.headlineSmall?.copyWith(
                       color: style.foreground,
@@ -399,7 +403,7 @@ class _RiskCard extends StatelessWidget {
             ],
             const SizedBox(height: 16),
             Text(
-              result.recommendation,
+              strings.localizeRecommendation(result.recommendation),
               key: const Key('check-recommendation'),
               style: textTheme.titleMedium,
             ),
@@ -407,7 +411,9 @@ class _RiskCard extends StatelessWidget {
             _InfoRow(
               icon: Icons.flag_outlined,
               child: Text(
-                'จำนวนรายงาน: ${result.countedReports} รายงาน',
+                strings.isThai
+                    ? 'จำนวนรายงาน: ${result.countedReports} รายงาน'
+                    : '${strings.reportCountLabel}: ${result.countedReports}',
                 key: const Key('check-count'),
                 style: textTheme.bodyLarge,
               ),
@@ -417,7 +423,7 @@ class _RiskCard extends StatelessWidget {
               _InfoRow(
                 icon: Icons.schedule_outlined,
                 child: Text(
-                  'รายงานล่าสุด: ${period.label}',
+                  '${strings.latestReportLabel}: ${period.label}',
                   key: const Key('check-last-report'),
                   style: textTheme.bodyLarge,
                 ),
@@ -427,7 +433,7 @@ class _RiskCard extends StatelessWidget {
             _InfoRow(
               icon: Icons.person_outline,
               child: Text(
-                'ชื่อลูกค้า: ${result.customerName ?? '-'}',
+                '${strings.customerNameLabel}: ${result.customerName ?? '-'}',
                 key: const Key('check-name'),
                 style: textTheme.bodyLarge,
               ),
@@ -436,7 +442,7 @@ class _RiskCard extends StatelessWidget {
             _InfoRow(
               icon: Icons.phone_outlined,
               child: Text(
-                'เบอร์โทร: ${result.phoneMasked}',
+                '${strings.phoneLabel}: ${result.phoneMasked}',
                 key: const Key('check-phone-masked'),
                 style: textTheme.bodyLarge,
               ),

@@ -9,35 +9,82 @@ import 'services/check_service.dart';
 import 'services/report_service.dart';
 import 'theme.dart';
 
-class CodCheckApp extends StatelessWidget {
-  CodCheckApp({
+import 'services/app_settings.dart';
+
+class CodCheckApp extends StatefulWidget {
+  const CodCheckApp({
     super.key,
     required this.authService,
     required this.checkService,
     required this.reportService,
     this.themeMode = ThemeMode.dark,
+    this.settingsController,
   });
 
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
   final ThemeMode themeMode;
+  final AppSettingsController? settingsController;
+
+  @override
+  State<CodCheckApp> createState() => _CodCheckAppState();
+}
+
+class _CodCheckAppState extends State<CodCheckApp> {
+  late final AppSettingsController _settings;
+  late final bool _ownsSettings;
   final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
+  void initState() {
+    super.initState();
+    _ownsSettings = widget.settingsController == null;
+    _settings = widget.settingsController ??
+        AppSettingsController(
+          themeMode: widget.themeMode,
+          language: AppLanguage.th,
+        );
+  }
+
+  @override
+  void didUpdateWidget(CodCheckApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.themeMode != oldWidget.themeMode) {
+      _settings.setThemeMode(widget.themeMode);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsSettings) {
+      _settings.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ตรวจสอบลูกค้า COD',
-      navigatorKey: _navigatorKey,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: themeMode,
-      home: AuthGate(
-        authService: authService,
-        checkService: checkService,
-        reportService: reportService,
-        navigatorKey: _navigatorKey,
-      ),
+    return ListenableBuilder(
+      listenable: _settings,
+      builder: (context, _) {
+        return AppSettingsScope(
+          controller: _settings,
+          child: MaterialApp(
+            title: _settings.strings.appTitle,
+            navigatorKey: _navigatorKey,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: _settings.themeMode,
+            home: AuthGate(
+              authService: widget.authService,
+              checkService: widget.checkService,
+              reportService: widget.reportService,
+              navigatorKey: _navigatorKey,
+            ),
+          ),
+        );
+      },
     );
   }
 }

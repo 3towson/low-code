@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../services/check_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
 import '../widgets/check_panel.dart';
 import '../widgets/page_body.dart';
+import '../widgets/settings_dialog.dart';
 import 'login_page.dart';
 import 'report_customer_page.dart';
 
@@ -67,6 +69,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final app = AppColors.of(context);
+    final strings = context.strings;
+    final isDark = context.isDarkMode;
+
     return Scaffold(
       body: PageBody(
         child: Column(
@@ -76,6 +81,35 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const _Logo(),
                 const Spacer(),
+                IconButton(
+                  key: const Key('theme-toggle-button'),
+                  tooltip: isDark ? strings.switchToLight : strings.switchToDark,
+                  onPressed: () => context.appSettings?.toggleTheme(),
+                  style: IconButton.styleFrom(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(28, 28),
+                    padding: const EdgeInsets.all(4),
+                  ),
+                  icon: Icon(
+                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                    size: 18,
+                    color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF64748B),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('settings-button'),
+                  tooltip: strings.settings,
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (_) => const SettingsDialog(),
+                  ),
+                  style: IconButton.styleFrom(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(28, 28),
+                    padding: const EdgeInsets.all(4),
+                  ),
+                  icon: const Icon(Icons.settings_outlined, size: 18),
+                ),
                 if (widget.signedIn)
                   _AccountBar(
                     shopName: widget.authService.shopName,
@@ -85,8 +119,13 @@ class _HomePageState extends State<HomePage> {
                   TextButton.icon(
                     key: const Key('home-login'),
                     onPressed: _openLogin,
-                    icon: const Icon(Icons.login),
-                    label: const Text('เข้าสู่ระบบ'),
+                    style: TextButton.styleFrom(
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: const Size(0, 32),
+                    ),
+                    icon: const Icon(Icons.login, size: 16),
+                    label: Text(strings.signIn),
                   ),
               ],
             ),
@@ -94,13 +133,13 @@ class _HomePageState extends State<HomePage> {
             Text('COD Risk Shield', style: textTheme.headlineMedium),
             const SizedBox(height: 4),
             Text(
-              'ตรวจก่อนส่ง ป้องกันพัสดุตีกลับ',
+              strings.appSubtitle,
               style: textTheme.bodyLarge?.copyWith(color: app.muted),
             ),
             const SizedBox(height: AppSpacing.section),
             const _StatsRow(),
             const SizedBox(height: AppSpacing.section),
-            Text('ตรวจสอบลูกค้า', style: textTheme.titleMedium),
+            Text(strings.checkCustomer, style: textTheme.titleMedium),
             const SizedBox(height: 8),
             CheckPanel(checkService: widget.checkService),
             const SizedBox(height: 32),
@@ -108,7 +147,7 @@ class _HomePageState extends State<HomePage> {
               key: const Key('home-report'),
               onPressed: _openReport,
               icon: const Icon(Icons.report_outlined),
-              label: const Text('รายงานลูกค้า'),
+              label: Text(strings.reportCustomer),
             ),
           ],
         ),
@@ -159,13 +198,14 @@ class _AccountBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppColors.of(context);
+    final strings = context.strings;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.storefront_outlined, size: 18, color: app.muted),
         const SizedBox(width: 4),
         ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 160),
+          constraints: const BoxConstraints(maxWidth: 80),
           child: Text(
             shopName,
             key: const Key('home-shop-name'),
@@ -177,43 +217,46 @@ class _AccountBar extends StatelessWidget {
         ),
         IconButton(
           key: const Key('home-logout'),
-          tooltip: 'ออกจากระบบ',
+          tooltip: strings.signOut,
           onPressed: onSignOut,
-          icon: const Icon(Icons.logout),
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          icon: const Icon(Icons.logout, size: 18),
         ),
       ],
     );
   }
 }
 
-/// ตัวเลขสรุปของเครือข่าย (hardcode ไว้ก่อน)
+/// ตัวเลขสรุปของเครือข่าย
 class _StatsRow extends StatelessWidget {
   const _StatsRow();
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final strings = context.strings;
+    return Row(
       children: [
         Expanded(
           child: _StatTile(
-            value: '2,480+',
-            label: 'ร้านค้า',
+            value: strings.shopsCount,
+            label: strings.shopsLabel,
             icon: Icons.storefront_outlined,
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: _StatTile(
-            value: '18,340 ชิ้น',
-            label: 'ป้องกันแล้ว',
+            value: strings.protectedCount,
+            label: strings.protectedLabel,
             icon: Icons.shield_outlined,
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: _StatTile(
-            value: '฿917,000',
-            label: 'ประหยัดได้',
+            value: strings.savedCount,
+            label: strings.savedLabel,
             icon: Icons.trending_up_rounded,
           ),
         ),
