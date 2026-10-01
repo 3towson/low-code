@@ -28,12 +28,30 @@ bool exceedsOrderLimit(String text) =>
     _ordersWithPhone(text).length > maxOrdersPerCheck;
 
 List<String> _ordersWithPhone(String text) {
-  return text
+  final blankSeparated = text
       .replaceAll('\r\n', '\n')
       .split(_blankLines)
       .map((chunk) => chunk.trim())
       .where((chunk) => chunk.isNotEmpty && containsThaiMobile(chunk))
       .toList();
+
+  if (blankSeparated.length > 1) {
+    return blankSeparated;
+  }
+
+  // กรณีวางเบอร์เรียงทีละบรรทัด หรือคั่นด้วย comma/semicolon โดยไม่มีบรรทัดว่าง
+  final lines = text
+      .replaceAll('\r\n', '\n')
+      .split(RegExp(r'[\n,;]+'))
+      .map((l) => l.trim())
+      .where((l) => l.isNotEmpty)
+      .toList();
+
+  if (lines.length > 1 && lines.every((l) => containsThaiMobile(l))) {
+    return lines;
+  }
+
+  return blankSeparated;
 }
 
 /// true เมื่อข้อความมีเบอร์มือถือไทยอยู่ด้วย

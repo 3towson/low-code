@@ -32,7 +32,7 @@ class PageBody extends StatelessWidget {
         Positioned.fill(
           child: IgnorePointer(
             child: CustomPaint(
-              painter: _AmbientGlowPainter(primary: primary, isDark: isDark),
+              painter: AmbientGlowPainter(primary: primary, isDark: isDark),
             ),
           ),
         ),
@@ -100,16 +100,16 @@ class PageBody extends StatelessWidget {
   }
 }
 
-class _AmbientGlowPainter extends CustomPainter {
-  const _AmbientGlowPainter({required this.primary, required this.isDark});
+class AmbientGlowPainter extends CustomPainter {
+  const AmbientGlowPainter({required this.primary, required this.isDark});
   final Color primary;
   final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final topOpacity = isDark ? 0.22 : 0.08;
-    final midOpacity = isDark ? 0.06 : 0.02;
+    final topOpacity = isDark ? 0.28 : 0.10;
+    final midOpacity = isDark ? 0.08 : 0.03;
 
     final paint1 = Paint()
       ..shader = RadialGradient(
@@ -126,6 +126,6 @@ class _AmbientGlowPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _AmbientGlowPainter oldDelegate) =>
+  bool shouldRepaint(covariant AmbientGlowPainter oldDelegate) =>
       oldDelegate.primary != primary || oldDelegate.isDark != isDark;
 }

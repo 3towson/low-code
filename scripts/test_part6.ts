@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ทดสอบส่วนที่ 6: Edge Function check-customer
 // deploy function และตั้ง secrets ก่อน (รัน seed_test.ts และ seed_demo.ts แล้ว) จากนั้นรัน:
 // deno run --allow-net --allow-read --allow-env scripts/test_part6.ts
@@ -52,7 +53,7 @@ const reporterStrings: string[] = [];
     console.log(`FAIL  อ่าน sellers: ${error.message}`);
     Deno.exit(1);
   }
-  reporterStrings.push(...data.map((s) => s.shop_name as string));
+  reporterStrings.push(...data.map((s: { shop_name: string }) => s.shop_name));
   for (let page = 1; ; page++) {
     const { data: users, error: e } = await sb.auth.admin.listUsers({ page, perPage: 1000 });
     if (e) {

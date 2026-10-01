@@ -43,6 +43,16 @@ void main() {
       expect(splitOrders(text), [text]);
     });
 
+    test('วางเบอร์เรียงทีละบรรทัดโดยไม่มีบรรทัดว่าง แยกได้ถูกต้อง', () {
+      const text = '0924582481\n0959307725';
+      expect(splitOrders(text), ['0924582481', '0959307725']);
+    });
+
+    test('วางเบอร์คั่นด้วย comma หรือ semicolon แยกได้ถูกต้อง', () {
+      const text = '0924582481, 0959307725; 0812345678';
+      expect(splitOrders(text), ['0924582481', '0959307725', '0812345678']);
+    });
+
     test('เกิน 10 ชุด ได้แค่ 10 ชุดแรก', () {
       final text = List.generate(12, (i) => _order(i + 1)).join('\n\n');
       final orders = splitOrders(text);

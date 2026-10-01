@@ -128,8 +128,9 @@ class ReportService {
           .invoke('report-customer', body: input.toJson())
           .timeout(timeout);
       final data = res.data;
-      if (data is Map && data['status'] == 'CREATED')
+      if (data is Map && data['status'] == 'CREATED') {
         return const ReportSuccess();
+      }
       return const ReportError(_genericMessage);
     } on FunctionsFetchException {
       // ส่ง request ไม่ถึง server

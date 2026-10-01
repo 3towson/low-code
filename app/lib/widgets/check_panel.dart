@@ -240,7 +240,6 @@ class _CheckPanelState extends State<CheckPanel> {
   }
 
   Widget _phoneSection(bool busy) {
-    final app = AppColors.of(context);
     final strings = context.strings;
     final isDark = context.isDarkMode;
 

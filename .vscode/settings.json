@@ -1,0 +1,8 @@
+{
+  "deno.enable": true,
+  "deno.enablePaths": [
+    "./scripts",
+    "./supabase/functions"
+  ],
+  "deno.lint": true
+}

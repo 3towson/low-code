@@ -922,6 +922,196 @@ body::before {
 }
 
 /* ==========================================================================
+   Multi-Order Results Styles
+   ========================================================================== */
+
+.multi-result-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.25s ease-out;
+  margin-top: 8px;
+}
+
+.multi-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.multi-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.multi-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  margin-top: 4px;
+}
+
+.multi-progress-bar {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.25s ease;
+}
+
+.multi-order-tile {
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.multi-order-tile:hover {
+  border-color: var(--primary);
+}
+
+.multi-order-tile.tile-green {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+
+.multi-order-tile.tile-yellow {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+
+.multi-order-tile.tile-red {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+
+.multi-tile-header {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+}
+
+.multi-tile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tile-green .multi-tile-icon {
+  background: rgba(22, 163, 74, 0.15);
+  color: var(--success);
+}
+
+.tile-yellow .multi-tile-icon {
+  background: rgba(217, 119, 6, 0.15);
+  color: var(--warning);
+}
+
+.tile-red .multi-tile-icon {
+  background: rgba(220, 38, 38, 0.15);
+  color: var(--danger);
+}
+
+.tile-error .multi-tile-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--danger);
+}
+
+.multi-tile-title-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.multi-tile-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.multi-tile-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.multi-tile-badge {
+  font-weight: 600;
+}
+
+.tile-green .multi-tile-badge { color: var(--success); }
+.tile-yellow .multi-tile-badge { color: var(--warning); }
+.tile-red .multi-tile-badge { color: var(--danger); }
+
+.multi-tile-chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.multi-tile-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.multi-tile-content {
+  padding: 0 14px 14px 14px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.multi-recommendation {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.multi-raw-order {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+/* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
 

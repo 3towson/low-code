@@ -1,11 +1,11 @@
 {
-    "name": "cod_customer_check",
-    "short_name": "cod_customer_check",
+    "name": "COD Risk Shield",
+    "short_name": "COD Risk Shield",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0b1120",
+    "theme_color": "#2563eb",
+    "description": "ระบบตรวจสอบและป้องกันพัสดุตีกลับสำหรับร้านค้าออนไลน์",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
