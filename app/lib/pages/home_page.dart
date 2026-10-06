@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
           : const Color(0xFFF8FAFF),
       body: Stack(
         children: [
-          // Background ambient glow matching React Vite
+          // Background ambient glow
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(
@@ -374,7 +374,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// Pulsing blue dot in hero badge matching React's @keyframes pulse
+/// Pulsing blue dot in hero badge with smooth pulse animation
 class _PulsingDot extends StatefulWidget {
   const _PulsingDot();
 
@@ -447,7 +447,7 @@ class _PulsingDotState extends State<_PulsingDot>
   }
 }
 
-/// Sticky Top Navbar with Glassmorphism matching React Vite Navbar.tsx
+/// Sticky Top Navbar with Glassmorphism
 class _TopNavbar extends StatelessWidget {
   const _TopNavbar({
     required this.signedIn,

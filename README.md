@@ -2,7 +2,6 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://3towson.github.io/low-code/)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Cloud-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Gemini AI](https://img.shields.io/badge/Google%20Gemini-AI-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Deno-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -22,8 +21,7 @@
 - [🚀 การติดตั้งและเริ่มต้นใช้งาน (Getting Started)](#-การติดตั้งและเริ่มต้นใช้งาน-getting-started)
   - [1. การตั้งค่า Environment Variables](#1-การตั้งค่า-environment-variables)
   - [2. การรัน Flutter App (Web/Desktop/Mobile)](#2-การรัน-flutter-app)
-  - [3. การรัน React Web App](#3-การรัน-react-web-app)
-  - [4. การรันสคริปต์ทดสอบและ Edge Functions](#4-การรันสคริปต์ทดสอบและ-edge-functions)
+  - [3. การรันสคริปต์ทดสอบและ Edge Functions](#3-การรันสคริปต์ทดสอบและ-edge-functions)
 - [🧪 การทดสอบและผลลัพธ์ (Testing & QA)](#-การทดสอบและผลลัพธ์-testing--qa)
 - [🚢 การ Deploy ขึ้น GitHub Pages](#-การ-deploy-ขึ้น-github-pages)
 
@@ -48,9 +46,8 @@
    - สลับภาษาได้ทันที: **ภาษาไทย (TH)** และ **English (EN)**
    - ออกแบบ UI ตามมาตรฐาน Material 3 & Modern Glassmorphism Responsive Design
 
-4. **มี 2 รูปแบบ Frontend ให้เลือกใช้งาน**
+4. **รองรับการใช้งานข้ามแพลตฟอร์ม (Cross-Platform Frontend)**
    - **Flutter App (`app/`)**: ประสิทธิภาพสูง รองรับทั้ง Web, Android, iOS, Windows
-   - **React App (`web/`)**: พัฒนาด้วย React 19 + Vite + TypeScript พร้อมไอคอน Lucide
 
 ---
 
@@ -98,7 +95,6 @@
 flowchart TD
     subgraph Clients["Frontend Clients"]
         Flutter["Flutter App (Web / Mobile / Desktop)"]
-        React["React Web App (Vite + TypeScript)"]
     end
 
     subgraph Supabase["Supabase Cloud"]
@@ -124,10 +120,7 @@ flowchart TD
 
     Flutter -->|HTTP / REST| CheckFn
     Flutter -->|HTTP / REST| ReportFn
-    React -->|HTTP / REST| CheckFn
-    React -->|HTTP / REST| ReportFn
     Flutter --> Auth
-    React --> Auth
 
     CheckFn -->|วิเคราะห์ข้อความ| Gemini
     CheckFn --> SharedMod
@@ -156,14 +149,6 @@ flowchart TD
 │   │   └── main.dart             # จุดเริ่มต้นโปรแกรม
 │   ├── test/                     # Unit & Widget Tests (>140 tests)
 │   └── web/                      # Flutter Web Config & Shell
-│
-├── web/                          # ⚛️ React 19 + Vite Application
-│   ├── src/
-│   │   ├── components/           # Navbar, CheckPanel, RiskCard, ReportModal, AuthModal
-│   │   ├── context/              # AppContext (Auth, Theme, Language State)
-│   │   ├── services/             # Supabase Client & API calls
-│   │   └── index.css             # Glassmorphic & Modern Styling
-│   └── vite.config.ts
 │
 ├── supabase/                     # ⚡ Supabase Backend
 │   ├── migrations/               # SQL Migrations (Schemas, RLS, Triggers, RPC)
@@ -226,12 +211,6 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-สำหรับการรัน **React Web** ให้สร้างไฟล์ `web/.env`:
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
 ---
 
 ### 2. การรัน Flutter App
@@ -255,21 +234,7 @@ flutter run -d windows --dart-define-from-file=.env.flutter
 
 ---
 
-### 3. การรัน React Web App
-
-เข้าไปที่โฟลเดอร์ `web/` แล้วติดตั้ง Dependencies:
-
-```bash
-cd web
-npm install
-npm run dev
-```
-
-เปิดเบราว์เซอร์ไปที่ `http://localhost:5173`
-
----
-
-### 4. การรันสคริปต์ทดสอบและ Edge Functions
+### 3. การรันสคริปต์ทดสอบและ Edge Functions
 
 ตรวจสอบความพร้อมของระบบและการเชื่อมต่อ Supabase & Gemini:
 ```bash
