@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'pages/home_page.dart';
+import 'services/admin_service.dart';
+import 'services/app_settings.dart';
 import 'services/auth_service.dart';
 import 'services/check_service.dart';
 import 'services/report_service.dart';
 import 'theme.dart';
-
-import 'services/app_settings.dart';
 
 class CodCheckApp extends StatefulWidget {
   const CodCheckApp({
@@ -17,6 +17,7 @@ class CodCheckApp extends StatefulWidget {
     required this.authService,
     required this.checkService,
     required this.reportService,
+    this.adminService,
     this.themeMode = ThemeMode.dark,
     this.settingsController,
     this.animatePulse = true,
@@ -25,6 +26,7 @@ class CodCheckApp extends StatefulWidget {
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
+  final AdminService? adminService;
   final ThemeMode themeMode;
   final AppSettingsController? settingsController;
   final bool animatePulse;
@@ -83,6 +85,7 @@ class _CodCheckAppState extends State<CodCheckApp> {
               authService: widget.authService,
               checkService: widget.checkService,
               reportService: widget.reportService,
+              adminService: widget.adminService,
               navigatorKey: _navigatorKey,
               animatePulse: widget.animatePulse,
             ),
@@ -102,6 +105,7 @@ class AuthGate extends StatefulWidget {
     required this.authService,
     required this.checkService,
     required this.reportService,
+    this.adminService,
     required this.navigatorKey,
     this.animatePulse = true,
   });
@@ -109,6 +113,7 @@ class AuthGate extends StatefulWidget {
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
+  final AdminService? adminService;
   final GlobalKey<NavigatorState> navigatorKey;
   final bool animatePulse;
 
@@ -150,6 +155,7 @@ class _AuthGateState extends State<AuthGate> {
       authService: widget.authService,
       checkService: widget.checkService,
       reportService: widget.reportService,
+      adminService: widget.adminService,
       signedIn: _session != null,
       animatePulse: widget.animatePulse,
     );

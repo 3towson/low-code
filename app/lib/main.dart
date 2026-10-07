@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'services/admin_service.dart';
 import 'services/auth_service.dart';
 import 'services/check_service.dart';
 import 'services/report_service.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
       authService: AuthService(client.auth),
       checkService: CheckService(client.functions),
       reportService: ReportService(client.functions),
+      adminService: AdminService(client),
     ),
   );
 }

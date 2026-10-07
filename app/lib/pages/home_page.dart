@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/admin_service.dart';
 import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../services/check_service.dart';
@@ -12,6 +13,7 @@ import '../theme.dart';
 import '../widgets/check_panel.dart';
 import '../widgets/page_body.dart';
 import '../widgets/settings_dialog.dart';
+import 'admin_dashboard_page.dart';
 import 'login_page.dart';
 import 'report_customer_page.dart';
 
@@ -23,6 +25,7 @@ class HomePage extends StatefulWidget {
     required this.authService,
     required this.checkService,
     required this.reportService,
+    this.adminService,
     required this.signedIn,
     this.animatePulse = true,
   });
@@ -30,6 +33,7 @@ class HomePage extends StatefulWidget {
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
+  final AdminService? adminService;
   final bool signedIn;
   final bool animatePulse;
 
@@ -78,6 +82,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _openAdmin() {
+    final adminSvc =
+        widget.adminService ?? AdminService(Supabase.instance.client);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdminDashboardPage(
+          adminService: adminSvc,
+        ),
+      ),
+    );
+  }
+
   void _openReport() {
     Widget report(BuildContext _) => ReportCustomerPage(
       reportService: widget.reportService,
@@ -119,10 +135,12 @@ class _HomePageState extends State<HomePage> {
                 // 1. Sticky Full-width Top Navbar
                 _TopNavbar(
                   signedIn: widget.signedIn,
+                  isAdmin: widget.signedIn && widget.authService.isAdmin,
                   shopName: widget.signedIn ? widget.authService.shopName : null,
                   signingOut: _signingOut,
                   onSignOut: _signingOut ? null : _signOut,
                   onOpenLogin: _openLogin,
+                  onOpenAdmin: _openAdmin,
                 ),
                 // 2. Scrollable Body Content
                 Expanded(
@@ -455,17 +473,21 @@ class _PulsingDotState extends State<_PulsingDot>
 class _TopNavbar extends StatelessWidget {
   const _TopNavbar({
     required this.signedIn,
+    this.isAdmin = false,
     this.shopName,
     required this.signingOut,
     required this.onSignOut,
     required this.onOpenLogin,
+    this.onOpenAdmin,
   });
 
   final bool signedIn;
+  final bool isAdmin;
   final String? shopName;
   final bool signingOut;
   final VoidCallback? onSignOut;
   final VoidCallback onOpenLogin;
+  final VoidCallback? onOpenAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -503,7 +525,7 @@ class _TopNavbar extends StatelessWidget {
                   children: [
                     const _Logo(),
                     const SizedBox(width: 10),
-                    Flexible(
+                    Expanded(
                       child: _BrandTitle(
                         isDark: isDark,
                         subtitle: strings.appSubtitle,
@@ -541,7 +563,7 @@ class _TopNavbar extends StatelessWidget {
                             : const Color(0xFF64748B),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     IconButton(
                       key: const Key('settings-button'),
                       tooltip: strings.settings,
@@ -571,7 +593,34 @@ class _TopNavbar extends StatelessWidget {
                             : const Color(0xFF64748B),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    if (signedIn && isAdmin) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        key: const Key('home-admin-button'),
+                        tooltip: 'แผงควบคุมผู้ดูแลระบบ (Admin Console)',
+                        onPressed: onOpenAdmin,
+                        style: IconButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(34, 34),
+                          maximumSize: const Size(34, 34),
+                          padding: EdgeInsets.zero,
+                          side: BorderSide(
+                            color: isDark
+                                ? const Color(0xFF3B82F6).withValues(alpha: 0.5)
+                                : const Color(0xFF2563EB).withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.admin_panel_settings_rounded,
+                          size: 16,
+                          color: Color(0xFF3B82F6),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 4),
                     if (signedIn)
                       _AccountBar(
                         shopName: shopName ?? '',
@@ -759,13 +808,13 @@ class _AccountBar extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 80),
+            constraints: const BoxConstraints(maxWidth: 60),
             child: Text(
               shopName,
               key: const Key('home-shop-name'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             ),
           ),
           IconButton(
@@ -773,7 +822,12 @@ class _AccountBar extends StatelessWidget {
             tooltip: strings.signOut,
             onPressed: onSignOut,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+            style: IconButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              minimumSize: const Size(26, 26),
+              maximumSize: const Size(26, 26),
+              padding: EdgeInsets.zero,
+            ),
             icon: Icon(
               Icons.logout_rounded,
               size: 15,

@@ -36,6 +36,7 @@ const _input = ReportInput(
   phone: '๐๘๑-๒๓๔-๕๖๗๘',
   platform: ReportPlatform.line,
   reason: ReportReason.fakeAddress,
+  evidencePath: 'user123/evidence.jpg',
 );
 
 Future<ReportResult> _run(Future<FunctionResponse> Function() handler) {
@@ -54,10 +55,11 @@ void main() {
       'phone': '๐๘๑-๒๓๔-๕๖๗๘',
       'platform': 'line',
       'reason': 'fake_address',
+      'evidence_path': 'user123/evidence.jpg',
     });
   });
 
-  test('ส่ง other_details ไปที่ report-customer เมื่อมีค่า', () async {
+  test('ส่ง other_details และ evidence_path ไปที่ report-customer เมื่อมีค่า', () async {
     final fake = FakeFunctionsClient(
         () async => const FunctionResponse(data: {'status': 'CREATED'}, status: 201));
     const inputWithOther = ReportInput(
@@ -65,6 +67,7 @@ void main() {
       phone: '0812345678',
       platform: ReportPlatform.other,
       reason: ReportReason.other,
+      evidencePath: 'user123/evidence2.jpg',
       otherDetails: 'เหตุผล: ขอยกเลิกกลางคัน',
     );
     await ReportService(fake).submit(inputWithOther);
@@ -73,8 +76,24 @@ void main() {
       'phone': '0812345678',
       'platform': 'other',
       'reason': 'other',
+      'evidence_path': 'user123/evidence2.jpg',
       'other_details': 'เหตุผล: ขอยกเลิกกลางคัน',
     });
+  });
+
+  test('ส่ง amount: 0 ได้ถูกต้อง', () async {
+    final fake = FakeFunctionsClient(
+        () async => const FunctionResponse(data: {'status': 'CREATED'}, status: 201));
+    const inputWithZero = ReportInput(
+      customerName: 'สมศักดิ์',
+      phone: '0812345678',
+      platform: ReportPlatform.shopee,
+      reason: ReportReason.refusedDelivery,
+      evidencePath: 'user123/evidence0.jpg',
+      amount: 0,
+    );
+    await ReportService(fake).submit(inputWithZero);
+    expect(fake.calledBody, containsPair('amount', 0));
   });
 
   test('201 CREATED -> ReportSuccess', () async {
@@ -107,6 +126,15 @@ void main() {
     expect((r as ReportInvalid).messages, ['เบอร์ไม่ถูก', 'ชื่อไม่ถูก']);
   });
 
+  test('details เป็น JSON String สามารถแกะข้อความ error ได้ถูกต้อง', () async {
+    final r = await _run(() async => throw const FunctionsHttpException(
+          status: 400,
+          details: '{"status":"INVALID_INPUT","errors":[{"field":"evidence_path","message":"กรุณาแนบรูปภาพหลักฐาน"}]}',
+        ));
+    expect(r, isA<ReportInvalid>());
+    expect((r as ReportInvalid).messages, ['กรุณาแนบรูปภาพหลักฐาน']);
+  });
+
   test('ส่ง request ไม่ถึง server -> ReportNoInternet', () async {
     final r = await _run(() async => throw const FunctionsFetchException(
         details: 'ClientException with SocketException: Failed host lookup'));
@@ -118,6 +146,13 @@ void main() {
         status: 401, details: {'error': 'กรุณาเข้าสู่ระบบก่อนใช้งาน'}));
     expect(r, isA<ReportError>());
     expect((r as ReportError).message, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
+  });
+
+  test('403 -> ReportError ข้อความเตือนยืนยันอีเมลจาก server', () async {
+    final r = await _run(() async => throw const FunctionsHttpException(
+        status: 403, details: {'error': 'กรุณายืนยันอีเมลก่อนรายงานลูกค้า'}));
+    expect(r, isA<ReportError>());
+    expect((r as ReportError).message, 'กรุณายืนยันอีเมลก่อนรายงานลูกค้า');
   });
 
   test('500 ที่ body ไม่ใช่ JSON -> ReportError ข้อความทั่วไปภาษาไทย', () async {

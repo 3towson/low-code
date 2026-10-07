@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -56,6 +57,8 @@ class ReportInput {
     required this.phone,
     required this.platform,
     required this.reason,
+    required this.evidencePath,
+    this.evidencePaths,
     this.amount,
     this.otherDetails,
   });
@@ -66,18 +69,33 @@ class ReportInput {
   final String phone;
   final ReportPlatform platform;
   final ReportReason reason;
+  final String evidencePath;
+  final List<String>? evidencePaths;
   final num? amount;
   final String? otherDetails;
 
-  Map<String, dynamic> toJson() => {
-    'customer_name': customerName.trim(),
-    'phone': phone,
-    'platform': platform.value,
-    'reason': reason.value,
-    if (amount != null) 'amount': amount,
-    if (otherDetails != null && otherDetails!.trim().isNotEmpty)
-      'other_details': otherDetails!.trim(),
-  };
+  Map<String, dynamic> toJson() {
+    final paths = (evidencePaths != null && evidencePaths!.isNotEmpty)
+        ? evidencePaths!
+        : evidencePath
+            .split(',')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+    final combinedPath =
+        paths.isNotEmpty ? paths.join(',') : evidencePath.trim();
+
+    return {
+      'customer_name': customerName.trim(),
+      'phone': phone,
+      'platform': platform.value,
+      'reason': reason.value,
+      'evidence_path': combinedPath,
+      if (amount != null) 'amount': amount,
+      if (otherDetails != null && otherDetails!.trim().isNotEmpty)
+        'other_details': otherDetails!.trim(),
+    };
+  }
 }
 
 /// ผลการส่งรายงาน
@@ -158,7 +176,19 @@ class ReportService {
 
 /// แปลง response ที่ไม่ใช่ 2xx เป็น [ReportResult]
 ReportResult reportResultFromError(int status, Object? details) {
-  final body = details is Map ? details : const {};
+  Map<dynamic, dynamic> body;
+  if (details is Map) {
+    body = details;
+  } else if (details is String && details.trim().startsWith('{')) {
+    try {
+      final decoded = jsonDecode(details);
+      body = decoded is Map ? decoded : const {};
+    } catch (_) {
+      body = const {};
+    }
+  } else {
+    body = const {};
+  }
 
   if (status == 409 || body['status'] == 'DUPLICATE') {
     return ReportDuplicate(

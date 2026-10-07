@@ -43,6 +43,8 @@ function validate(body: Record<string, unknown>):
       reason: string;
       amount: number | null;
       other_details: string | null;
+      evidence_path: string;
+      evidence_paths: string[];
     }
   | { ok: false; errors: FieldError[] } {
   const errors: FieldError[] = [];
@@ -95,6 +97,32 @@ function validate(body: Record<string, unknown>):
     }
   }
 
+  let evidencePaths: string[] = [];
+  if (Array.isArray(body.evidence_paths)) {
+    evidencePaths = body.evidence_paths
+      .filter((p): p is string => typeof p === "string")
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+  } else if (typeof body.evidence_path === "string" && body.evidence_path.trim().length > 0) {
+    evidencePaths = body.evidence_path
+      .split(",")
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+  }
+
+  if (evidencePaths.length === 0) {
+    errors.push({ field: "evidence_path", message: "กรุณาแนบรูปภาพหลักฐานอย่างน้อย 1 รูป" });
+  } else if (evidencePaths.length > 3) {
+    errors.push({ field: "evidence_path", message: "แนบรูปภาพหลักฐานได้สูงสุดไม่เกิน 3 รูป" });
+  } else {
+    for (const p of evidencePaths) {
+      if (p.length > 255) {
+        errors.push({ field: "evidence_path", message: "ชื่อไฟล์หลักฐานยาวเกินไป" });
+        break;
+      }
+    }
+  }
+
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -104,6 +132,8 @@ function validate(body: Record<string, unknown>):
     reason: reason as string,
     amount: amount as number | null,
     other_details: otherDetails,
+    evidence_path: evidencePaths.join(","),
+    evidence_paths: evidencePaths,
   };
 }
 
@@ -133,6 +163,15 @@ Deno.serve(async (req: Request) => {
     );
     if (!input.ok) return json(400, { status: "INVALID_INPUT", errors: input.errors });
 
+    // ตรวจสอบว่า evidence_paths ทุกไฟล์ขึ้นต้นด้วย user id ของตนเอง
+    const invalidPath = input.evidence_paths.find((p) => !p.startsWith(`${auth.user.id}/`));
+    if (invalidPath) {
+      return json(400, {
+        status: "INVALID_INPUT",
+        errors: [{ field: "evidence_path", message: "ไฟล์หลักฐานต้องอยู่ในโฟลเดอร์ของร้านคุณ" }],
+      });
+    }
+
     // 3) hash เบอร์แล้ว insert (reported_by มาจาก token เท่านั้น)
     const phoneHash = await hashPhone(input.phone, Deno.env.get("PHONE_HASH_SECRET") ?? "");
     const { error: insertError } = await admin.from("cod_reports").insert({
@@ -143,6 +182,8 @@ Deno.serve(async (req: Request) => {
       reason: input.reason,
       amount: input.amount,
       other_details: input.other_details,
+      evidence_path: input.evidence_path,
+      status: "pending",
     });
     if (insertError) {
       if (insertError.message?.includes("DUPLICATE_REPORT")) {
@@ -154,7 +195,7 @@ Deno.serve(async (req: Request) => {
       throw new Error(`insert ล้มเหลว: ${insertError.code ?? "unknown"}`);
     }
 
-    return json(201, { status: "CREATED" });
+    return json(201, { status: "CREATED", report_status: "pending" });
   } catch (e) {
     console.error("report-customer error:", e instanceof Error ? e.message : "unknown");
     return json(500, { error: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });

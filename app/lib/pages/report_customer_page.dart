@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/app_settings.dart';
 import '../services/check_service.dart';
+import '../services/evidence_storage_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
 import '../utils/order_splitter.dart';
@@ -10,6 +13,18 @@ import '../utils/phone_utils.dart';
 
 const int maxCustomerNameLength = 100;
 const num maxDamageAmount = 1000000;
+
+class EvidenceFile {
+  const EvidenceFile({
+    required this.name,
+    required this.bytes,
+    this.extension = 'jpg',
+  });
+
+  final String name;
+  final Uint8List bytes;
+  final String extension;
+}
 
 String? validateCustomerName(String? value) {
   final name = value?.trim() ?? '';
@@ -43,11 +58,21 @@ class ReportCustomerPage extends StatefulWidget {
     super.key,
     required this.reportService,
     this.checkService,
+    this.storageService,
+    this.imagePickerOverride,
+    this.initialEvidence,
+    this.initialEvidences,
+    this.userId,
     this.onClose,
   });
 
   final ReportService reportService;
   final CheckService? checkService;
+  final EvidenceStorageService? storageService;
+  final Future<EvidenceFile?> Function()? imagePickerOverride;
+  final EvidenceFile? initialEvidence;
+  final List<EvidenceFile>? initialEvidences;
+  final String? userId;
   final VoidCallback? onClose;
 
   @override
@@ -65,6 +90,13 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
 
   ReportPlatform? _platform;
   ReportReason? _reason;
+  late final List<EvidenceFile> _selectedEvidences = [
+    if (widget.initialEvidences != null)
+      ...widget.initialEvidences!
+    else if (widget.initialEvidence != null)
+      widget.initialEvidence!,
+  ];
+  String? _evidenceError;
   bool _submitting = false;
   bool _extracting = false;
   _AiMessage? _aiMessage;
@@ -88,12 +120,87 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     }
   }
 
+  Future<void> _pickEvidence() async {
+    if (_submitting || _extracting) return;
+    if (_selectedEvidences.length >= 3) return;
+    try {
+      final file = widget.imagePickerOverride != null
+          ? await widget.imagePickerOverride!()
+          : await _defaultPickImage();
+      if (file != null) {
+        setState(() {
+          if (_selectedEvidences.length < 3) {
+            _selectedEvidences.add(file);
+          }
+          _evidenceError = null;
+        });
+      }
+    } catch (e) {
+      setState(() => _evidenceError = 'เลือกรูปภาพไม่สำเร็จ: $e');
+    }
+  }
+
+  Future<EvidenceFile?> _defaultPickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
+    if (picked == null) return null;
+    final bytes = await picked.readAsBytes();
+    final ext = picked.name.contains('.') ? picked.name.split('.').last : 'jpg';
+    return EvidenceFile(
+      name: picked.name,
+      bytes: bytes,
+      extension: ext,
+    );
+  }
+
   Future<void> _submit() async {
     if (_submitting || _extracting) return;
     ScaffoldMessenger.of(context).clearSnackBars();
-    if (!_formKey.currentState!.validate()) return;
+    final formValid = _formKey.currentState!.validate();
+    if (_selectedEvidences.isEmpty) {
+      setState(() =>
+          _evidenceError = 'กรุณาแนบภาพแคปหน้าจอหลักฐาน (แชท/สลิป/ประวัติจัดส่ง)');
+    } else {
+      setState(() => _evidenceError = null);
+    }
+    if (!formValid || _selectedEvidences.isEmpty) return;
 
     setState(() => _submitting = true);
+    final evidencePaths = <String>[];
+    try {
+      final storage = widget.storageService ??
+          SupabaseEvidenceStorageService(Supabase.instance.client);
+      String resolvedUserId = widget.userId ?? 'user';
+      if (widget.userId == null) {
+        try {
+          resolvedUserId =
+              Supabase.instance.client.auth.currentUser?.id ?? 'user';
+        } catch (_) {
+          resolvedUserId = 'user';
+        }
+      }
+      for (final ev in _selectedEvidences) {
+        final path = await storage.uploadEvidence(
+          userId: resolvedUserId,
+          bytes: ev.bytes,
+          extension: ev.extension,
+        );
+        evidencePaths.add(path);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _evidenceError = 'อัปโหลดภาพหลักฐานไม่สำเร็จ: $e';
+      });
+      return;
+    }
+
     final otherDetailsParts = [
       if (_platform == ReportPlatform.other &&
           _otherPlatformController.text.trim().isNotEmpty)
@@ -111,6 +218,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         phone: _phoneController.text,
         platform: _platform!,
         reason: _reason!,
+        evidencePath: evidencePaths.join(','),
+        evidencePaths: evidencePaths,
         amount: parseDamageAmount(_amountController.text),
         otherDetails: otherDetails,
       ),
@@ -128,6 +237,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         _reason = null;
         _otherPlatformController.clear();
         _otherReasonController.clear();
+        _selectedEvidences.clear();
+        _evidenceError = null;
         _aiMessage = null;
       }
     });
@@ -374,7 +485,9 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                           ),
                           child: IconButton(
                             tooltip: strings.close,
-                            onPressed: _handleClose,
+                            onPressed: (_submitting || _extracting)
+                                ? null
+                                : _handleClose,
                             padding: EdgeInsets.zero,
                             icon: Icon(
                               Icons.close_rounded,
@@ -702,6 +815,9 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                             validator: validateDamageAmount,
                           ),
 
+                          const SizedBox(height: 16),
+                          _buildEvidenceSection(context),
+
                           const SizedBox(height: 24),
 
                           // Modal Footer: Close & Submit
@@ -781,6 +897,212 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildEvidenceSection(BuildContext context) {
+    final isDark = context.isDarkMode;
+    final app = AppColors.of(context);
+    final borderColor = isDark
+        ? const Color(0xFF22304A)
+        : const Color(0xFFE2E8F0);
+    final fieldBg = isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFF);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text.rich(
+          TextSpan(
+            text: 'ภาพแคปหน้าจอหลักฐาน *',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? const Color(0xFFF1F5F9)
+                  : const Color(0xFF0F172A),
+            ),
+            children: [
+              const TextSpan(
+                text: ' (แชท/สลิป/ประวัติจัดส่ง 1-3 รูป)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.grey,
+                ),
+              ),
+              if (_selectedEvidences.isNotEmpty)
+                TextSpan(
+                  text: ' [${_selectedEvidences.length}/3]',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: _selectedEvidences.length == 3
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF3B82F6),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (_selectedEvidences.isEmpty) ...[
+          InkWell(
+            key: const Key('report-pick-evidence'),
+            onTap: _submitting ? null : _pickEvidence,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              decoration: BoxDecoration(
+                color: fieldBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _evidenceError != null ? app.danger : borderColor,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 32,
+                    color: _evidenceError != null
+                        ? app.danger
+                        : const Color(0xFF3B82F6),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'กดเพื่อเลือกรูปภาพหลักฐาน',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _evidenceError != null
+                          ? app.danger
+                          : (isDark
+                              ? const Color(0xFFF1F5F9)
+                              : const Color(0xFF0F172A)),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'แนบได้สูงสุด 3 รูป เพื่อป้องกันการกลั่นแกล้ง (Admin จะตรวจสอบก่อนอนุมัติ)',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ] else ...[
+          for (int i = 0; i < _selectedEvidences.length; i++) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: fieldBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: borderColor),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(
+                      _selectedEvidences[i].bytes,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 52,
+                        height: 52,
+                        color: isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFE2E8F0),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.image_outlined,
+                          color: Colors.grey,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedEvidences[i].name,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${(_selectedEvidences[i].bytes.lengthInBytes / 1024).toStringAsFixed(1)} KB • แนบหลักฐานแล้ว (รูปที่ ${i + 1})',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF10B981),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    key: i == 0
+                        ? const Key('report-remove-evidence')
+                        : Key('report-remove-evidence-$i'),
+                    tooltip: 'ลบรูปหลักฐาน',
+                    onPressed: _submitting
+                        ? null
+                        : () => setState(() => _selectedEvidences.removeAt(i)),
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (_selectedEvidences.length < 3) ...[
+            OutlinedButton.icon(
+              key: const Key('report-pick-evidence'),
+              onPressed: _submitting ? null : _pickEvidence,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(42),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(color: borderColor),
+              ),
+              icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+              label: Text(
+                'เพิ่มรูปภาพอีก (${_selectedEvidences.length}/3)',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? const Color(0xFFF1F5F9)
+                      : const Color(0xFF0F172A),
+                ),
+              ),
+            ),
+          ],
+        ],
+        if (_evidenceError != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            _evidenceError!,
+            key: const Key('report-evidence-error'),
+            style: TextStyle(
+              fontSize: 12,
+              color: app.danger,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

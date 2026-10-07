@@ -22,6 +22,14 @@ class AuthService {
     return email.isNotEmpty ? email.split('@').first : 'ร้านค้า';
   }
 
+  /// ตรวจสอบว่าเป็นผู้ดูแลระบบ (Admin) หรือไม่
+  bool get isAdmin {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final role = user.appMetadata['role'];
+    return role == 'admin';
+  }
+
   /// สมัครสมาชิก โปรเจกต์บังคับยืนยันอีเมล จึงยังไม่ได้ session กลับมา
   Future<void> signUp({
     required String email,

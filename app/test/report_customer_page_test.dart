@@ -1,9 +1,36 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:cod_customer_check/pages/report_customer_page.dart';
+import 'package:cod_customer_check/services/evidence_storage_service.dart';
 import 'package:cod_customer_check/services/report_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+final _testEvidence = EvidenceFile(
+  name: 'slip_chat_evidence.jpg',
+  bytes: base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  ),
+  extension: 'jpg',
+);
+
+class FakeEvidenceStorageService implements EvidenceStorageService {
+  @override
+  Future<String> uploadEvidence({
+    required String userId,
+    required Uint8List bytes,
+    required String extension,
+  }) async {
+    return '$userId/mock_evidence.$extension';
+  }
+
+  @override
+  Future<String> createSignedUrl(String path, {int expiresIn = 900}) async {
+    return 'https://example.com/signed/$path';
+  }
+}
 
 /// ไม่ต่อ Supabase จริง เก็บ input ที่ส่งมา และให้เทสต์เป็นคนปล่อยผลผ่าน [respond]
 class FakeReportService implements ReportService {
@@ -28,9 +55,26 @@ class FakeReportService implements ReportService {
 
 Finder get _submit => find.byKey(const Key('report-submit'));
 
-Future<void> _pumpPage(WidgetTester tester, FakeReportService service) {
+Future<void> _pumpPage(
+  WidgetTester tester,
+  FakeReportService service, {
+  EvidenceStorageService? storageService,
+  bool attachEvidence = true,
+  EvidenceFile? initialEvidence,
+  Future<EvidenceFile?> Function()? imagePickerOverride,
+}) {
+  final resolvedEvidence =
+      attachEvidence ? (initialEvidence ?? _testEvidence) : null;
   return tester.pumpWidget(
-      MaterialApp(home: ReportCustomerPage(reportService: service)));
+    MaterialApp(
+      home: ReportCustomerPage(
+        reportService: service,
+        storageService: storageService ?? FakeEvidenceStorageService(),
+        initialEvidence: resolvedEvidence,
+        imagePickerOverride: imagePickerOverride,
+      ),
+    ),
+  );
 }
 
 Future<void> _tapSubmit(WidgetTester tester) async {
@@ -47,7 +91,8 @@ Future<void> _select(WidgetTester tester, String key, String label) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _fillValid(WidgetTester tester, {String phone = '081-234-5678'}) async {
+Future<void> _fillValid(WidgetTester tester,
+    {String phone = '081-234-5678'}) async {
   await tester.enterText(find.byKey(const Key('report-name')), 'สมชาย ทดสอบ');
   await tester.enterText(find.byKey(const Key('report-phone')), phone);
   await _select(tester, 'report-platform', 'Shopee');
@@ -61,7 +106,7 @@ bool _buttonEnabled(WidgetTester tester) =>
 void main() {
   testWidgets('ช่องบังคับว่าง ต้องแสดงข้อความเตือนและไม่ส่ง', (tester) async {
     final service = FakeReportService();
-    await _pumpPage(tester, service);
+    await _pumpPage(tester, service, attachEvidence: false);
 
     await _tapSubmit(tester);
 
@@ -69,7 +114,56 @@ void main() {
     expect(find.text('กรุณากรอกเบอร์โทร'), findsOneWidget);
     expect(find.text('กรุณาเลือกแพลตฟอร์ม'), findsOneWidget);
     expect(find.text('กรุณาเลือกเหตุผล'), findsOneWidget);
+    expect(
+        find.text('กรุณาแนบภาพแคปหน้าจอหลักฐาน (แชท/สลิป/ประวัติจัดส่ง)'),
+        findsOneWidget);
     expect(service.inputs, isEmpty);
+  });
+
+  testWidgets('ไม่ได้แนบรูปหลักฐาน แสดงข้อความเตือนและไม่ส่ง', (tester) async {
+    final service = FakeReportService();
+    await _pumpPage(tester, service, attachEvidence: false);
+    await _fillValid(tester);
+
+    await _tapSubmit(tester);
+
+    expect(find.text('กรุณาแนบภาพแคปหน้าจอหลักฐาน (แชท/สลิป/ประวัติจัดส่ง)'),
+        findsOneWidget);
+    expect(service.inputs, isEmpty);
+  });
+
+  testWidgets('เลือกรูปหลักฐานผ่าน imagePickerOverride แสดงตัวอย่างและลบได้',
+      (tester) async {
+    final service = FakeReportService();
+    var pickedCount = 0;
+    await _pumpPage(
+      tester,
+      service,
+      attachEvidence: false,
+      imagePickerOverride: () async {
+        pickedCount++;
+        return _testEvidence;
+      },
+    );
+
+    // ยังไม่มีรูป
+    expect(find.text('slip_chat_evidence.jpg'), findsNothing);
+
+    // กดเลือกรูป
+    await tester.ensureVisible(find.byKey(const Key('report-pick-evidence')));
+    await tester.tap(find.byKey(const Key('report-pick-evidence')));
+    await tester.pumpAndSettle();
+
+    expect(pickedCount, 1);
+    expect(find.text('slip_chat_evidence.jpg'), findsOneWidget);
+
+    // กดลบรูป
+    await tester.ensureVisible(find.byKey(const Key('report-remove-evidence')));
+    await tester.tap(find.byKey(const Key('report-remove-evidence')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('slip_chat_evidence.jpg'), findsNothing);
+    expect(find.text('กดเพื่อเลือกรูปภาพหลักฐาน'), findsOneWidget);
   });
 
   testWidgets('เบอร์ผิด ต้องแสดงข้อความเตือนและไม่ส่ง', (tester) async {
@@ -99,12 +193,13 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(service.inputs, hasLength(1));
 
-    // ส่งค่า enum ตาม PROJECT_CONTEXT ไม่ใช่ข้อความภาษาไทย
+    // ส่งค่า enum ตาม PROJECT_CONTEXT พร้อม evidence_path
     expect(service.inputs.single.toJson(), {
       'customer_name': 'สมชาย ทดสอบ',
       'phone': '081-234-5678',
       'platform': 'shopee',
       'reason': 'refused_delivery',
+      'evidence_path': 'user/mock_evidence.jpg',
       'amount': 1500,
     });
 
@@ -160,6 +255,9 @@ void main() {
     expect(find.text('ปฏิเสธรับสินค้า'), findsNothing);
     // ล้างแล้วต้องไม่มีข้อความเตือนค้าง
     expect(find.text('กรุณากรอกชื่อลูกค้า'), findsNothing);
+    expect(
+        find.text('กรุณาแนบภาพแคปหน้าจอหลักฐาน (แชท/สลิป/ประวัติจัดส่ง)'),
+        findsNothing);
   });
 
   testWidgets(
@@ -173,8 +271,10 @@ void main() {
     expect(find.byKey(const Key('report-reason-other')), findsNothing);
 
     // กรอกข้อมูลทั่วไป
-    await tester.enterText(find.byKey(const Key('report-name')), 'สมชาย ทดสอบ');
-    await tester.enterText(find.byKey(const Key('report-phone')), '081-234-5678');
+    await tester.enterText(
+        find.byKey(const Key('report-name')), 'สมชาย ทดสอบ');
+    await tester.enterText(
+        find.byKey(const Key('report-phone')), '081-234-5678');
 
     // เลือกแพลตฟอร์มเป็น 'อื่นๆ'
     await _select(tester, 'report-platform', 'อื่นๆ');
@@ -203,6 +303,7 @@ void main() {
       'phone': '081-234-5678',
       'platform': 'other',
       'reason': 'other',
+      'evidence_path': 'user/mock_evidence.jpg',
       'other_details': 'แพลตฟอร์ม: Instagram | เหตุผล: เปลี่ยนใจไม่รับ',
     });
 
@@ -212,6 +313,60 @@ void main() {
     // หลังส่งสำเร็จ ฟอร์มต้องถูกรีเซ็ต
     expect(find.byKey(const Key('report-platform-other')), findsNothing);
     expect(find.byKey(const Key('report-reason-other')), findsNothing);
+  });
+
+  testWidgets('แนบภาพหลักฐานได้สูงสุด 3 รูป และส่ง path รวมกันสำเร็จ',
+      (tester) async {
+    final service = FakeReportService();
+    var pickCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ReportCustomerPage(
+            reportService: service,
+            storageService: FakeEvidenceStorageService(),
+            imagePickerOverride: () async {
+              pickCount++;
+              return EvidenceFile(
+                name: 'evidence_$pickCount.jpg',
+                bytes: Uint8List.fromList([1, 2, 3]),
+                extension: 'jpg',
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // รูปที่ 1
+    await tester.ensureVisible(find.byKey(const Key('report-pick-evidence')));
+    await tester.tap(find.byKey(const Key('report-pick-evidence')));
+    await tester.pumpAndSettle();
+    expect(find.text('evidence_1.jpg'), findsOneWidget);
+    expect(find.text('เพิ่มรูปภาพอีก (1/3)'), findsOneWidget);
+
+    // รูปที่ 2
+    await tester.ensureVisible(find.byKey(const Key('report-pick-evidence')));
+    await tester.tap(find.byKey(const Key('report-pick-evidence')));
+    await tester.pumpAndSettle();
+    expect(find.text('evidence_2.jpg'), findsOneWidget);
+    expect(find.text('เพิ่มรูปภาพอีก (2/3)'), findsOneWidget);
+
+    // รูปที่ 3
+    await tester.ensureVisible(find.byKey(const Key('report-pick-evidence')));
+    await tester.tap(find.byKey(const Key('report-pick-evidence')));
+    await tester.pumpAndSettle();
+    expect(find.text('evidence_3.jpg'), findsOneWidget);
+    expect(find.text('เพิ่มรูปภาพอีก (3/3)'), findsNothing);
+
+    // กรอกข้อมูลฟอร์ม
+    await _fillValid(tester);
+    await _tapSubmit(tester);
+
+    expect(service.inputs, hasLength(1));
+    expect(service.inputs.single.evidencePath,
+        'user/mock_evidence.jpg,user/mock_evidence.jpg,user/mock_evidence.jpg');
   });
 }
 

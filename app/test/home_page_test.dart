@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cod_customer_check/app.dart';
 import 'package:cod_customer_check/pages/login_page.dart';
 import 'package:cod_customer_check/pages/report_customer_page.dart';
+import 'package:cod_customer_check/services/admin_service.dart';
 import 'package:cod_customer_check/services/auth_service.dart';
 import 'package:cod_customer_check/services/check_service.dart';
 import 'package:cod_customer_check/services/report_service.dart';
@@ -12,13 +13,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// ไม่ต่อ Supabase จริง signIn/signOut ส่ง event ผ่าน onAuthStateChange เหมือนของจริง
 class FakeAuthService implements AuthService {
-  FakeAuthService({bool signedIn = false}) {
+  FakeAuthService({bool signedIn = false, this.isAdmin = false}) {
     if (signedIn) _session = _newSession();
   }
 
   final _controller = StreamController<AuthState>.broadcast();
   Session? _session;
   int signInCalls = 0;
+  @override
+  final bool isAdmin;
 
   /// ตั้งเป็น error เพื่อจำลอง login ไม่สำเร็จ
   Object? signInError;
@@ -94,6 +97,26 @@ class FakeReportService implements ReportService {
       throw UnimplementedError(invocation.memberName.toString());
 }
 
+class FakeAdminService implements AdminService {
+  @override
+  Future<AdminStats> getStats() async => const AdminStats(
+        pendingCount: 0,
+        approvedToday: 0,
+        rejectedToday: 0,
+      );
+
+  @override
+  Future<List<PendingReport>> getPendingReports({
+    int limit = 50,
+    int offset = 0,
+  }) async =>
+      [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
+
 const _order = 'สมชาย ใจดี 080-000-0002 บ้านเลขที่ 1 กทม.';
 
 Finder get _loginButton => find.byKey(const Key('home-login'));
@@ -106,6 +129,7 @@ Future<FakeCheckService> _pumpApp(
   WidgetTester tester,
   FakeAuthService auth, {
   ThemeMode? themeMode,
+  AdminService? adminService,
 }) async {
   tester.view.physicalSize = const Size(360, 740);
   tester.view.devicePixelRatio = 1;
@@ -116,12 +140,14 @@ Future<FakeCheckService> _pumpApp(
           authService: auth,
           checkService: check,
           reportService: FakeReportService(),
+          adminService: adminService,
           animatePulse: false,
         )
       : CodCheckApp(
           authService: auth,
           checkService: check,
           reportService: FakeReportService(),
+          adminService: adminService,
           themeMode: themeMode,
           animatePulse: false,
         ));
@@ -362,4 +388,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 900));
     expect(find.text('COD Risk Shield'), findsOneWidget);
   });
+
+  testWidgets('user ธรรมดา login แล้ว ไม่เห็นปุ่ม Admin Console',
+      (tester) async {
+    await _pumpApp(tester, FakeAuthService(signedIn: true, isAdmin: false));
+    expect(find.byKey(const Key('home-admin-button')), findsNothing);
+  });
+
+  testWidgets('admin login แล้ว เห็นปุ่ม Admin Console', (tester) async {
+    await _pumpApp(tester, FakeAuthService(signedIn: true, isAdmin: true));
+    expect(find.byKey(const Key('home-admin-button')), findsOneWidget);
+  });
+
+  testWidgets(
+      'admin login แล้ว กดปุ่ม Admin Console เข้าหน้า AdminDashboardPage ได้สำเร็จและไม่ crash',
+      (tester) async {
+    final admin = FakeAdminService();
+    await _pumpApp(
+      tester,
+      FakeAuthService(signedIn: true, isAdmin: true),
+      adminService: admin,
+    );
+    expect(find.byKey(const Key('home-admin-button')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('home-admin-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('ระบบจัดการผู้ดูแลระบบ (Admin Console)'), findsOneWidget);
+    expect(find.byTooltip('กลับหน้าหลัก'), findsOneWidget);
+  });
 }
+

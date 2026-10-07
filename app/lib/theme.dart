@@ -196,7 +196,7 @@ abstract final class AppTheme {
     final controlShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppSpacing.controlRadius),
     );
-    const controlSize = Size.fromHeight(AppSpacing.controlHeight);
+    const controlSize = Size(0, AppSpacing.controlHeight);
     final buttonText = textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
     );
