@@ -125,12 +125,40 @@ void main() {
   });
 
   testWidgets(
-    'server ส่งมาแค่เบอร์ที่ mask กรอกชื่อ และให้ผู้ใช้กรอกเบอร์เอง',
+    'server ส่งมาแค่เบอร์ที่ mask ดึงเบอร์จากแชทในเครื่องและกรอกชื่อกับเบอร์ให้',
     (tester) async {
       final service = FakeCheckService();
       await _pumpPage(tester, service);
 
       await tester.enterText(_chatField, _chat);
+      await _tapExtract(tester);
+      service.respond(
+        const CheckOk(
+          level: RiskLevel.green,
+          countedReports: 0,
+          recommendation: 'ส่งได้ตามปกติ',
+          phoneMasked: '081-XXX-5678',
+          customerName: 'สมหญิง ใจดี',
+        ),
+      );
+      await tester.pump();
+
+      expect(_fieldText(tester, 'report-name'), 'สมหญิง ใจดี');
+      expect(_fieldText(tester, 'report-phone'), '0812345678');
+      expect(
+        tester.widget<Text>(_aiMessage).data,
+        'กรอกชื่อและเบอร์โทรให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
+      );
+    },
+  );
+
+  testWidgets(
+    'server ส่งมาแค่เบอร์ที่ mask และข้อความแชทไม่มีเบอร์ที่สกัดได้ ให้ผู้ใช้กรอกเบอร์เอง',
+    (tester) async {
+      final service = FakeCheckService();
+      await _pumpPage(tester, service);
+
+      await tester.enterText(_chatField, 'ข้อความไม่มีเบอร์ตรงๆ');
       await _tapExtract(tester);
       service.respond(
         const CheckOk(

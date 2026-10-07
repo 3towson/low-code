@@ -10,6 +10,9 @@ const maxOrdersPerCheck = 10;
 /// บรรทัดว่างตั้งแต่ 1 บรรทัดขึ้นไป (บรรทัดที่มีแต่ช่องว่างก็นับเป็นบรรทัดว่าง)
 final RegExp _blankLines = RegExp(r'\n[ \t]*(?:\n[ \t]*)+');
 
+/// เส้นคั่นออเดอร์ เช่น ---, ===, ___, *** (อย่างน้อย 3 ตัว) คั่นบรรทัด
+final RegExp _dividerLine = RegExp(r'(?:^|\n)[ \t]*[-=_*~]{3,}[ \t]*(?:\n|$)');
+
 /// ชุดตัวเลข (อารบิกหรือไทย) ที่คั่นด้วยช่องว่าง ขีด จุด หรือวงเล็บ เช่น +66 81-234-5678
 final RegExp _digitRun = RegExp(r'[0-9๐-๙]+(?:[ \t\-.()]+[0-9๐-๙]+)*');
 final RegExp _digitGroup = RegExp(r'[0-9๐-๙]+');
@@ -61,8 +64,23 @@ bool exceedsOrderLimit(String text) =>
     _ordersWithPhone(text).length > maxOrdersPerCheck;
 
 List<String> _ordersWithPhone(String text) {
-  final blankSeparated = text
-      .replaceAll('\r\n', '\n')
+  final normalized = text.replaceAll('\r\n', '\n');
+
+  // 1) หากมีเส้นคั่น เช่น ---, ===, *** ให้ตัดแบ่งตามเส้นคั่นก่อน
+  // เพื่อรักษาเนื้อหาภายในออเดอร์ (เช่น กรณีมีเว้นบรรทัดย่อยในออเดอร์เดียวกัน) ไว้ครบถ้วน
+  if (_dividerLine.hasMatch(normalized)) {
+    final dividerSeparated = normalized
+        .split(_dividerLine)
+        .map((chunk) => chunk.trim())
+        .where((chunk) => chunk.isNotEmpty && containsThaiMobile(chunk))
+        .toList();
+    if (dividerSeparated.length > 1) {
+      return _deduplicateByPhone(dividerSeparated);
+    }
+  }
+
+  // 2) แบ่งด้วยบรรทัดว่าง (blank lines)
+  final blankSeparated = normalized
       .split(_blankLines)
       .map((chunk) => chunk.trim())
       .where((chunk) => chunk.isNotEmpty && containsThaiMobile(chunk))

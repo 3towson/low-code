@@ -37,6 +37,37 @@ const admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
+// Rate limiter สำหรับ Guest Mode (30 คำขอ / 60 วินาที ต่อ IP)
+const GUEST_RATE_LIMIT = 30;
+const GUEST_WINDOW_MS = 60_000;
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(req: Request): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+function isRateLimited(ip: string): boolean {
+  if (ip === "unknown") return false;
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + GUEST_WINDOW_MS });
+    if (rateLimitMap.size > 10_000) {
+      for (const [k, v] of rateLimitMap.entries()) {
+        if (now > v.resetAt) rateLimitMap.delete(k);
+      }
+    }
+    return false;
+  }
+  entry.count++;
+  return entry.count > GUEST_RATE_LIMIT;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "POST") return json(405, { error: "ไม่รองรับคำขอนี้" });
@@ -47,6 +78,19 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get("Authorization");
     if (!apiKey && !authHeader) {
       return json(401, { error: "กรุณาระบุ apikey หรือเข้าสู่ระบบก่อนใช้งาน" });
+    }
+
+    const expectedAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!authHeader && expectedAnonKey && apiKey !== expectedAnonKey) {
+      return json(401, { error: "apikey ไม่ถูกต้อง หรือกรุณาเข้าสู่ระบบก่อนใช้งาน" });
+    }
+
+    // 1.1) ตรวจ Rate Limit สำหรับ Guest Mode (ป้องกันการยิงสแปมทำลายโควต้า Gemini)
+    if (!authHeader) {
+      const clientIp = getClientIp(req);
+      if (isRateLimited(clientIp)) {
+        return json(429, { error: "คำขอถี่เกินไป กรุณารอสักครู่แล้วลองใหม่" });
+      }
     }
 
     // 2) อ่าน body: ต้องมี text หรือ phone อย่างใดอย่างหนึ่งที่ไม่ว่าง

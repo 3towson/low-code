@@ -5,6 +5,7 @@ import '../services/app_settings.dart';
 import '../services/check_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
+import '../utils/order_splitter.dart';
 import '../utils/phone_utils.dart';
 
 const int maxCustomerNameLength = 100;
@@ -172,7 +173,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
       _extracting = false;
       _aiMessage = switch (result) {
         CheckOk(:final customerName, :final phone, :final phoneMasked) =>
-          _fillFromAi(customerName, phone, phoneMasked),
+          _fillFromAi(customerName, phone, phoneMasked, text),
         CheckNoPhone() => const _AiMessage(
           'ไม่พบเบอร์โทรในข้อความ กรุณากรอกเอง',
           _AiTone.warning,
@@ -184,15 +185,21 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     });
   }
 
-  _AiMessage _fillFromAi(String? name, String? phone, String phoneMasked) {
+  _AiMessage _fillFromAi(
+    String? name,
+    String? phone,
+    String phoneMasked,
+    String originalText,
+  ) {
+    final resolvedPhone = phone ?? extractFirstThaiMobile(originalText);
     if (name != null) _nameController.text = name.trim();
-    if (phone != null) _phoneController.text = phone.trim();
+    if (resolvedPhone != null) _phoneController.text = resolvedPhone.trim();
 
     final filled = [
       if (name != null) 'ชื่อ',
-      if (phone != null) 'เบอร์โทร',
+      if (resolvedPhone != null) 'เบอร์โทร',
     ].join('และ');
-    if (phone != null) {
+    if (resolvedPhone != null) {
       return _AiMessage(
         'กรอก$filledให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
         _AiTone.success,
@@ -599,17 +606,25 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                               key: const Key('report-platform-other'),
                               controller: _otherPlatformController,
                               enabled: !_submitting,
+                              maxLength: 100,
                               decoration: InputDecoration(
                                 hintText: strings.specifyPlatformHint,
                                 filled: true,
                                 fillColor: fieldBg,
                               ),
                               textInputAction: TextInputAction.next,
-                              validator: (v) =>
-                                  _platform == ReportPlatform.other &&
-                                      (v == null || v.trim().isEmpty)
-                                  ? strings.specifyPlatformReq
-                                  : null,
+                              validator: (v) {
+                                if (_platform != ReportPlatform.other) {
+                                  return null;
+                                }
+                                if (v == null || v.trim().isEmpty) {
+                                  return strings.specifyPlatformReq;
+                                }
+                                if (v.trim().length > 100) {
+                                  return 'รายละเอียดแพลตฟอร์มต้องไม่เกิน 100 ตัวอักษร';
+                                }
+                                return null;
+                              },
                             ),
                           ],
 
@@ -631,17 +646,25 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                               key: const Key('report-reason-other'),
                               controller: _otherReasonController,
                               enabled: !_submitting,
+                              maxLength: 350,
                               decoration: InputDecoration(
                                 hintText: strings.specifyReasonHint,
                                 filled: true,
                                 fillColor: fieldBg,
                               ),
                               textInputAction: TextInputAction.next,
-                              validator: (v) =>
-                                  _reason == ReportReason.other &&
-                                      (v == null || v.trim().isEmpty)
-                                  ? strings.specifyReasonReq
-                                  : null,
+                              validator: (v) {
+                                if (_reason != ReportReason.other) {
+                                  return null;
+                                }
+                                if (v == null || v.trim().isEmpty) {
+                                  return strings.specifyReasonReq;
+                                }
+                                if (v.trim().length > 350) {
+                                  return 'รายละเอียดเหตุผลต้องไม่เกิน 350 ตัวอักษร';
+                                }
+                                return null;
+                              },
                             ),
                           ],
 

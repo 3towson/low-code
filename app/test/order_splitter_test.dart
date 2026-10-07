@@ -53,6 +53,32 @@ void main() {
       expect(splitOrders(text), ['0924582481', '0959307725', '0812345678']);
     });
 
+    test('ออเดอร์คั่นด้วยเส้นคั่น (--- หรือ ===) แม้มีบรรทัดว่างย่อยภายในออเดอร์ แยกได้ถูกต้อง', () {
+      const text = '''
+ลูกค้า ก
+
+โทร 081-111-1111
+
+123/45 กทม.
+------------------------
+ลูกค้า ข
+
+โทร 082-222-2222
+
+678/90 เชียงใหม่
+========================
+ลูกค้า ค
+โทร 083-333-3333
+อยุธยา''';
+      final orders = splitOrders(text);
+      expect(orders, hasLength(3));
+      expect(orders[0], contains('ลูกค้า ก'));
+      expect(orders[0], contains('123/45 กทม.'));
+      expect(orders[1], contains('ลูกค้า ข'));
+      expect(orders[1], contains('678/90 เชียงใหม่'));
+      expect(orders[2], contains('ลูกค้า ค'));
+    });
+
     test('เกิน 10 ชุด ได้แค่ 10 ชุดแรก', () {
       final text = List.generate(12, (i) => _order(i + 1)).join('\n\n');
       final orders = splitOrders(text);
