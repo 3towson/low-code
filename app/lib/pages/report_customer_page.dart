@@ -93,6 +93,17 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _submitting = true);
+    final otherDetailsParts = [
+      if (_platform == ReportPlatform.other &&
+          _otherPlatformController.text.trim().isNotEmpty)
+        'แพลตฟอร์ม: ${_otherPlatformController.text.trim()}',
+      if (_reason == ReportReason.other &&
+          _otherReasonController.text.trim().isNotEmpty)
+        'เหตุผล: ${_otherReasonController.text.trim()}',
+    ];
+    final otherDetails =
+        otherDetailsParts.isNotEmpty ? otherDetailsParts.join(' | ') : null;
+
     final result = await widget.reportService.submit(
       ReportInput(
         customerName: _nameController.text,
@@ -100,6 +111,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         platform: _platform!,
         reason: _reason!,
         amount: parseDamageAmount(_amountController.text),
+        otherDetails: otherDetails,
       ),
     );
     if (!mounted) return;

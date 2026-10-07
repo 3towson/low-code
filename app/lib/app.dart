@@ -19,6 +19,7 @@ class CodCheckApp extends StatefulWidget {
     required this.reportService,
     this.themeMode = ThemeMode.dark,
     this.settingsController,
+    this.animatePulse = true,
   });
 
   final AuthService authService;
@@ -26,6 +27,7 @@ class CodCheckApp extends StatefulWidget {
   final ReportService reportService;
   final ThemeMode themeMode;
   final AppSettingsController? settingsController;
+  final bool animatePulse;
 
   @override
   State<CodCheckApp> createState() => _CodCheckAppState();
@@ -82,6 +84,7 @@ class _CodCheckAppState extends State<CodCheckApp> {
               checkService: widget.checkService,
               reportService: widget.reportService,
               navigatorKey: _navigatorKey,
+              animatePulse: widget.animatePulse,
             ),
           ),
         );
@@ -100,12 +103,14 @@ class AuthGate extends StatefulWidget {
     required this.checkService,
     required this.reportService,
     required this.navigatorKey,
+    this.animatePulse = true,
   });
 
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
   final GlobalKey<NavigatorState> navigatorKey;
+  final bool animatePulse;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -146,6 +151,7 @@ class _AuthGateState extends State<AuthGate> {
       checkService: widget.checkService,
       reportService: widget.reportService,
       signedIn: _session != null,
+      animatePulse: widget.animatePulse,
     );
   }
 }

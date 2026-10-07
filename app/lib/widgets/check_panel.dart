@@ -9,7 +9,6 @@ import '../utils/phone_utils.dart';
 enum _Mode { text, phone, multi }
 
 /// ช่องวางข้อความออเดอร์ ปุ่มตรวจสอบ และผลการตรวจในหน้าเดียวกัน
-/// (ใช้ในหน้า Home แทนการเปิดหน้า CheckCustomerPage)
 /// วางหลายออเดอร์คั่นด้วยบรรทัดว่างได้ จะตรวจทีละออเดอร์และแสดงผลเป็นรายการ
 class CheckPanel extends StatefulWidget {
   const CheckPanel({super.key, required this.checkService});

@@ -57,6 +57,7 @@ class ReportInput {
     required this.platform,
     required this.reason,
     this.amount,
+    this.otherDetails,
   });
 
   final String customerName;
@@ -66,6 +67,7 @@ class ReportInput {
   final ReportPlatform platform;
   final ReportReason reason;
   final num? amount;
+  final String? otherDetails;
 
   Map<String, dynamic> toJson() => {
     'customer_name': customerName.trim(),
@@ -73,6 +75,8 @@ class ReportInput {
     'platform': platform.value,
     'reason': reason.value,
     if (amount != null) 'amount': amount,
+    if (otherDetails != null && otherDetails!.trim().isNotEmpty)
+      'other_details': otherDetails!.trim(),
   };
 }
 

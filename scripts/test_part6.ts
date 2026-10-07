@@ -120,10 +120,10 @@ async function expectLevel(name: string, body: unknown, level: string) {
   record("OPTIONS preflight", "200 + Allow-Origin", `HTTP ${r.status} Allow-Origin=${allow}`, r.ok && allow === "*");
 }
 
-// 2) ไม่แนบ token
+// 2) ไม่แนบ token (Guest Mode ใช้งานได้)
 {
   const r = await call(JSON.stringify({ phone: "0800000001" }), false);
-  record("ไม่แนบ token", "401", `HTTP ${r.status}`, r.status === 401);
+  record("ไม่แนบ token (Guest Mode)", "200 OK", summary(r), r.status === 200 && r.body?.status === "OK");
 }
 
 // 3-6) ระดับความเสี่ยง

@@ -87,7 +87,7 @@ void main() {
     for (final MapEntry(key: name, value: phoneLine) in formats.entries) {
       test('$name: "$phoneLine"', () {
         expect(containsThaiMobile(phoneLine), isTrue);
-        final text = 'ลูกค้า ก\n$phoneLine\n\nลูกค้า ข\n$phoneLine';
+        final text = 'ลูกค้า ก\n$phoneLine\n\nลูกค้า ข\nโทร 0800000002';
         expect(splitOrders(text), hasLength(2));
       });
     }
@@ -103,5 +103,61 @@ void main() {
         expect(containsThaiMobile(line), isFalse);
       });
     }
+  });
+
+  group('ตัดเบอร์ซ้ำ (Deduplication)', () {
+    test('วางเบอร์เรียงทีละบรรทัด มีเบอร์ซ้ำ คืนเฉพาะเบอร์ที่ไม่ซ้ำตามลำดับ', () {
+      const text = '''
+0924582481
+0924582482
+0924582483
+0924582484
+0924582485
+0924582486
+0924582481
+0924582481''';
+      expect(splitOrders(text), [
+        '0924582481',
+        '0924582482',
+        '0924582483',
+        '0924582484',
+        '0924582485',
+        '0924582486',
+      ]);
+    });
+
+    test('วางเบอร์คั่นด้วย comma/semicolon มีเบอร์ซ้ำ คืนเฉพาะเบอร์ที่ไม่ซ้ำ', () {
+      const text = '0924582481, 0959307725; 0924582481';
+      expect(splitOrders(text), ['0924582481', '0959307725']);
+    });
+
+    test('ออเดอร์คั่นด้วยบรรทัดว่าง มีเบอร์ซ้ำ คืนเฉพาะออเดอร์ที่ไม่ซ้ำเบอร์', () {
+      final text = '${_order(1)}\n\n${_order(2)}\n\n${_order(1)}';
+      expect(splitOrders(text), [_order(1), _order(2)]);
+    });
+
+    test('เบอร์เขียนคนละแบบแต่เป็นเบอร์เดียวกัน ถือเป็นเบอร์ซ้ำ', () {
+      const text = '081-234-5678\n0812345678\n+66 81 234 5678\n0899999999';
+      expect(splitOrders(text), ['081-234-5678', '0899999999']);
+    });
+
+    test('เบอร์ซ้ำทั้งหมดจนเหลือ 1 เบอร์ คืนข้อความทั้งก้อน (ตรวจรอบเดียว)', () {
+      const text = '0924582481\n0924582481\n0924582481';
+      expect(splitOrders(text), [text]);
+    });
+
+    test('ออเดอร์เกิน 10 ชุดเมื่อรวมซ้ำ แต่หักซ้ำแล้วไม่เกิน 10 ชุด ไม่ถูกตัด', () {
+      // 12 บรรทัด มี 8 เบอร์ไม่ซ้ำ
+      final lines = [
+        ...List.generate(8, (i) => '080000000$i'),
+        '0800000000',
+        '0800000001',
+        '0800000002',
+        '0800000003',
+      ];
+      final text = lines.join('\n');
+      expect(exceedsOrderLimit(text), isFalse);
+      expect(splitOrders(text), hasLength(8));
+    });
   });
 }

@@ -24,12 +24,14 @@ class HomePage extends StatefulWidget {
     required this.checkService,
     required this.reportService,
     required this.signedIn,
+    this.animatePulse = true,
   });
 
   final AuthService authService;
   final CheckService checkService;
   final ReportService reportService;
   final bool signedIn;
+  final bool animatePulse;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -159,10 +161,10 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     borderRadius: BorderRadius.circular(9999),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      _PulsingDot(),
+                                      _PulsingDot(animate: widget.animatePulse),
                                       SizedBox(width: 8),
                                       Text(
                                         'AI Risk Protection for Online Merchants',
@@ -376,7 +378,9 @@ class _HomePageState extends State<HomePage> {
 
 /// Pulsing blue dot in hero badge with smooth pulse animation
 class _PulsingDot extends StatefulWidget {
-  const _PulsingDot();
+  const _PulsingDot({this.animate = true});
+
+  final bool animate;
 
   @override
   State<_PulsingDot> createState() => _PulsingDotState();
@@ -395,7 +399,7 @@ class _PulsingDotState extends State<_PulsingDot>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     );
-    if (!WidgetsBinding.instance.runtimeType.toString().contains('TestWidgetsFlutterBinding')) {
+    if (widget.animate) {
       _controller.repeat();
     }
 

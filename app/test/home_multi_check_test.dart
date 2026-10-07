@@ -83,6 +83,7 @@ Future<void> _pumpHome(
         checkService: service,
         reportService: _FakeReportService(),
         signedIn: false,
+        animatePulse: false,
       ),
     ),
   );
@@ -332,5 +333,49 @@ void main() {
     expect(_item(0), findsNothing);
     expect(_status, findsNothing);
     expect(find.byKey(const Key('check-card-yellow')), findsOneWidget);
+  });
+
+  testWidgets('วางเบอร์มีเบอร์ซ้ำ ตรวจเฉพาะเบอร์ที่ไม่ซ้ำ ไม่ตรวจซ้ำ และแสดงจำนวนถูกต้อง', (
+    tester,
+  ) async {
+    final service = ControlledCheckService();
+    await _pumpHome(tester, service);
+
+    const text = '''
+0924582481
+0924582482
+0924582483
+0924582484
+0924582485
+0924582486
+0924582481
+0924582481''';
+
+    await _submit(tester, text);
+    // พบ 6 ออเดอร์ (ตัดเบอร์ซ้ำ 2 รายการออก)
+    expect(_statusText(tester), 'พบ 6 ออเดอร์ กำลังตรวจสอบ... 1/6');
+    expect(service.calls, ['0924582481']);
+
+    service.respond(_ok(RiskLevel.green, 1));
+    await tester.pump();
+    expect(_statusText(tester), 'พบ 6 ออเดอร์ กำลังตรวจสอบ... 2/6');
+    expect(service.calls, ['0924582481', '0924582482']);
+
+    for (var i = 2; i <= 6; i++) {
+      service.respond(_ok(RiskLevel.green, i));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(_statusText(tester), 'ตรวจแล้ว 6 ออเดอร์');
+    // ตรวจแค่ 6 เบอร์ ไม่มีการเรียก 0924582481 ซ้ำ
+    expect(service.calls, [
+      '0924582481',
+      '0924582482',
+      '0924582483',
+      '0924582484',
+      '0924582485',
+      '0924582486',
+    ]);
   });
 }

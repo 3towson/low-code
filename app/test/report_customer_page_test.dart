@@ -203,6 +203,7 @@ void main() {
       'phone': '081-234-5678',
       'platform': 'other',
       'reason': 'other',
+      'other_details': 'แพลตฟอร์ม: Instagram | เหตุผล: เปลี่ยนใจไม่รับ',
     });
 
     service.respond(const ReportSuccess());

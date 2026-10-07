@@ -57,6 +57,26 @@ void main() {
     });
   });
 
+  test('ส่ง other_details ไปที่ report-customer เมื่อมีค่า', () async {
+    final fake = FakeFunctionsClient(
+        () async => const FunctionResponse(data: {'status': 'CREATED'}, status: 201));
+    const inputWithOther = ReportInput(
+      customerName: 'สมศักดิ์',
+      phone: '0812345678',
+      platform: ReportPlatform.other,
+      reason: ReportReason.other,
+      otherDetails: 'เหตุผล: ขอยกเลิกกลางคัน',
+    );
+    await ReportService(fake).submit(inputWithOther);
+    expect(fake.calledBody, {
+      'customer_name': 'สมศักดิ์',
+      'phone': '0812345678',
+      'platform': 'other',
+      'reason': 'other',
+      'other_details': 'เหตุผล: ขอยกเลิกกลางคัน',
+    });
+  });
+
   test('201 CREATED -> ReportSuccess', () async {
     final r = await _run(() async =>
         const FunctionResponse(data: {'status': 'CREATED'}, status: 201));

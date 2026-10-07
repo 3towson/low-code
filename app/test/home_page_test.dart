@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cod_customer_check/app.dart';
-import 'package:cod_customer_check/pages/check_customer_page.dart';
 import 'package:cod_customer_check/pages/login_page.dart';
 import 'package:cod_customer_check/pages/report_customer_page.dart';
 import 'package:cod_customer_check/services/auth_service.dart';
@@ -117,12 +116,14 @@ Future<FakeCheckService> _pumpApp(
           authService: auth,
           checkService: check,
           reportService: FakeReportService(),
+          animatePulse: false,
         )
       : CodCheckApp(
           authService: auth,
           checkService: check,
           reportService: FakeReportService(),
           themeMode: themeMode,
+          animatePulse: false,
         ));
   await tester.pumpAndSettle();
   return check;
@@ -197,7 +198,6 @@ void main() {
     await _tap(tester, find.byKey(const Key('check-submit')));
 
     expect(check.calls, ['text:$_order']);
-    expect(find.byType(CheckCustomerPage), findsNothing);
     expect(find.byKey(const Key('check-card-red')), findsOneWidget);
     // ผลอยู่ใต้ปุ่มตรวจสอบ และอยู่เหนือปุ่มรายงาน
     final submitY =
@@ -342,4 +342,24 @@ void main() {
       });
     }
   }
+
+  testWidgets(
+      'animatePulse = true ทำงานต่อเนื่องและ pump ด้วย Duration ได้อย่างถูกต้อง',
+      (tester) async {
+    await tester.pumpWidget(CodCheckApp(
+      authService: FakeAuthService(),
+      checkService: FakeCheckService(),
+      reportService: FakeReportService(),
+      animatePulse: true,
+    ));
+    await tester.pump();
+    expect(
+        find.text('AI Risk Protection for Online Merchants'), findsOneWidget);
+
+    // ทดสอบแอนิเมชันรอบแรก (ครึ่งรอบ 900ms)
+    await tester.pump(const Duration(milliseconds: 900));
+    // ทดสอบจบรอบแรก (1800ms)
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('COD Risk Shield'), findsOneWidget);
+  });
 }

@@ -1,5 +1,5 @@
 // Edge Function: รายงานลูกค้า COD ที่มีปัญหา
-// body: { customer_name, phone, platform, reason, amount? }
+// body: { customer_name, phone, platform, reason, amount?, other_details? }
 // reported_by ใช้ user id จาก token เท่านั้น ห้ามอ่านจาก body
 // ห้าม log ชื่อ เบอร์โทร หรือ hash และเก็บเฉพาะ phone_hash ลงฐานข้อมูล
 
@@ -35,7 +35,15 @@ const admin = createClient(
 
 // ตรวจ body คืนค่าที่พร้อม insert หรือรายการ field ที่ผิด
 function validate(body: Record<string, unknown>):
-  | { ok: true; name: string; phone: string; platform: string; reason: string; amount: number | null }
+  | {
+      ok: true;
+      name: string;
+      phone: string;
+      platform: string;
+      reason: string;
+      amount: number | null;
+      other_details: string | null;
+    }
   | { ok: false; errors: FieldError[] } {
   const errors: FieldError[] = [];
 
@@ -69,6 +77,24 @@ function validate(body: Record<string, unknown>):
     errors.push({ field: "amount", message: "มูลค่าความเสียหายต้องเป็นตัวเลข 0 ถึง 1,000,000" });
   }
 
+  const MAX_OTHER_DETAILS_LENGTH = 500;
+  let otherDetails: string | null = null;
+  if (typeof body.other_details === "string") {
+    const trimmed = body.other_details.trim();
+    if (trimmed.length > MAX_OTHER_DETAILS_LENGTH) {
+      errors.push({
+        field: "other_details",
+        message: `รายละเอียดเพิ่มเติมต้องไม่เกิน ${MAX_OTHER_DETAILS_LENGTH} ตัวอักษร`,
+      });
+    } else if (trimmed.length > 0) {
+      if (findPhoneCandidates(trimmed).length > 0) {
+        errors.push({ field: "other_details", message: "รายละเอียดเพิ่มเติมห้ามมีเบอร์โทร" });
+      } else {
+        otherDetails = trimmed;
+      }
+    }
+  }
+
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -77,10 +103,11 @@ function validate(body: Record<string, unknown>):
     platform: platform as string,
     reason: reason as string,
     amount: amount as number | null,
+    other_details: otherDetails,
   };
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "POST") return json(405, { error: "ไม่รองรับคำขอนี้" });
 
@@ -115,6 +142,7 @@ Deno.serve(async (req) => {
       platform: input.platform,
       reason: input.reason,
       amount: input.amount,
+      other_details: input.other_details,
     });
     if (insertError) {
       if (insertError.message?.includes("DUPLICATE_REPORT")) {

@@ -66,6 +66,7 @@ Widget _buildTestApp({
     checkService: _FakeCheckService(),
     reportService: _FakeReportService(),
     settingsController: controller,
+    animatePulse: false,
   );
 }
 

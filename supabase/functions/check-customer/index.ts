@@ -1,6 +1,6 @@
 // Edge Function: ตรวจสอบระดับความเสี่ยงของลูกค้า COD
 // body: { text: string } (ข้อความออเดอร์) หรือ { phone: string } (ผู้ใช้กรอกเบอร์เอง)
-// ต้อง login ก่อนใช้งาน
+// รองรับการใช้งานโดยไม่ต้อง login (Guest Mode) หรือเข้าสู่ระบบก็ได้
 // ห้าม log ข้อความออเดอร์ ชื่อ เบอร์โทร หรือ hash และห้ามส่ง hash หรือข้อมูลผู้รายงานกลับไป
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -37,16 +37,17 @@ const admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
   if (req.method !== "POST") return json(405, { error: "ไม่รองรับคำขอนี้" });
 
   try {
-    // 1) ตรวจผู้ใช้ (ต้องเข้าสู่ระบบ)
-    const token = req.headers.get("Authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
-    if (!token) return json(401, { error: "กรุณาเข้าสู่ระบบก่อนใช้งาน" });
-    const { data: auth, error: authError } = await admin.auth.getUser(token);
-    if (authError || !auth.user) return json(401, { error: "กรุณาเข้าสู่ระบบก่อนใช้งาน" });
+    // 1) ตรวจสิทธิ์: อนุญาต Guest Mode โดยตรวจสอบว่ามี apikey หรือ Authorization
+    const apiKey = req.headers.get("apikey");
+    const authHeader = req.headers.get("Authorization");
+    if (!apiKey && !authHeader) {
+      return json(401, { error: "กรุณาระบุ apikey หรือเข้าสู่ระบบก่อนใช้งาน" });
+    }
 
     // 2) อ่าน body: ต้องมี text หรือ phone อย่างใดอย่างหนึ่งที่ไม่ว่าง
     let body: unknown;

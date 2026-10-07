@@ -142,10 +142,18 @@ class CheckService {
     void Function(MultiCheckResult result)? onResult,
   }) async {
     final results = <MultiCheckResult>[];
+    final cache = <String, CheckResult>{};
     for (final order in orders) {
+      final CheckResult checkResult;
+      if (cache.containsKey(order)) {
+        checkResult = cache[order]!;
+      } else {
+        checkResult = await checkText(order);
+        cache[order] = checkResult;
+      }
       final result = MultiCheckResult(
         orderText: order,
-        result: await checkText(order),
+        result: checkResult,
       );
       results.add(result);
       onResult?.call(result);

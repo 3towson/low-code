@@ -93,4 +93,25 @@ void main() {
     expect(results, isEmpty);
     expect(service.calls, isEmpty);
   });
+
+  test('ออเดอร์ซ้ำกัน ไม่เรียก checkText ซ้ำและใช้ผลเดิม', () async {
+    final responses = {
+      'ออเดอร์ 1': _ok(RiskLevel.green, '080-XXX-0001'),
+      'ออเดอร์ 2': _ok(RiskLevel.red, '080-XXX-0002'),
+    };
+    final service = _ScriptedCheckService(responses);
+
+    final results = await service.checkMultiple([
+      'ออเดอร์ 1',
+      'ออเดอร์ 2',
+      'ออเดอร์ 1',
+    ]);
+
+    // เรียก checkText แค่ 2 ครั้งสำหรับออเดอร์ที่ไม่ซ้ำ
+    expect(service.calls, ['ออเดอร์ 1', 'ออเดอร์ 2']);
+    expect(results, hasLength(3));
+    expect(results[0].result, same(responses['ออเดอร์ 1']));
+    expect(results[1].result, same(responses['ออเดอร์ 2']));
+    expect(results[2].result, same(responses['ออเดอร์ 1']));
+  });
 }

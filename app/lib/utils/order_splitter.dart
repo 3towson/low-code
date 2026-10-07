@@ -14,7 +14,40 @@ final RegExp _blankLines = RegExp(r'\n[ \t]*(?:\n[ \t]*)+');
 final RegExp _digitRun = RegExp(r'[0-9๐-๙]+(?:[ \t\-.()]+[0-9๐-๙]+)*');
 final RegExp _digitGroup = RegExp(r'[0-9๐-๙]+');
 
-/// แยกข้อความเป็นออเดอร์ด้วยบรรทัดว่าง เก็บเฉพาะก้อนที่มีเบอร์มือถือไทย
+/// ดึงเบอร์มือถือไทยเบอร์แรกที่พบในข้อความ (normalize เป็น 0XXXXXXXXX แล้ว)
+/// หรือ null ถ้าไม่พบเบอร์มือถือไทย
+String? extractFirstThaiMobile(String text) {
+  for (final run in _digitRun.allMatches(text)) {
+    final groups = _digitGroup.allMatches(run[0]!).map((m) => m[0]!).toList();
+    for (var i = 0; i < groups.length; i++) {
+      var digits = '';
+      for (var j = i; j < groups.length && digits.length < 11; j++) {
+        digits += groups[j];
+        final normalized = normalizeThaiPhone(digits);
+        if (normalized != null) return normalized;
+      }
+    }
+  }
+  return null;
+}
+
+/// true เมื่อข้อความมีเบอร์มือถือไทยอยู่ด้วย
+bool containsThaiMobile(String text) => extractFirstThaiMobile(text) != null;
+
+/// ตัดรายการที่มีเบอร์ซ้ำกันออก เก็บเฉพาะรายการแรกที่พบ
+List<String> _deduplicateByPhone(List<String> items) {
+  final seen = <String>{};
+  final unique = <String>[];
+  for (final item in items) {
+    final phone = extractFirstThaiMobile(item);
+    if (phone == null || seen.add(phone)) {
+      unique.add(item);
+    }
+  }
+  return unique;
+}
+
+/// แยกข้อความเป็นออเดอร์ด้วยบรรทัดว่าง เก็บเฉพาะก้อนที่มีเบอร์มือถือไทยและไม่ซ้ำเบอร์
 /// ถ้าได้ไม่ถึง 2 ออเดอร์ คืนข้อความทั้งก้อน (ให้ server แยกเองเหมือนเดิม)
 /// ได้ไม่เกิน [maxOrdersPerCheck] ออเดอร์ ใช้ [exceedsOrderLimit] เพื่อรู้ว่าถูกตัดหรือไม่
 List<String> splitOrders(String text) {
@@ -36,7 +69,7 @@ List<String> _ordersWithPhone(String text) {
       .toList();
 
   if (blankSeparated.length > 1) {
-    return blankSeparated;
+    return _deduplicateByPhone(blankSeparated);
   }
 
   // กรณีวางเบอร์เรียงทีละบรรทัด หรือคั่นด้วย comma/semicolon โดยไม่มีบรรทัดว่าง
@@ -48,25 +81,8 @@ List<String> _ordersWithPhone(String text) {
       .toList();
 
   if (lines.length > 1 && lines.every((l) => containsThaiMobile(l))) {
-    return lines;
+    return _deduplicateByPhone(lines);
   }
 
   return blankSeparated;
-}
-
-/// true เมื่อข้อความมีเบอร์มือถือไทยอยู่ด้วย
-/// ลองต่อกลุ่มตัวเลขที่ติดกันทีละช่วง เพราะเบอร์อาจอยู่ติดกับตัวเลขอื่น
-/// เช่น "081 234 5678 บ้านเลขที่ 12"
-bool containsThaiMobile(String text) {
-  for (final run in _digitRun.allMatches(text)) {
-    final groups = _digitGroup.allMatches(run[0]!).map((m) => m[0]!).toList();
-    for (var i = 0; i < groups.length; i++) {
-      var digits = '';
-      for (var j = i; j < groups.length && digits.length < 11; j++) {
-        digits += groups[j];
-        if (normalizeThaiPhone(digits) != null) return true;
-      }
-    }
-  }
-  return false;
 }
