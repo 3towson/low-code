@@ -188,7 +188,7 @@ Deno.serve(async (req: Request) => {
     const input = validate(
       (body && typeof body === "object" && !Array.isArray(body) ? body : {}) as Record<string, unknown>,
     );
-    if (!input.ok) return json(400, { status: "INVALID_INPUT", errors: input.errors });
+    if (input.ok === false) return json(400, { status: "INVALID_INPUT", errors: input.errors });
 
     // ตรวจสอบว่า evidence_paths ทุกไฟล์ขึ้นต้นด้วย user id ของตนเอง
     const invalidPath = input.evidence_paths.find((p) => !p.startsWith(`${auth.user.id}/`));

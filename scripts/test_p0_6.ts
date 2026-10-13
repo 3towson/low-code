@@ -7,7 +7,6 @@
 //
 // รัน: deno run --allow-net --allow-read --allow-env scripts/test_p0_6.ts
 
-import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadEnv, serviceClient } from "./_env.ts";
 
 const env = await loadEnv([
@@ -72,7 +71,7 @@ try {
     .select("key, count, window_start")
     .eq("key", testKey)
     .single();
-  const countOk = row?.count >= 3;
+  const countOk = (row?.count ?? 0) >= 3;
   record(
     "4. ตรวจสอบตาราง rate_limits",
     "count >= 3",
