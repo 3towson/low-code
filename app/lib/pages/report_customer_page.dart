@@ -96,6 +96,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     else if (widget.initialEvidence != null)
       widget.initialEvidence!,
   ];
+  final Map<EvidenceFile, String> _uploadedEvidencePaths = {};
   String? _evidenceError;
   bool _submitting = false;
   bool _extracting = false;
@@ -136,7 +137,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         });
       }
     } catch (e) {
-      setState(() => _evidenceError = 'เลือกรูปภาพไม่สำเร็จ: $e');
+      debugPrint('Pick evidence error: $e');
+      setState(() => _evidenceError = 'ไม่สามารถเลือกรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
     }
   }
 
@@ -185,18 +187,24 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         }
       }
       for (final ev in _selectedEvidences) {
-        final path = await storage.uploadEvidence(
-          userId: resolvedUserId,
-          bytes: ev.bytes,
-          extension: ev.extension,
-        );
-        evidencePaths.add(path);
+        if (_uploadedEvidencePaths.containsKey(ev)) {
+          evidencePaths.add(_uploadedEvidencePaths[ev]!);
+        } else {
+          final path = await storage.uploadEvidence(
+            userId: resolvedUserId,
+            bytes: ev.bytes,
+            extension: ev.extension,
+          );
+          _uploadedEvidencePaths[ev] = path;
+          evidencePaths.add(path);
+        }
       }
     } catch (e) {
+      debugPrint('Upload evidence error: $e');
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _evidenceError = 'อัปโหลดภาพหลักฐานไม่สำเร็จ: $e';
+        _evidenceError = 'อัปโหลดภาพหลักฐานไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่';
       });
       return;
     }
@@ -238,6 +246,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         _otherPlatformController.clear();
         _otherReasonController.clear();
         _selectedEvidences.clear();
+        _uploadedEvidencePaths.clear();
         _evidenceError = null;
         _aiMessage = null;
       }
@@ -1058,7 +1067,10 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                     tooltip: 'ลบรูปหลักฐาน',
                     onPressed: _submitting
                         ? null
-                        : () => setState(() => _selectedEvidences.removeAt(i)),
+                        : () => setState(() {
+                            final removed = _selectedEvidences.removeAt(i);
+                            _uploadedEvidencePaths.remove(removed);
+                          }),
                     icon: const Icon(Icons.close_rounded, size: 20),
                   ),
                 ],

@@ -23,22 +23,16 @@ class SupabaseEvidenceStorageService implements EvidenceStorageService {
   final SupabaseClient _supabase;
   final String bucket;
 
-  /// แปลงนามสกุลไฟล์เป็น MIME type ที่มาตรฐาน IANA และ Supabase Storage Bucket อนุญาต
+  /// แปลงนามสกุลไฟล์เป็น MIME type ที่มาตรฐาน IANA และ Supabase Storage Bucket อนุญาต (jpeg, png, webp)
   static String resolveMimeType(String extension) {
     final clean = extension.replaceAll('.', '').toLowerCase().trim();
     switch (clean) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
       case 'png':
         return 'image/png';
       case 'webp':
         return 'image/webp';
-      case 'gif':
-        return 'image/gif';
-      case 'heic':
-      case 'heif':
-        return 'image/heic';
+      case 'jpg':
+      case 'jpeg':
       default:
         return 'image/jpeg';
     }
@@ -51,7 +45,10 @@ class SupabaseEvidenceStorageService implements EvidenceStorageService {
     required String extension,
   }) async {
     final cleanExt = extension.replaceAll('.', '').toLowerCase().trim();
-    final ext = cleanExt.isEmpty ? 'jpg' : cleanExt;
+    // Bucket อนุญาตเฉพาะ jpg/jpeg, png, webp เท่านั้น หากเป็น heic/gif หรือรูปแบบอื่นให้บันทึกเป็น jpg
+    final ext = (cleanExt == 'png' || cleanExt == 'webp' || cleanExt == 'jpeg')
+        ? cleanExt
+        : 'jpg';
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final rand = DateTime.now().microsecondsSinceEpoch % 10000;
     final path = '$userId/evidence_${timestamp}_$rand.$ext';

@@ -48,6 +48,7 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
   bool _submitting = false;
   String? _error;
   String? _evidenceError;
+  final Map<EvidenceFile, String> _uploadedEvidencePaths = {};
 
   @override
   void initState() {
@@ -87,7 +88,8 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
         });
       }
     } catch (e) {
-      setState(() => _evidenceError = 'เลือกรูปภาพไม่สำเร็จ: $e');
+      debugPrint('Pick KYC evidence error: $e');
+      setState(() => _evidenceError = 'ไม่สามารถเลือกรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
     }
   }
 
@@ -134,11 +136,13 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
         category: _selectedCategory,
         contactPhone: _phoneController.text,
         evidences: _selectedEvidences,
+        uploadedPathCache: _uploadedEvidencePaths,
       );
 
       if (!mounted) return;
 
       if (ok) {
+        _uploadedEvidencePaths.clear();
         if (widget.onSubmitted != null) {
           widget.onSubmitted!();
         }
@@ -166,9 +170,10 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
         });
       }
     } catch (e) {
+      debugPrint('Submit KYC error: $e');
       if (!mounted) return;
       setState(() {
-        _error = 'เกิดข้อผิดพลาด: $e';
+        _error = 'เกิดข้อผิดพลาดในการยื่นข้อมูล กรุณาลองใหม่อีกครั้ง';
         _submitting = false;
       });
     }
@@ -474,8 +479,10 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
                                     child: InkWell(
                                       onTap: _submitting
                                           ? null
-                                          : () => setState(() =>
-                                              _selectedEvidences.removeAt(i)),
+                                          : () => setState(() {
+                                              final removed = _selectedEvidences.removeAt(i);
+                                              _uploadedEvidencePaths.remove(removed);
+                                            }),
                                       child: Container(
                                         padding: const EdgeInsets.all(2),
                                         decoration: const BoxDecoration(

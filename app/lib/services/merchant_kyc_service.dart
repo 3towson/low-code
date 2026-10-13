@@ -115,15 +115,11 @@ class MerchantKycService {
 
   /// ดึงสถานะ KYC ปัจจุบันของร้านค้า
   Future<MerchantKycInfo> getKycStatus() async {
-    try {
-      final res = await _callRpc('get_my_kyc_status');
-      if (res is Map<String, dynamic>) {
-        return MerchantKycInfo.fromJson(res);
-      } else if (res is Map) {
-        return MerchantKycInfo.fromJson(Map<String, dynamic>.from(res));
-      }
-    } catch (_) {
-      // Fallback กรณีตารางยังไม่ได้รัน migration หรือมีปัญหาการเชื่อมต่อ
+    final res = await _callRpc('get_my_kyc_status');
+    if (res is Map<String, dynamic>) {
+      return MerchantKycInfo.fromJson(res);
+    } else if (res is Map) {
+      return MerchantKycInfo.fromJson(Map<String, dynamic>.from(res));
     }
     return const MerchantKycInfo(
       shopName: '',
@@ -138,6 +134,7 @@ class MerchantKycService {
     required String contactPhone,
     required List<EvidenceFile> evidences,
     String? userId,
+    Map<EvidenceFile, String>? uploadedPathCache,
   }) async {
     final effectiveUserId = userId ?? _supabase?.auth.currentUser?.id;
     if (effectiveUserId == null) {
@@ -150,12 +147,17 @@ class MerchantKycService {
     final uploadedPaths = <String>[];
     final storage = _storageService;
     for (final evidence in evidences) {
-      if (storage != null) {
+      if (uploadedPathCache != null && uploadedPathCache.containsKey(evidence)) {
+        uploadedPaths.add(uploadedPathCache[evidence]!);
+      } else if (storage != null) {
         final path = await storage.uploadEvidence(
           userId: effectiveUserId,
           bytes: evidence.bytes,
           extension: evidence.extension,
         );
+        if (uploadedPathCache != null) {
+          uploadedPathCache[evidence] = path;
+        }
         uploadedPaths.add(path);
       }
     }

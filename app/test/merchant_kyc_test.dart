@@ -55,6 +55,7 @@ class MockMerchantKycService extends MerchantKycService {
     required String contactPhone,
     required List<EvidenceFile> evidences,
     String? userId,
+    Map<EvidenceFile, String>? uploadedPathCache,
   }) async {
     submitCallCount++;
     lastSubmittedUrl = shopUrl;
@@ -87,6 +88,9 @@ class FakeAuthService implements AuthService {
   final String mockShopName;
   @override
   final bool isAdmin;
+
+  @override
+  Future<bool> checkIsAdmin() async => isAdmin;
 
   @override
   String get shopName => mockShopName;

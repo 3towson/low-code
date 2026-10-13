@@ -33,21 +33,30 @@
    - รองรับการกรอกเบอร์โทรโดยตรง หรือวางข้อความออเดอร์ดิบ (Raw Order Text) จากแชท
    - **Smart Order Parser & AI Extract**: ตัดแบ่งหลายออเดอร์อัตโนมัติ (Multi-order Splitting) และสกัดชื่อ-เบอร์โทรด้วย **Google Gemini AI** พร้อมระบบ Fallback ด้วย Regular Expression อัตโนมัติ
    - แสดงระดับความเสี่ยง (เขียว / เหลือง / แดง), จำนวนครั้งที่เคยถูกรายงาน และช่วงเวลาที่ถูกรายงานล่าสุด
-   - ใช้งานหน้าตรวจสอบได้ทันทีโดยไม่ต้องเข้าสู่ระบบ (Guest Mode)
+   - ใช้งานหน้าตรวจสอบได้ทันทีในโหมดผู้เยี่ยมชม (Guest Mode) พร้อมระบบ Postgres Rate Limiting ป้องกันการดูดข้อมูล
 
-2. **ระบบรายงานลูกค้าที่มีปัญหา (Problematic Customer Reporting)**
-   - ฟอร์มรายงานระบุ: ชื่อ, เบอร์โทร, แพลตฟอร์ม, สาเหตุ, มูลค่าความเสียหาย (Damage Amount), และรายละเอียดเพิ่มเติม
-   - รองรับตัวเลือก "อื่นๆ" (Other) พร้อมช่องกรอกเพิ่มเติมแบบไดนามิก
+2. **ระบบยืนยันตัวตนร้านค้า (Merchant KYC Verification)**
+   - ป้องกันการรายงานเท็จและบัญชีสแปม ร้านค้าต้องส่งลิงก์หน้าร้าน, หมวดหมู่สินค้า, เบอร์ติดต่อร้านค้า และภาพหลักฐานยอดขาย/ส่งพัสดุจริง (>50 ออเดอร์)
+   - ผู้ดูแลระบบ (Admin) ตรวจสอบและอนุมัติก่อนเปิดสิทธิ์ส่งรายงานลูกค้า
+
+3. **ระบบรายงานลูกค้าที่มีปัญหา พร้อมภาพหลักฐาน (Problematic Customer Reporting)**
+   - ฟอร์มรายงานระบุ: เบอร์โทร, แพลตฟอร์ม, สาเหตุ, มูลค่าความเสียหาย, และรายละเอียดเพิ่มเติม
+   - **บังคับแนบรูปภาพหลักฐานจริง (1–3 รูป)** จัดเก็บใน Supabase Storage Bucket ที่เข้ารหัสความปลอดภัย
+   - รายงานเริ่มต้นที่สถานะ `pending` เพื่อให้ผู้ดูแลระบบตรวจสอบความถูกต้องก่อนมีผลกับระดับความเสี่ยง
    - ระบบป้องกันสแปมและการส่งรายงานซ้ำ (Anti-duplicate Reports) ภายใน 7 วันจากร้านเดิม
-   - บังคับเข้าสู่ระบบผ่าน Supabase Auth เพื่อยืนยันตัวตนร้านค้าก่อนส่งรายงาน
 
-3. **ดีไซน์สวยงาม ทันสมัย รองรับ 2 ภาษา (Bilingual & Multi-Theme)**
+4. **ระบบผู้ดูแลระบบและการดูแลความปลอดภัย UGC (Admin Moderation & UGC Safety)**
+   - แดชบอร์ดสำหรับผู้ดูแลระบบ (Admin Dashboard) ใช้ตรวจสอบและอนุมัติ/ปฏิเสธรายงานและร้านค้า KYC
+   - สามารถระงับสิทธิ์บัญชีร้านค้า (Suspend Merchant) ที่ละเมิดข้อกำหนด UGC หรือสร้างรายงานเท็จได้ทันที
+
+5. **การจัดการบัญชีตามเกณฑ์ App Store & Google Play**
+   - รองรับการลืมรหัสผ่าน (Reset Password via Email)
+   - ฟังก์ชันลบบัญชีผู้ใช้ถาวร (Delete Account) ตามเกณฑ์ Apple App Store Guideline 5.1.1(v) และ Google Play Data Safety
+
+6. **ดีไซน์สวยงาม ทันสมัย รองรับ 2 ภาษา (Bilingual & Multi-Theme)**
    - สลับโหมดการแสดงผล **Dark Mode / Light Mode** ได้อย่างลื่นไหล
    - สลับภาษาได้ทันที: **ภาษาไทย (TH)** และ **English (EN)**
    - ออกแบบ UI ตามมาตรฐาน Material 3 & Modern Glassmorphism Responsive Design
-
-4. **รองรับการใช้งานข้ามแพลตฟอร์ม (Cross-Platform Frontend)**
-   - **Flutter App (`app/`)**: ประสิทธิภาพสูง รองรับทั้ง Web, Android, iOS, Windows
 
 ---
 
@@ -258,13 +267,13 @@ deno run --allow-net --allow-read --allow-env scripts/e2e_test.ts
 
 โปรเจกต์นี้ได้รับการพัฒนาโดยใช้แนวคิด **Test-Driven Development (TDD)** และมีการทดสอบครอบคลุมทุกเลเยอร์:
 
-- **194/194 เคสทดสอบอัตโนมัติผ่าน 100%** (ดูรายละเอียดใน [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md))
-- **Flutter Tests (140+ เคสผ่านทั้งหมด)**:
+- **194/194 เคสทดสอบอัตโนมัติบน Deno & PostgreSQL ผ่าน 100%** (ดูรายละเอียดใน [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md))
+- **Flutter Test Suite (211/211 เคสผ่าน 100%)**:
   ```bash
   cd app
   flutter test
   ```
-- **Flutter Analyze**: โค้ดผ่านการตรวจ Lint สะอาด ไม่มี Warnings หรือ Errors
+- **Flutter Analyze**: โค้ดผ่านการตรวจ Lint สะอาด 100% ไม่มี Warnings หรือ Errors
   ```bash
   cd app
   flutter analyze
@@ -277,9 +286,10 @@ deno run --allow-net --allow-read --allow-env scripts/e2e_test.ts
 | Risk Logic | การคำนวณสี เขียว / เหลือง / แดง ตามช่วงเวลา 90 วันและ 12 เดือน | ✅ ผ่าน 10/10 |
 | Normalization & Hash | แปลงเลขไทย, รูปแบบ +66, HMAC-SHA256, Phone Masking | ✅ ผ่าน 21/21 |
 | AI Extraction | การดึงชื่อ-เบอร์โทรด้วย Gemini และ Regex Fallback | ✅ ผ่าน 29/29 |
-| Edge Functions | ทดสอบ Endpoint `check-customer` และ `report-customer` | ✅ ผ่าน 25/25 |
-| Flutter App | Login, Signup, Check Panel, Report Form, Settings, Localization | ✅ ผ่าน 140/140 |
-| End-to-End Flow | การทำงานเชื่อมโยงตั้งแต่สร้างร้านค้า -> ตรวจสอบ -> รายงาน -> ตรวจสอบซ้ำ | ✅ ผ่าน 12/12 |
+| Edge Functions & Rate Limit | ทดสอบ `check-customer`, `report-customer`, `delete-account`, rate limiting | ✅ ผ่าน 35/35 |
+| Merchant KYC & Admin | ยื่นยืนยันตัวตน, อนุมัติ/ปฏิเสธร้านค้า, ระงับบัญชี UGC | ✅ ผ่าน 25/25 |
+| Flutter App | Login, Check Panel, Report Form, Settings, Localization, Admin, KYC | ✅ ผ่าน 211/211 |
+| End-to-End Flow | การทำงานเชื่อมโยงตั้งแต่สร้างร้านค้า -> KYC -> ตรวจสอบ -> รายงาน -> ตรวจสอบซ้ำ | ✅ ผ่าน 12/12 |
 
 ---
 

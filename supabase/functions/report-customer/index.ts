@@ -190,13 +190,41 @@ Deno.serve(async (req: Request) => {
     );
     if (input.ok === false) return json(400, { status: "INVALID_INPUT", errors: input.errors });
 
-    // ตรวจสอบว่า evidence_paths ทุกไฟล์ขึ้นต้นด้วย user id ของตนเอง
-    const invalidPath = input.evidence_paths.find((p) => !p.startsWith(`${auth.user.id}/`));
-    if (invalidPath) {
-      return json(400, {
-        status: "INVALID_INPUT",
-        errors: [{ field: "evidence_path", message: "ไฟล์หลักฐานต้องอยู่ในโฟลเดอร์ของร้านคุณ" }],
-      });
+    // ตรวจสอบว่า evidence_paths ทุกไฟล์ขึ้นต้นด้วย user id ของตนเอง นามสกุลถูกต้อง และไฟล์มีอยู่จริง (P1-4)
+    const validPathRegex = new RegExp(
+      `^${auth.user.id}/[a-zA-Z0-9_.-]+\\.(jpg|jpeg|png|webp)$`,
+      "i",
+    );
+    for (const p of input.evidence_paths) {
+      if (!validPathRegex.test(p) || p.includes("..")) {
+        return json(400, {
+          status: "INVALID_INPUT",
+          errors: [{
+            field: "evidence_path",
+            message: "ไฟล์หลักฐานต้องอยู่ในโฟลเดอร์ของร้านคุณ และเป็นไฟล์ภาพนามสกุล jpg, png หรือ webp",
+          }],
+        });
+      }
+    }
+
+    try {
+      const { data: objects, error: listError } = await admin.storage
+        .from("report-evidences")
+        .list(auth.user.id);
+      if (!listError && objects && objects.length > 0) {
+        const fileNames = new Set(objects.map((o) => o.name));
+        for (const p of input.evidence_paths) {
+          const fileName = p.slice(auth.user.id.length + 1);
+          if (!fileNames.has(fileName)) {
+            return json(400, {
+              status: "INVALID_INPUT",
+              errors: [{ field: "evidence_path", message: `ไม่พบไฟล์ภาพหลักฐาน ${fileName} ในระบบ` }],
+            });
+          }
+        }
+      }
+    } catch {
+      // หากเกิดข้อผิดพลาดในการตรวจสอบ storage ไม่บล็อกการทำงาน
     }
 
     // 3) hash เบอร์แล้ว insert (reported_by มาจาก token เท่านั้น)

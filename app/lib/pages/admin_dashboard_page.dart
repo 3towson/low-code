@@ -131,11 +131,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _loadData();
       }
     } catch (e) {
+      debugPrint('Admin approve report error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: Text('เกิดข้อผิดพลาด: $e'),
+          content: Text('เกิดข้อผิดพลาดในการอนุมัติรายงาน กรุณาลองใหม่อีกครั้ง'),
         ),
       );
     }
@@ -211,11 +212,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _loadData();
       }
     } catch (e) {
+      debugPrint('Admin reject report error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: Text('เกิดข้อผิดพลาด: $e'),
+          content: Text('เกิดข้อผิดพลาดในการปฏิเสธรายงาน กรุณาลองใหม่อีกครั้ง'),
         ),
       );
     }
@@ -286,11 +288,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _loadData();
       }
     } catch (e) {
+      debugPrint('Admin approve merchant error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: Text('เกิดข้อผิดพลาด: $e'),
+          content: Text('เกิดข้อผิดพลาดในการอนุมัติร้านค้า กรุณาลองใหม่อีกครั้ง'),
         ),
       );
     }
@@ -360,11 +363,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _loadData();
       }
     } catch (e) {
+      debugPrint('Admin reject merchant error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: Text('เกิดข้อผิดพลาด: $e'),
+          content: Text('เกิดข้อผิดพลาดในการปฏิเสธร้านค้า กรุณาลองใหม่อีกครั้ง'),
         ),
       );
     }
@@ -435,11 +439,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _loadData();
       }
     } catch (e) {
+      debugPrint('Admin suspend merchant error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: Text('เกิดข้อผิดพลาด: $e'),
+          content: Text('เกิดข้อผิดพลาดในการระงับบัญชีร้านค้า กรุณาลองใหม่อีกครั้ง'),
         ),
       );
     }
@@ -519,11 +524,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _loadData();
       }
     } catch (e) {
+      debugPrint('Admin suspend merchant error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           backgroundColor: Colors.red,
-          content: Text('เกิดข้อผิดพลาด: $e'),
+          content: Text('เกิดข้อผิดพลาดในการระงับบัญชีร้านค้า กรุณาลองใหม่อีกครั้ง'),
         ),
       );
     }
@@ -1475,9 +1481,10 @@ class _EvidenceViewerDialogState extends State<_EvidenceViewerDialog> {
         _loading = false;
       });
     } catch (e) {
+      debugPrint('Open evidence error: $e');
       if (!mounted) return;
       setState(() {
-        _error = 'ไม่สามารถเปิดรูปหลักฐานได้: $e';
+        _error = 'ไม่สามารถเปิดรูปหลักฐานได้ กรุณาลองใหม่อีกครั้ง';
         _loading = false;
       });
     }
@@ -1836,9 +1843,10 @@ class _MerchantEvidenceViewerDialogState
         _loading = false;
       });
     } catch (e) {
+      debugPrint('Open merchant evidence error: $e');
       if (!mounted) return;
       setState(() {
-        _error = 'ไม่สามารถเปิดรูปหลักฐานได้: $e';
+        _error = 'ไม่สามารถเปิดรูปหลักฐานได้ กรุณาลองใหม่อีกครั้ง';
         _loading = false;
       });
     }

@@ -75,6 +75,8 @@ async function cleanup(): Promise<{ reports: number; users: number }> {
   const userIds = [...(await findE2eUsers(sb)).values()];
   let reports = 0;
   if (userIds.length) {
+    const files = userIds.map((id) => `${id}/proof.jpg`);
+    await sb.storage.from("report-evidences").remove(files);
     const { error, count } = await sb
       .from("cod_reports")
       .delete({ count: "exact" })
@@ -124,6 +126,13 @@ async function setup() {
     if (upError) {
       throw new Error(`แก้ sellers ของ ${u.key} ล้มเหลว: ${upError.message}`);
     }
+
+    // P1-1: อัปโหลดไฟล์หลักฐานทดสอบเข้า report-evidences
+    const dummyFile = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    await sb.storage.from("report-evidences").upload(`${data.user.id}/proof.jpg`, dummyFile, {
+      contentType: "image/jpeg",
+      upsert: true,
+    });
 
     const anon = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -214,6 +223,7 @@ async function report(step: string, who: UserKey, phone: string, expectStatus: 2
     platform: "facebook",
     reason: "refused_delivery",
     amount: 250,
+    evidence_paths: [`${ids[who]}/proof.jpg`],
   });
   const expectedBody = expectStatus === 201 ? "CREATED" : "DUPLICATE";
   record(
@@ -223,6 +233,19 @@ async function report(step: string, who: UserKey, phone: string, expectStatus: 2
     `${r.status} ${r.body?.status ?? r.body?.error ?? ""}`.trim(),
     r.status === expectStatus && r.body?.status === expectedBody,
   );
+
+  // P1-1: รายงานเริ่มต้นที่สถานะ pending อนุมัติให้เป็น active เพื่อให้มีผลกับการคำนวณระดับความเสี่ยง
+  if (r.status === 201) {
+    const phoneHash = await hashPhone(phone, env.PHONE_HASH_SECRET);
+    const { error: approveError } = await sb
+      .from("cod_reports")
+      .update({ status: "active" })
+      .eq("phone_hash", phoneHash)
+      .eq("reported_by", ids[who]);
+    if (approveError) {
+      throw new Error(`อนุมัติรายงาน e2e ล้มเหลว: ${approveError.message}`);
+    }
+  }
 }
 
 async function check(

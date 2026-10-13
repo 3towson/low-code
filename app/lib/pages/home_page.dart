@@ -80,9 +80,25 @@ class _HomePageState extends State<HomePage> {
     }
     final kycSvc = _effectiveKycService;
     if (kycSvc != null) {
-      final info = await kycSvc.getKycStatus();
-      if (mounted) setState(() => _kycInfo = info);
+      try {
+        final info = await kycSvc.getKycStatus();
+        if (mounted) setState(() => _kycInfo = info);
+      } catch (e) {
+        debugPrint('Load KYC status error: $e');
+      }
     }
+    _loadAdminStatus();
+  }
+
+  Future<void> _loadAdminStatus() async {
+    if (!widget.signedIn) return;
+    try {
+      final wasAdmin = widget.authService.isAdmin;
+      final isNowAdmin = await widget.authService.checkIsAdmin();
+      if (mounted && wasAdmin != isNowAdmin) {
+        setState(() {});
+      }
+    } catch (_) {}
   }
 
   Future<void> _signOut() async {
@@ -165,7 +181,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openReport() {
+  Future<void> _openReport() async {
     Widget report(BuildContext _) => ReportCustomerPage(
       reportService: widget.reportService,
       checkService: widget.checkService,
@@ -176,14 +192,37 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    // P1-3.5: ดึงสถานะ KYC ใหม่ทุกครั้งที่กดรายงานเพื่อป้องกันกรณีเพิ่งได้รับการอนุมัติ
+    MerchantKycInfo? info = _kycInfo;
+    final kycSvc = _effectiveKycService;
+    if (kycSvc != null) {
+      try {
+        info = await kycSvc.getKycStatus();
+        if (mounted) setState(() => _kycInfo = info);
+      } catch (e) {
+        debugPrint('Fetch KYC on open report error: $e');
+        // P1-3.4: แยก error ออกมา ไม่สรุปว่าเป็น unverified
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('โหลดสถานะการยืนยันตัวตนร้านค้าไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
     // ตรวจสอบสถานะ KYC ของร้านค้า
-    if (_kycInfo != null) {
-      if (_kycInfo!.isApproved) {
+    if (info != null) {
+      if (info.isApproved) {
         Navigator.of(context).push(_modalRoute(report));
         return;
       }
 
-      if (_kycInfo!.isPending) {
+      if (info.isPending) {
         showDialog<void>(
           context: context,
           builder: (ctx) => AlertDialog(

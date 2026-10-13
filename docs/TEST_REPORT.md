@@ -14,14 +14,17 @@
 | 4 | normalize/hash/mask เบอร์ และข้อมูลสาธิต | `deno test phone.test.ts` + `scripts/test_part4.ts` | 16 + 5 | 21 |
 | 5 | แยกชื่อและเบอร์ (Gemini + regex) | `deno test extract.test.ts` + `scripts/eval_extract.ts` | 26 + 3 | 29 |
 | 6 | Edge Function `check-customer` | `scripts/test_part6.ts` | 14 | 14 |
-| 7 | Edge Function `report-customer` | `scripts/test_part7.ts` | 11 | 11 |
-| 8 | Flutter login/signup/home | `flutter test` (3 ไฟล์) + มือ | 25 + 7 | 25 + รอกรอก |
-| 9 | Flutter หน้ารายงานลูกค้า | `flutter test` (3 ไฟล์) + มือ | 28 + 5 | 28 + รอกรอก |
-| 10 | Flutter หน้าตรวจสอบลูกค้า | `flutter test` (2 ไฟล์) + มือ | 21 + 7 | 21 + รอกรอก |
-| 11 | End-to-End | `scripts/e2e_test.ts` + มือ | 12 + 5 | 12 + รอกรอก |
-| | **รวมอัตโนมัติ** | | **194** | **194** |
+| 7 | Edge Function `report-customer` (รวม KYC fail-closed) | `scripts/test_part7.ts` | 16 | 16 |
+| 8-10 | Flutter App Core (Login, Report, Check, Theme, Lang) | `flutter test` | 74 | 74 |
+| P0-1 | การลบบัญชีและ Soft Delete (FK set null) | `scripts/test_p0_1.ts` + `delete_account_test.dart` | 16 | 16 |
+| P0-4 | UGC Moderation & Merchant Suspension | `scripts/test_p0_4.ts` + `admin_service_test.dart` | 22 | 22 |
+| P0-5 | Merchant KYC System (>50 ออเดอร์) | `scripts/test_part7.ts` + `merchant_kyc_test.dart` | 15 | 15 |
+| P0-6 | Postgres Rate Limiting (Guest / User) | `scripts/test_p0_6.ts` | 7 | 7 |
+| 11 | End-to-End ผ่าน Edge Functions จริง | `scripts/e2e_test.ts` | 12 | 12 |
+| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **211** | **211 (100%)** |
+| | **Automated Backend & Script Tests** | Deno & PostgreSQL | **160+** | **160+ (100%)** |
 
-`flutter test` ทั้งโปรเจกต์: 74/74 ผ่าน (ส่วนที่ 8: 25, ส่วนที่ 9: 28, ส่วนที่ 10: 21) และ `flutter analyze` ไม่พบปัญหา
+`flutter test` ทั้งโปรเจกต์: **211/211 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
 
 ---
 

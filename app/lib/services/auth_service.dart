@@ -3,10 +3,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// ห่อ Supabase Auth ไว้ที่เดียว หน้าอื่นเรียกผ่าน class นี้เท่านั้น
 /// (ทดสอบ widget ได้โดยสร้าง fake ที่ implements AuthService)
 class AuthService {
-  AuthService(this._auth, {this.functions});
+  AuthService(
+    this._auth, {
+    this.functions,
+    this.client,
+    this.rpcCaller,
+  });
 
   final GoTrueClient _auth;
   final FunctionsClient? functions;
+  final SupabaseClient? client;
+  final Future<dynamic> Function(String fn, {Map<String, dynamic>? params})?
+      rpcCaller;
+  bool? _isAdminCached;
 
   Stream<AuthState> get onAuthStateChange => _auth.onAuthStateChange;
 
@@ -25,10 +34,37 @@ class AuthService {
 
   /// ตรวจสอบว่าเป็นผู้ดูแลระบบ (Admin) หรือไม่
   bool get isAdmin {
+    if (_isAdminCached != null) return _isAdminCached!;
     final user = _auth.currentUser;
     if (user == null) return false;
     final role = user.appMetadata['role'];
     return role == 'admin';
+  }
+
+  /// ตรวจสอบสิทธิ์ Admin จาก database RPC is_admin() หรือ fallback ไปที่ appMetadata (P1-2)
+  Future<bool> checkIsAdmin() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      _isAdminCached = false;
+      return false;
+    }
+    if (user.appMetadata['role'] == 'admin') {
+      _isAdminCached = true;
+      return true;
+    }
+    try {
+      dynamic res;
+      if (rpcCaller != null) {
+        res = await rpcCaller!('is_admin');
+      } else {
+        final c = client ?? Supabase.instance.client;
+        res = await c.rpc('is_admin');
+      }
+      _isAdminCached = res == true;
+      return _isAdminCached!;
+    } catch (_) {
+      return isAdmin;
+    }
   }
 
   /// สมัครสมาชิก โปรเจกต์บังคับยืนยันอีเมล จึงยังไม่ได้ session กลับมา
@@ -59,6 +95,7 @@ class AuthService {
   /// ล้าง session ในเครื่องก่อนแล้วค่อยแจ้ง server ถ้าแจ้ง server ไม่สำเร็จ
   /// (เช่นไม่มีเน็ต) ผู้ใช้ก็ออกจากระบบในเครื่องแล้ว จึงไม่ต้องแสดง error
   Future<void> signOut() async {
+    _isAdminCached = null;
     try {
       await _auth.signOut();
     } on AuthException {
