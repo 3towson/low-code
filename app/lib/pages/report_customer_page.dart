@@ -11,7 +11,6 @@ import '../theme.dart';
 import '../utils/order_splitter.dart';
 import '../utils/phone_utils.dart';
 
-const int maxCustomerNameLength = 100;
 const num maxDamageAmount = 1000000;
 
 class EvidenceFile {
@@ -24,15 +23,6 @@ class EvidenceFile {
   final String name;
   final Uint8List bytes;
   final String extension;
-}
-
-String? validateCustomerName(String? value) {
-  final name = value?.trim() ?? '';
-  if (name.isEmpty) return 'กรุณากรอกชื่อลูกค้า';
-  if (name.runes.length > maxCustomerNameLength) {
-    return 'ชื่อลูกค้าต้องไม่เกิน $maxCustomerNameLength ตัวอักษร';
-  }
-  return null;
 }
 
 num? parseDamageAmount(String? value) {

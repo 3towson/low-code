@@ -450,6 +450,63 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Future<void> _unsuspendMerchant(PendingMerchant merchant) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle_outline_rounded, color: Color(0xFF10B981)),
+            SizedBox(width: 8),
+            Expanded(child: Text('ยืนยันยกเลิกการระงับร้านค้า')),
+          ],
+        ),
+        content: Text(
+          'คุณต้องการยกเลิกการระงับร้านค้า "${merchant.shopName}" และคืนสถานะเป็นอนุมัติ (Approved) หรือไม่?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('ยกเลิก'),
+          ),
+          FilledButton(
+            key: const Key('admin-confirm-unsuspend-button'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+            ),
+            child: const Text('ยืนยันยกเลิกการระงับ'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final success = await widget.adminService.unsuspendMerchant(merchant.id);
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF10B981),
+            content: Text('ยกเลิกการระงับร้านค้า "${merchant.shopName}" เรียบร้อยแล้ว'),
+          ),
+        );
+        _loadData();
+      }
+    } catch (e) {
+      debugPrint('Admin unsuspend merchant error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('เกิดข้อผิดพลาดในการยกเลิกการระงับร้านค้า กรุณาลองใหม่อีกครั้ง'),
+        ),
+      );
+    }
+  }
+
   Future<void> _suspendMerchantFromReport(PendingReport report) async {
     if (report.sellerId == null || report.sellerId!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1138,16 +1195,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             spacing: 10,
             runSpacing: 8,
             children: [
-              OutlinedButton.icon(
-                key: Key('admin-suspend-merchant-${merchant.id}'),
-                onPressed: () => _suspendMerchant(merchant),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFDC2626),
-                  side: const BorderSide(color: Color(0xFFDC2626)),
+              if (merchant.verificationStatus == 'suspended')
+                OutlinedButton.icon(
+                  key: Key('admin-unsuspend-merchant-${merchant.id}'),
+                  onPressed: () => _unsuspendMerchant(merchant),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF10B981),
+                    side: const BorderSide(color: Color(0xFF10B981)),
+                  ),
+                  icon: const Icon(Icons.check_circle_outline_rounded, size: 15),
+                  label: const Text('ยกเลิกการระงับ'),
+                )
+              else
+                OutlinedButton.icon(
+                  key: Key('admin-suspend-merchant-${merchant.id}'),
+                  onPressed: () => _suspendMerchant(merchant),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFDC2626),
+                    side: const BorderSide(color: Color(0xFFDC2626)),
+                  ),
+                  icon: const Icon(Icons.block_rounded, size: 15),
+                  label: const Text('ระงับร้านค้า'),
                 ),
-                icon: const Icon(Icons.block_rounded, size: 15),
-                label: const Text('ระงับร้านค้า'),
-              ),
               OutlinedButton.icon(
                 key: Key('admin-reject-merchant-${merchant.id}'),
                 onPressed: () => _rejectMerchant(merchant),

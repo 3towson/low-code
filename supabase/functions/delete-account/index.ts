@@ -88,18 +88,21 @@ Deno.serve(async (req: Request) => {
 
     // 2) เปลี่ยนสถานะรายงานที่ยังรอการอนุมัติ (pending) ของผู้ใช้นี้ให้เป็น rejected (N6)
     //    เนื่องจากหลังจากลบบัญชีและภาพหลักฐานแล้ว แอดมินจะไม่สามารถตรวจหลักฐานได้
-    try {
-      await admin
-        .from("cod_reports")
-        .update({
-          status: "rejected",
-          review_notes: "ผู้รายงานขอลบบัญชีผู้ใช้ (Account Deleted)",
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("reported_by", uid)
-        .eq("status", "pending");
-    } catch (e) {
-      console.warn("Failed to update pending reports before account deletion:", e);
+    const { error: rejectError } = await admin
+      .from("cod_reports")
+      .update({
+        status: "rejected",
+        reject_reason: "ผู้รายงานขอลบบัญชีผู้ใช้ (Account Deleted)",
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("reported_by", uid)
+      .eq("status", "pending");
+
+    if (rejectError) {
+      console.error("Failed to update pending reports before account deletion:", rejectError.message);
+      return json(500, {
+        error: "เกิดข้อผิดพลาดในการปรับสถานะรายงานที่ค้างอยู่ กรุณาลองใหม่อีกครั้ง หรือติดต่อฝ่ายสนับสนุน",
+      });
     }
 
     // 3) ลบบัญชีผู้ใช้ใน auth.users ก่อน (N6)

@@ -236,6 +236,16 @@ class AdminService {
     return false;
   }
 
+  /// ยกเลิกการระงับร้านค้า (Unsuspend Merchant)
+  Future<bool> unsuspendMerchant(String sellerId) async {
+    final res = await _callRpc(
+      'admin_unsuspend_merchant',
+      params: {'p_seller_id': sellerId},
+    );
+    if (res is Map && res['ok'] == true) return true;
+    return false;
+  }
+
   /// สถิติจำนวนร้านค้าที่รออนุมัติ
   Future<int> getPendingMerchantsCount() async {
     try {
@@ -277,6 +287,7 @@ class PendingMerchant {
     required this.evidencePath,
     required this.submittedAt,
     required this.createdAt,
+    this.verificationStatus,
   });
 
   final String id;
@@ -287,6 +298,7 @@ class PendingMerchant {
   final String? evidencePath;
   final DateTime? submittedAt;
   final DateTime createdAt;
+  final String? verificationStatus;
 
   /// รายการพาธไฟล์ภาพหลักฐานทั้งหมด
   List<String> get evidencePaths {
@@ -309,6 +321,7 @@ class PendingMerchant {
       submittedAt: DateTime.tryParse(json['submitted_at']?.toString() ?? ''),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
+      verificationStatus: json['verification_status'] as String?,
     );
   }
 }

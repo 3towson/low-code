@@ -68,6 +68,15 @@ class MockAdminService implements AdminService {
     return true;
   }
 
+  final List<String> unsuspendedMerchantIds = [];
+
+  @override
+  Future<bool> unsuspendMerchant(String sellerId) async {
+    unsuspendedMerchantIds.add(sellerId);
+    _merchants = _merchants.where((m) => m.id != sellerId).toList();
+    return true;
+  }
+
   @override
   Future<AdminStats> getStats() async {
     return _stats;
@@ -505,6 +514,55 @@ void main() {
     expect(service.suspendedMerchantRecords.length, 1);
     expect(service.suspendedMerchantRecords.first['id'], 'bad-seller-007');
     expect(find.textContaining('ระงับร้านค้า "ร้านค้าสร้างรายงานเท็จ" เรียบร้อยแล้ว'),
+        findsOneWidget);
+  });
+
+  testWidgets('ยกเลิกการระงับร้านค้า แสดงปุ่มและเรียก unsuspendMerchant เมื่อร้านค้ามีสถานะ suspended (N7/R1)',
+      (tester) async {
+    final suspendedMerchant = PendingMerchant(
+      id: 'seller-suspended-01',
+      shopName: 'ร้านค้าที่เคยถูกระงับ',
+      shopUrl: 'https://suspended-shop.com',
+      category: 'เสื้อผ้าและแฟชั่น',
+      contactPhone: '0811112222',
+      evidencePath: null,
+      submittedAt: DateTime(2026, 10, 13, 10, 0),
+      createdAt: DateTime(2026, 10, 13, 9, 0),
+      verificationStatus: 'suspended',
+    );
+
+    final service = MockAdminService(
+      merchants: [suspendedMerchant],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // สลับไปยังแท็บร้านค้า
+    await tester.tap(find.byKey(const Key('admin-tab-merchants')));
+    await tester.pumpAndSettle();
+
+    // มีปุ่มยกเลิกการระงับร้านค้า (แทนปุ่มระงับร้านค้า)
+    expect(find.byKey(const Key('admin-unsuspend-merchant-seller-suspended-01')),
+        findsOneWidget);
+    expect(find.byKey(const Key('admin-suspend-merchant-seller-suspended-01')),
+        findsNothing);
+
+    // กดยกเลิกการระงับ
+    await tester.tap(
+        find.byKey(const Key('admin-unsuspend-merchant-seller-suspended-01')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ยืนยันยกเลิกการระงับร้านค้า'), findsOneWidget);
+
+    // กดยืนยัน
+    await tester.tap(find.byKey(const Key('admin-confirm-unsuspend-button')));
+    await tester.pumpAndSettle();
+
+    expect(service.unsuspendedMerchantIds, ['seller-suspended-01']);
+    expect(find.textContaining('ยกเลิกการระงับร้านค้า "ร้านค้าที่เคยถูกระงับ" เรียบร้อยแล้ว'),
         findsOneWidget);
   });
 }

@@ -267,6 +267,28 @@ void main() {
       expect(ok, isTrue);
     });
 
+    test('unsuspendMerchant calls admin_unsuspend_merchant RPC (N7/R1)', () async {
+      String? calledFn;
+      Map<String, dynamic>? calledParams;
+
+      final service = AdminService(
+        null,
+        rpcCaller: (fn, {params}) async {
+          calledFn = fn;
+          calledParams = params;
+          return {'ok': true, 'status': 'approved'};
+        },
+      );
+
+      final ok = await service.unsuspendMerchant('merchant-999');
+
+      expect(calledFn, 'admin_unsuspend_merchant');
+      expect(calledParams, {
+        'p_seller_id': 'merchant-999',
+      });
+      expect(ok, isTrue);
+    });
+
     test('getAuditLogs calls admin_get_audit_logs RPC and deserializes results (P2)',
         () async {
       String? calledFn;

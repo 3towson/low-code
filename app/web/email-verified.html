@@ -158,5 +158,38 @@
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1/dist/umd/supabase.min.js"></script>
+  <script>
+    const SUPABASE_URL = "https://sczybmgepozpbjkewied.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjenlibWdlcG96cGJqa2V3aWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNTg4ODksImV4cCI6MjEwNTgzNDg4OX0.f91T-IW5XbCTNWjxWNoTY6J21FMWSK5mybXdPNQuyak";
+
+    async function initVerify() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenHash = urlParams.get('token_hash');
+      const otpType = urlParams.get('type') || 'email';
+
+      if (tokenHash && window.supabase) {
+        try {
+          const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          const { error } = await supabaseClient.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+          if (error) {
+            console.error('Email verification error:', error);
+            const badge = document.querySelector('.status-badge');
+            if (badge) {
+              badge.innerText = '⚠️ ลิงก์ยืนยันไม่ถูกต้องหรือหมดอายุแล้ว';
+              badge.style.color = '#EF4444';
+              badge.style.background = 'rgba(239, 68, 68, 0.15)';
+            }
+          }
+        } catch (e) {
+          console.error('Unexpected verification error:', e);
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', initVerify);
+  </script>
 </body>
 </html>
