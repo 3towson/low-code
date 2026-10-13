@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
       const { data: adminUser, error: adminErr } = await admin
         .from("admin_users")
         .select("id")
-        .eq("id", auth.user.id)
+        .eq("user_id", auth.user.id)
         .maybeSingle();
 
       const isAppAdmin =
@@ -64,15 +64,23 @@ Deno.serve(async (req: Request) => {
     let deletedFilesCount = 0;
     let updatedReportsCount = 0;
     const BATCH_SIZE = 500;
+    let lastSeenId: string | null = null;
 
     // 3) ค้นหารายงานที่มี evidence_path และสร้างก่อน cutoffDate (วนซ้ำเป็น Batch จนหมด)
     while (true) {
-      const { data: oldReports, error: queryErr } = await admin
+      let query = admin
         .from("cod_reports")
         .select("id, evidence_path")
         .not("evidence_path", "is", null)
         .lt("created_at", cutoffIso)
+        .order("id", { ascending: true })
         .limit(BATCH_SIZE);
+
+      if (lastSeenId) {
+        query = query.gt("id", lastSeenId);
+      }
+
+      const { data: oldReports, error: queryErr } = await query;
 
       if (queryErr) {
         console.error("Query old reports error:", queryErr.message);
@@ -83,45 +91,76 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
-      const filePathsToDelete: string[] = [];
+      lastSeenId = oldReports[oldReports.length - 1].id;
+
+      const reportItems = oldReports.map((report) => ({
+        id: report.id,
+        paths: report.evidence_path
+          ? report.evidence_path
+              .split(",")
+              .map((p: string) => p.trim())
+              .filter((p: string) => p.length > 0)
+          : [],
+      }));
+
       const reportIdsToClear: string[] = [];
 
-      for (const report of oldReports) {
-        reportIdsToClear.push(report.id);
-        if (report.evidence_path) {
-          const paths = report.evidence_path
-            .split(",")
-            .map((p: string) => p.trim())
-            .filter((p: string) => p.length > 0);
-          filePathsToDelete.push(...paths);
+      // 3.1) รายงานที่ไม่มีพาธไฟล์ที่ถูกต้อง (เช่น สตริงว่าง) สามารถล้างเป็น null ได้ทันที
+      for (const r of reportItems) {
+        if (r.paths.length === 0) {
+          reportIdsToClear.push(r.id);
         }
       }
 
-      // ลบไฟล์จาก Storage Bucket 'report-evidences' (ทีละ batch 100 ไฟล์)
-      for (let i = 0; i < filePathsToDelete.length; i += 100) {
-        const batch = filePathsToDelete.slice(i, i + 100);
+      // 3.2) รายงานที่มีไฟล์ ต้องลบไฟล์ออกจาก Storage ให้สำเร็จก่อน จึงจะล้าง evidence_path ได้
+      const reportsWithFiles = reportItems.filter((r) => r.paths.length > 0);
+      const CHUNK_SIZE = 50;
+
+      for (let i = 0; i < reportsWithFiles.length; i += CHUNK_SIZE) {
+        const chunk = reportsWithFiles.slice(i, i + CHUNK_SIZE);
+        const chunkPaths = chunk.flatMap((r) => r.paths);
+
         const { error: removeErr } = await admin.storage
           .from("report-evidences")
-          .remove(batch);
-        if (removeErr) {
-          console.warn("Storage remove batch error:", removeErr.message);
+          .remove(chunkPaths);
+
+        if (!removeErr) {
+          deletedFilesCount += chunkPaths.length;
+          for (const r of chunk) {
+            reportIdsToClear.push(r.id);
+          }
         } else {
-          deletedFilesCount += batch.length;
+          console.warn("Storage remove chunk error, retrying per report:", removeErr.message);
+          // หาก batch ภาพรวมมีข้อผิดพลาด ให้ลองลบทีละรายงานเพื่อคัดเฉพาะรายงานที่ลบไฟล์สำเร็จ
+          for (const r of chunk) {
+            const { error: singleErr } = await admin.storage
+              .from("report-evidences")
+              .remove(r.paths);
+
+            if (singleErr) {
+              console.warn(`Storage remove failed for report ${r.id}:`, singleErr.message);
+            } else {
+              deletedFilesCount += r.paths.length;
+              reportIdsToClear.push(r.id);
+            }
+          }
         }
       }
 
-      // ปรับ evidence_path ให้เป็น null ในตาราง cod_reports
-      const { error: updateErr } = await admin
-        .from("cod_reports")
-        .update({ evidence_path: null })
-        .in("id", reportIdsToClear);
+      // 3.3) ปรับ evidence_path ให้เป็น null เฉพาะรายงานที่ลบไฟล์ใน Storage สำเร็จเท่านั้น
+      if (reportIdsToClear.length > 0) {
+        const { error: updateErr } = await admin
+          .from("cod_reports")
+          .update({ evidence_path: null })
+          .in("id", reportIdsToClear);
 
-      if (updateErr) {
-        console.error("Update cod_reports error:", updateErr.message);
-        return json(500, { error: "Failed to update cod_reports evidence_path" });
+        if (updateErr) {
+          console.error("Update cod_reports error:", updateErr.message);
+          return json(500, { error: "Failed to update cod_reports evidence_path" });
+        }
+
+        updatedReportsCount += reportIdsToClear.length;
       }
-
-      updatedReportsCount += reportIdsToClear.length;
 
       if (oldReports.length < BATCH_SIZE) {
         break;
