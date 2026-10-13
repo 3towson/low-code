@@ -110,6 +110,11 @@ class AppStrings {
     required this.contactSectionDesc,
     required this.contactEmail,
     required this.contactLine,
+    required this.forgotPassword,
+    required this.forgotPasswordTitle,
+    required this.forgotPasswordDesc,
+    required this.forgotPasswordSend,
+    required this.forgotPasswordSuccess,
   });
 
   final AppLanguage language;
@@ -208,6 +213,11 @@ class AppStrings {
   final String contactSectionDesc;
   final String contactEmail;
   final String contactLine;
+  final String forgotPassword;
+  final String forgotPasswordTitle;
+  final String forgotPasswordDesc;
+  final String forgotPasswordSend;
+  final String forgotPasswordSuccess;
 
   bool get isThai => language == AppLanguage.th;
 
@@ -339,6 +349,11 @@ class AppStrings {
     contactSectionDesc: 'ช่องทางติดต่อทีมงานเพื่อแจ้งปัญหา ร้องเรียนเนื้อหา หรือสอบถามข้อมูล',
     contactEmail: 'อีเมลฝ่ายสนับสนุน',
     contactLine: 'LINE Official Account',
+    forgotPassword: 'ลืมรหัสผ่าน?',
+    forgotPasswordTitle: 'รีเซ็ตรหัสผ่าน',
+    forgotPasswordDesc: 'กรอกอีเมลของคุณเพื่อรับลิงก์สำหรับตั้งรหัสผ่านใหม่',
+    forgotPasswordSend: 'ส่งลิงก์รีเซ็ต',
+    forgotPasswordSuccess: 'ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลเรียบร้อยแล้ว',
   );
 
   static const AppStrings en = AppStrings._(
@@ -444,6 +459,11 @@ class AppStrings {
         'Contact our team for support, reporting objectionable content, or inquiries',
     contactEmail: 'Support Email',
     contactLine: 'Official LINE OA',
+    forgotPassword: 'Forgot Password?',
+    forgotPasswordTitle: 'Reset Password',
+    forgotPasswordDesc: 'Enter your email to receive a password reset link',
+    forgotPasswordSend: 'Send Reset Link',
+    forgotPasswordSuccess: 'Password reset link sent to your email',
   );
 
   static AppStrings of(AppLanguage lang) {

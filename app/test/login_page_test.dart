@@ -12,6 +12,15 @@ class FakeAuthService implements AuthService {
     signInCalls++;
   }
 
+  int resetPasswordCalls = 0;
+  String? lastResetEmail;
+
+  @override
+  Future<void> resetPassword({required String email, String? redirectTo}) async {
+    resetPasswordCalls++;
+    lastResetEmail = email;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError(invocation.memberName.toString());
@@ -60,4 +69,40 @@ void main() {
 
     expect(auth.signInCalls, 1);
   });
+
+  testWidgets('ปุ่มลืมรหัสผ่านแสดงในแท็บเข้าสู่ระบบ และเมื่อกดจะเปิด dialog รีเซ็ตรหัสผ่าน',
+      (tester) async {
+    final auth = FakeAuthService();
+    await tester.pumpWidget(MaterialApp(home: LoginPage(authService: auth)));
+
+    final forgotBtn = find.byKey(const Key('auth-forgot-password-button'));
+    expect(forgotBtn, findsOneWidget);
+
+    await tester.tap(forgotBtn);
+    await tester.pumpAndSettle();
+
+    expect(find.text('รีเซ็ตรหัสผ่าน'), findsOneWidget);
+    expect(find.byKey(const Key('forgot-password-email-field')), findsOneWidget);
+    expect(find.byKey(const Key('forgot-password-submit-button')), findsOneWidget);
+  });
+
+  testWidgets('กรอกอีเมลใน dialog รีเซ็ตรหัสผ่านแล้วส่งสำเร็จ จะเรียก resetPassword',
+      (tester) async {
+    final auth = FakeAuthService();
+    await tester.pumpWidget(
+        MaterialApp(home: Scaffold(body: LoginPage(authService: auth))));
+
+    await tester.tap(find.byKey(const Key('auth-forgot-password-button')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+        find.byKey(const Key('forgot-password-email-field')), 'user@example.com');
+    await tester.tap(find.byKey(const Key('forgot-password-submit-button')));
+    await tester.pumpAndSettle();
+
+    expect(auth.resetPasswordCalls, 1);
+    expect(auth.lastResetEmail, 'user@example.com');
+    expect(find.text('ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลเรียบร้อยแล้ว'), findsOneWidget);
+  });
 }
+

@@ -48,6 +48,14 @@ class AuthService {
     await _auth.signInWithPassword(email: email.trim(), password: password);
   }
 
+  /// ส่งอีเมลลิงก์สำหรับรีเซ็ตรหัสผ่าน (Forgot Password)
+  Future<void> resetPassword({required String email, String? redirectTo}) async {
+    await _auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: redirectTo ?? 'https://3towson.github.io/low-code/reset-password.html',
+    );
+  }
+
   /// ล้าง session ในเครื่องก่อนแล้วค่อยแจ้ง server ถ้าแจ้ง server ไม่สำเร็จ
   /// (เช่นไม่มีเน็ต) ผู้ใช้ก็ออกจากระบบในเครื่องแล้ว จึงไม่ต้องแสดง error
   Future<void> signOut() async {

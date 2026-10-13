@@ -74,20 +74,36 @@ We respect the rights of data subjects and provide transparent, accessible chann
 ---
 
 ### 4. Demo Accounts for Review
-To assist with your testing, you may use the following pre-configured credentials:
+To assist with your testing, please use the following pre-configured credentials:
 
-- **Merchant Account:**
-  - Email: `demo_merchant@codcheck.app`
-  - Password: `Password123!`
-  - Role: Verified Merchant
+1. **Verified Merchant Account (KYC Approved):**
+   - **Email:** `reviewer_approved@codcheck.app`
+   - **Password:** `Password123!`
+   - **Role:** Approved Merchant
+   - **Purpose:** Test core features immediately: check customer COD delivery risk, view statistics, and submit problematic customer reports with photo evidence.
 
-- **Admin Account:**
-  - Email: `admin@codcheck.app`
-  - Password: `Password123!`
-  - Role: System Administrator (Access to Admin Dashboard to review reports & merchant KYC)
+2. **New Merchant Account (Unverified / KYC Pending):**
+   - **Email:** `reviewer_unverified@codcheck.app`
+   - **Password:** `Password123!`
+   - **Role:** Unverified Merchant
+   - **Purpose:** Experience the Merchant KYC Verification workflow. When tapping the report button, this account will be prompted to submit shop verification documents before reporting is unlocked.
+
+3. **Administrator Account:**
+   - **Email:** `admin@codcheck.app`
+   - **Password:** `Password123!`
+   - **Role:** System Administrator
+   - **Purpose:** Inspect the Admin Moderation Dashboard (Settings > Admin Dashboard) to review/approve/reject customer reports and review merchant KYC submissions.
+
+---
+
+### 5. Authentication & Email Verification URLs
+- **Site URL (Email Confirmation Landing):** `https://3towson.github.io/low-code/email-verified.html`
+- **Password Reset URL:** `https://3towson.github.io/low-code/reset-password.html`
+- **Custom URL Scheme (Deep Link):** `codcheck://login`
 
 If you require any further technical clarifications or demonstration, please do not hesitate to contact us.
 
 Warm regards,  
 **COD Customer Check Team**  
 support@codcheck.app
+
