@@ -12,6 +12,7 @@ import '../services/merchant_kyc_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
 import '../widgets/check_panel.dart';
+import '../widgets/delete_account_dialog.dart';
 import '../widgets/merchant_kyc_dialog.dart';
 import '../widgets/page_body.dart';
 import '../widgets/settings_dialog.dart';
@@ -89,6 +90,21 @@ class _HomePageState extends State<HomePage> {
     // สำเร็จแล้ว AuthGate จะส่ง signedIn = false มาเอง
     await widget.authService.signOut();
     if (mounted) setState(() => _signingOut = false);
+  }
+
+  Future<void> _openDeleteAccount() async {
+    final deleted = await DeleteAccountDialog.show(
+      context,
+      authService: widget.authService,
+    );
+    if (deleted == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.strings.deleteAccountSuccess),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+    }
   }
 
   Route<T> _modalRoute<T>(WidgetBuilder builder) {
@@ -266,6 +282,8 @@ class _HomePageState extends State<HomePage> {
                   onOpenKyc: _openKycDialog,
                   signingOut: _signingOut,
                   onSignOut: _signingOut ? null : _signOut,
+                  onDeleteAccount: _signingOut ? null : _openDeleteAccount,
+                  authService: widget.signedIn ? widget.authService : null,
                   onOpenLogin: _openLogin,
                   onOpenAdmin: _openAdmin,
                 ),
@@ -606,6 +624,8 @@ class _TopNavbar extends StatelessWidget {
     this.onOpenKyc,
     required this.signingOut,
     required this.onSignOut,
+    this.onDeleteAccount,
+    this.authService,
     required this.onOpenLogin,
     this.onOpenAdmin,
   });
@@ -617,6 +637,8 @@ class _TopNavbar extends StatelessWidget {
   final VoidCallback? onOpenKyc;
   final bool signingOut;
   final VoidCallback? onSignOut;
+  final VoidCallback? onDeleteAccount;
+  final AuthService? authService;
   final VoidCallback onOpenLogin;
   final VoidCallback? onOpenAdmin;
 
@@ -700,7 +722,9 @@ class _TopNavbar extends StatelessWidget {
                       tooltip: strings.settings,
                       onPressed: () => showDialog(
                         context: context,
-                        builder: (_) => const SettingsDialog(),
+                        builder: (_) => SettingsDialog(
+                          authService: authService,
+                        ),
                       ),
                       style: IconButton.styleFrom(
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -758,6 +782,12 @@ class _TopNavbar extends StatelessWidget {
                         kycInfo: kycInfo,
                         onOpenKyc: onOpenKyc,
                         onSignOut: signingOut ? null : onSignOut,
+                        onOpenSettings: () => showDialog(
+                          context: context,
+                          builder: (_) => SettingsDialog(
+                            authService: authService,
+                          ),
+                        ),
                       )
                     else
                       TextButton.icon(
@@ -917,12 +947,14 @@ class _AccountBar extends StatelessWidget {
     this.kycInfo,
     this.onOpenKyc,
     required this.onSignOut,
+    this.onOpenSettings,
   });
 
   final String shopName;
   final MerchantKycInfo? kycInfo;
   final VoidCallback? onOpenKyc;
   final VoidCallback? onSignOut;
+  final VoidCallback? onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -941,20 +973,32 @@ class _AccountBar extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.storefront_outlined,
-            size: 15,
-            color: isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB),
-          ),
-          const SizedBox(width: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 80),
-            child: Text(
-              shopName,
-              key: const Key('home-shop-name'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onOpenSettings,
+              borderRadius: BorderRadius.circular(9999),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.storefront_outlined,
+                    size: 15,
+                    color: isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB),
+                  ),
+                  const SizedBox(width: 4),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 80),
+                    child: Text(
+                      shopName,
+                      key: const Key('home-shop-name'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (kycInfo != null) ...[

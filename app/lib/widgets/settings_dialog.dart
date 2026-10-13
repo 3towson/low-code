@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../services/app_settings.dart';
+import '../services/auth_service.dart';
 import '../theme.dart';
+import 'delete_account_dialog.dart';
 
 /// กล่องโต้ตอบการตั้งค่า (Settings Dialog)
-/// รองรับการเปลี่ยนภาษา (ไทย / อังกฤษ) และการสลับธีม (สว่าง / มืด)
+/// รองรับการเปลี่ยนภาษา (ไทย / อังกฤษ), การสลับธีม (สว่าง / มืด) และการจัดการบัญชีผู้ใช้
 class SettingsDialog extends StatelessWidget {
-  const SettingsDialog({super.key});
+  const SettingsDialog({super.key, this.authService});
+
+  final AuthService? authService;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +35,7 @@ class SettingsDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -179,6 +183,93 @@ class SettingsDialog extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // ส่วนที่ 3: บัญชีผู้ใช้ (แสดงเฉพาะเมื่อเข้าสู่ระบบแล้ว)
+              if (authService != null &&
+                  (authService!.currentUser != null ||
+                      authService!.shopName.isNotEmpty)) ...[
+                const SizedBox(height: 18),
+                const Divider(height: 1),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Icon(Icons.storefront_outlined, size: 17, color: colors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'บัญชีร้านค้า',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: app.neutralBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: app.border),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              authService!.shopName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            if (authService!.currentUser?.email != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                authService!.currentUser!.email!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: app.muted,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      TextButton.icon(
+                        key: const Key('settings-delete-account-button'),
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          final deleted = await DeleteAccountDialog.show(
+                            context,
+                            authService: authService!,
+                          );
+                          if (deleted == true && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(strings.deleteAccountSuccess),
+                                backgroundColor: const Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFEF4444),
+                        ),
+                        icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                        label: Text(
+                          strings.deleteAccount,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 24),
               Container(

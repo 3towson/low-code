@@ -57,7 +57,13 @@ class FakeAuthService implements AuthService {
   }
 
   @override
+  User? get currentUser => _session?.user;
+
+  @override
   Future<void> signOut() async => expire();
+
+  @override
+  Future<void> deleteAccount() async => expire();
 
   /// จำลอง session หมดอายุหรือถูกออกจากระบบ
   void expire() {

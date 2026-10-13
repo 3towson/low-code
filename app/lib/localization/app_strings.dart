@@ -85,6 +85,22 @@ class AppStrings {
     required this.phoneHint,
     required this.platformReq,
     required this.reasonReq,
+    required this.deleteAccount,
+    required this.deleteAccountTitle,
+    required this.deleteAccountDesc,
+    required this.deleteAccountDataDeletedTitle,
+    required this.deleteAccountDataDeletedDesc,
+    required this.deleteAccountDataRetainedTitle,
+    required this.deleteAccountDataRetainedDesc,
+    required this.deleteAccountContinue,
+    required this.deleteAccountConfirmTitle,
+    required this.deleteAccountConfirmWarning,
+    required this.deleteAccountCheckbox,
+    required this.deleteAccountConfirmButton,
+    required this.deleteAccountCancel,
+    required this.deleteAccountBack,
+    required this.deleteAccountSuccess,
+    required this.deleteAccountFailed,
   });
 
   final AppLanguage language;
@@ -158,6 +174,22 @@ class AppStrings {
   final String phoneHint;
   final String platformReq;
   final String reasonReq;
+  final String deleteAccount;
+  final String deleteAccountTitle;
+  final String deleteAccountDesc;
+  final String deleteAccountDataDeletedTitle;
+  final String deleteAccountDataDeletedDesc;
+  final String deleteAccountDataRetainedTitle;
+  final String deleteAccountDataRetainedDesc;
+  final String deleteAccountContinue;
+  final String deleteAccountConfirmTitle;
+  final String deleteAccountConfirmWarning;
+  final String deleteAccountCheckbox;
+  final String deleteAccountConfirmButton;
+  final String deleteAccountCancel;
+  final String deleteAccountBack;
+  final String deleteAccountSuccess;
+  final String deleteAccountFailed;
 
   bool get isThai => language == AppLanguage.th;
 
@@ -260,6 +292,26 @@ class AppStrings {
     phoneHint: 'เช่น 081-234-5678',
     platformReq: 'กรุณาเลือกแพลตฟอร์ม',
     reasonReq: 'กรุณาเลือกเหตุผล',
+    deleteAccount: 'ลบบัญชีผู้ใช้',
+    deleteAccountTitle: 'ขอลบบัญชีผู้ใช้',
+    deleteAccountDesc:
+        'การลบบัญชีจะส่งผลต่อข้อมูลในระบบของคุณตามข้อกำหนดความเป็นส่วนตัว ดังนี้:',
+    deleteAccountDataDeletedTitle: 'ข้อมูลที่จะถูกลบถาวรทันที',
+    deleteAccountDataDeletedDesc:
+        '• บัญชีผู้ใช้และข้อมูลร้านค้า\n• ภาพหลักฐานการยืนยันตัวตนร้านค้า (KYC)\n• ภาพหลักฐานการรายงานลูกค้าทั้งหมด',
+    deleteAccountDataRetainedTitle: 'ข้อมูลที่จัดเก็บต่อในรูปแบบนิรนาม',
+    deleteAccountDataRetainedDesc:
+        '• รายงานความเสี่ยงลูกค้า COD จะถูกตัดการเชื่อมโยงกับบัญชีร้านค้าของคุณอย่างถาวร (Anonymized) เพื่อประโยชน์ในการป้องกันการฉ้อโกง',
+    deleteAccountContinue: 'ดำเนินการต่อ',
+    deleteAccountConfirmTitle: 'ยืนยันการลบบัญชีถาวร',
+    deleteAccountConfirmWarning:
+        'คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีนี้? เมื่อลบแล้วจะไม่สามารถกู้คืนบัญชีหรือข้อมูลใดๆ ได้อีกต่อไป',
+    deleteAccountCheckbox: 'ฉันเข้าใจและยืนยันว่าต้องการลบบัญชีถาวร',
+    deleteAccountConfirmButton: 'ยืนยันการลบบัญชี',
+    deleteAccountCancel: 'ยกเลิก',
+    deleteAccountBack: 'ย้อนกลับ',
+    deleteAccountSuccess: 'ลบบัญชีผู้ใช้สำเร็จ',
+    deleteAccountFailed: 'ลบบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
   );
 
   static const AppStrings en = AppStrings._(
@@ -334,6 +386,27 @@ class AppStrings {
     phoneHint: 'e.g. 081-234-5678',
     platformReq: 'Please select platform',
     reasonReq: 'Please select reason',
+    deleteAccount: 'Delete Account',
+    deleteAccountTitle: 'Request Account Deletion',
+    deleteAccountDesc:
+        'Deleting your account will affect your stored data according to our privacy policy:',
+    deleteAccountDataDeletedTitle: 'Data permanently deleted immediately',
+    deleteAccountDataDeletedDesc:
+        '• User account and shop profile\n• Merchant verification evidence (KYC)\n• All uploaded report evidence images',
+    deleteAccountDataRetainedTitle: 'Data retained anonymously',
+    deleteAccountDataRetainedDesc:
+        '• COD risk reports will be permanently unlinked from your account (Anonymized) for legitimate fraud prevention',
+    deleteAccountContinue: 'Continue',
+    deleteAccountConfirmTitle: 'Confirm Permanent Deletion',
+    deleteAccountConfirmWarning:
+        'Are you sure you want to delete this account? Once deleted, your account and data cannot be recovered.',
+    deleteAccountCheckbox:
+        'I understand and confirm that I want to delete my account permanently',
+    deleteAccountConfirmButton: 'Delete Account Permanently',
+    deleteAccountCancel: 'Cancel',
+    deleteAccountBack: 'Back',
+    deleteAccountSuccess: 'Account deleted successfully',
+    deleteAccountFailed: 'Failed to delete account. Please try again.',
   );
 
   static AppStrings of(AppLanguage lang) {

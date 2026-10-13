@@ -3,9 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// ห่อ Supabase Auth ไว้ที่เดียว หน้าอื่นเรียกผ่าน class นี้เท่านั้น
 /// (ทดสอบ widget ได้โดยสร้าง fake ที่ implements AuthService)
 class AuthService {
-  AuthService(this._auth);
+  AuthService(this._auth, {this.functions});
 
   final GoTrueClient _auth;
+  final FunctionsClient? functions;
 
   Stream<AuthState> get onAuthStateChange => _auth.onAuthStateChange;
 
@@ -55,6 +56,30 @@ class AuthService {
     } on AuthException {
       // ignore
     }
+  }
+
+  /// ลบบัญชีผู้ใช้ถาวรผ่าน Edge Function 'delete-account' (ตามเกณฑ์ Apple 5.1.1(v) และ Google Play)
+  Future<void> deleteAccount() async {
+    final funcClient = functions ?? Supabase.instance.client.functions;
+    try {
+      final res = await funcClient.invoke('delete-account');
+      if (res.status >= 400) {
+        final data = res.data;
+        final msg = (data is Map && data['error'] != null)
+            ? data['error'].toString()
+            : 'ลบบัญชีไม่สำเร็จ';
+        throw Exception(msg);
+      }
+    } on FunctionsFetchException {
+      throw Exception(_noInternet);
+    } on FunctionException catch (e) {
+      final details = e.details;
+      if (details is Map && details['error'] != null) {
+        throw Exception(details['error'].toString());
+      }
+      throw Exception('ลบบัญชีไม่สำเร็จ (${e.status})');
+    }
+    await signOut();
   }
 }
 
