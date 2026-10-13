@@ -370,6 +370,165 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Future<void> _suspendMerchant(PendingMerchant merchant) async {
+    final controller = TextEditingController(
+      text: 'ละเมิดข้อกำหนดการใช้งาน UGC หรือสร้างรายงานเท็จ',
+    );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.block_rounded, color: Color(0xFFEF4444)),
+            SizedBox(width: 10),
+            Text('ยืนยันระงับร้านค้า'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('ระบุเหตุผลในการระงับร้านค้า "${merchant.shopName}":'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'เช่น ละเมิดข้อกำหนด UGC หรือสร้างข้อมูลเท็จ',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('ยกเลิก'),
+          ),
+          FilledButton(
+            key: const Key('admin-confirm-suspend-button'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            child: const Text('ยืนยันระงับร้านค้า'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final success = await widget.adminService.suspendMerchant(
+        merchant.id,
+        controller.text.trim(),
+      );
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFEF4444),
+            content: Text('ระงับร้านค้า "${merchant.shopName}" เรียบร้อยแล้ว'),
+          ),
+        );
+        _loadData();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('เกิดข้อผิดพลาด: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _suspendMerchantFromReport(PendingReport report) async {
+    if (report.sellerId == null || report.sellerId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ไม่พบข้อมูลร้านค้า หรือบัญชีร้านค้าถูกลบไปแล้ว'),
+        ),
+      );
+      return;
+    }
+
+    final controller = TextEditingController(
+      text: 'ส่งรายงานอันเป็นเท็จหรือละเมิดนโยบาย UGC',
+    );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.block_rounded, color: Color(0xFFEF4444)),
+            SizedBox(width: 10),
+            Text('ระงับร้านค้าผู้รายงาน'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('คุณต้องการระงับร้านค้า "${report.shopName}" ที่ส่งรายงานนี้หรือไม่?'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'ระบุเหตุผล เช่น ส่งข้อมูลเท็จ หรือกลั่นแกล้งลูกค้า',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('ยกเลิก'),
+          ),
+          FilledButton(
+            key: const Key('admin-confirm-suspend-report-merchant-button'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            child: const Text('ยืนยันระงับร้านค้า'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final success = await widget.adminService.suspendMerchant(
+        report.sellerId!,
+        controller.text.trim(),
+      );
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFEF4444),
+            content: Text('ระงับร้านค้า "${report.shopName}" เรียบร้อยแล้ว'),
+          ),
+        );
+        _loadData();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('เกิดข้อผิดพลาด: $e'),
+        ),
+      );
+    }
+  }
+
   void _openMerchantEvidenceViewer(PendingMerchant merchant) {
     showDialog<void>(
       context: context,
@@ -967,12 +1126,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             const SizedBox(height: 10),
           ],
-          // Action Buttons: Approve / Reject
+          // Action Buttons: Suspend / Reject / Approve
           Wrap(
             alignment: WrapAlignment.end,
             spacing: 10,
             runSpacing: 8,
             children: [
+              OutlinedButton.icon(
+                key: Key('admin-suspend-merchant-${merchant.id}'),
+                onPressed: () => _suspendMerchant(merchant),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFDC2626),
+                  side: const BorderSide(color: Color(0xFFDC2626)),
+                ),
+                icon: const Icon(Icons.block_rounded, size: 15),
+                label: const Text('ระงับร้านค้า'),
+              ),
               OutlinedButton.icon(
                 key: Key('admin-reject-merchant-${merchant.id}'),
                 onPressed: () => _rejectMerchant(merchant),
@@ -1144,6 +1313,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           : 'ดูรูปหลักฐาน',
                 ),
               ),
+              if (report.sellerId != null && report.sellerId!.isNotEmpty)
+                OutlinedButton.icon(
+                  key: Key('admin-suspend-report-seller-${report.id}'),
+                  onPressed: () => _suspendMerchantFromReport(report),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    foregroundColor: const Color(0xFFDC2626),
+                    side: const BorderSide(color: Color(0xFFDC2626)),
+                  ),
+                  icon: const Icon(Icons.block_rounded, size: 16),
+                  label: const Text('ระงับร้านค้า'),
+                ),
               OutlinedButton.icon(
                 onPressed: () => _reject(report),
                 style: OutlinedButton.styleFrom(

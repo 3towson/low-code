@@ -24,6 +24,7 @@ class MockAdminService implements AdminService {
   final List<Map<String, String>> rejectedRecords = [];
   final List<String> approvedMerchantIds = [];
   final List<Map<String, String>> rejectedMerchantRecords = [];
+  final List<Map<String, String>> suspendedMerchantRecords = [];
 
   @override
   Future<List<PendingReport>> getPendingReports({
@@ -56,6 +57,13 @@ class MockAdminService implements AdminService {
   @override
   Future<bool> rejectMerchant(String sellerId, String reason) async {
     rejectedMerchantRecords.add({'id': sellerId, 'reason': reason});
+    _merchants = _merchants.where((m) => m.id != sellerId).toList();
+    return true;
+  }
+
+  @override
+  Future<bool> suspendMerchant(String sellerId, String reason) async {
+    suspendedMerchantRecords.add({'id': sellerId, 'reason': reason});
     _merchants = _merchants.where((m) => m.id != sellerId).toList();
     return true;
   }
@@ -400,4 +408,104 @@ void main() {
     // ต้องแสดง 'รายงาน #87654321' แทนชื่อลูกค้า
     expect(find.text('รายงาน #87654321'), findsOneWidget);
   });
+
+  testWidgets('ระงับร้านค้าจากแท็บร้านค้า พร้อมระบุเหตุผล และเรียก suspendMerchant (P0-4)',
+      (tester) async {
+    final merchant = PendingMerchant(
+      id: 'seller-suspend-01',
+      shopName: 'ร้านปั่นยอด ปลอมหลักฐาน',
+      category: 'เสื้อผ้าแฟชั่น',
+      shopUrl: 'https://shopee.co.th/fraud_shop',
+      contactPhone: '0899998888',
+      evidencePath: 'merchants/seller-suspend-01/fake_proof.jpg',
+      submittedAt: DateTime(2026, 10, 12, 10, 0),
+      createdAt: DateTime(2026, 10, 12, 9, 0),
+    );
+
+    final service = MockAdminService(
+      merchants: [merchant],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // สลับไปยังแท็บร้านค้า
+    await tester.tap(find.byKey(const Key('admin-tab-merchants')));
+    await tester.pumpAndSettle();
+
+    // มีปุ่มระงับร้านค้า
+    expect(find.byKey(const Key('admin-suspend-merchant-seller-suspend-01')),
+        findsOneWidget);
+
+    // กดปุ่มระงับร้านค้า
+    await tester.tap(
+        find.byKey(const Key('admin-suspend-merchant-seller-suspend-01')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ยืนยันระงับร้านค้า'), findsNWidgets(2));
+    expect(find.byType(TextField), findsOneWidget);
+
+    // ระบุเหตุผลระงับ
+    await tester.enterText(
+        find.byType(TextField), 'ใช้สลิปปลอม และสร้างรายงานเท็จหลายรายการ');
+
+    // กดยืนยันระงับ
+    await tester.tap(find.byKey(const Key('admin-confirm-suspend-button')));
+    await tester.pumpAndSettle();
+
+    expect(service.suspendedMerchantRecords.length, 1);
+    expect(service.suspendedMerchantRecords.first['id'], 'seller-suspend-01');
+    expect(service.suspendedMerchantRecords.first['reason'],
+        'ใช้สลิปปลอม และสร้างรายงานเท็จหลายรายการ');
+    expect(find.text('ไม่มีคำขออนุมัติร้านค้าที่รอการตรวจสอบ'), findsOneWidget);
+  });
+
+  testWidgets('ระงับร้านค้าจากแท็บรายงานเมื่อพบรายงานเท็จ (P0-4)',
+      (tester) async {
+    final abusiveReport = PendingReport(
+      id: 'rep-fraud-01',
+      customerName: 'ลูกค้าผู้บริสุทธิ์',
+      platform: 'shopee',
+      reason: 'refused_delivery',
+      amount: 1000,
+      otherDetails: 'รายงานกลั่นแกล้ง',
+      evidencePath: null,
+      shopName: 'ร้านค้าสร้างรายงานเท็จ',
+      createdAt: DateTime(2026, 10, 13, 11, 0),
+      sellerId: 'bad-seller-007',
+    );
+
+    final service = MockAdminService(
+      reports: [abusiveReport],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // ตรวจสอบว่ามีปุ่มระงับร้านค้าที่การ์ดรายงาน
+    expect(find.byKey(const Key('admin-suspend-report-seller-rep-fraud-01')),
+        findsOneWidget);
+
+    // กดปุ่มระงับร้านค้าจากรายงาน
+    await tester.tap(
+        find.byKey(const Key('admin-suspend-report-seller-rep-fraud-01')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ระงับร้านค้าผู้รายงาน'), findsOneWidget);
+
+    // กดยืนยันระงับ
+    await tester.tap(find.byKey(
+        const Key('admin-confirm-suspend-report-merchant-button')));
+    await tester.pumpAndSettle();
+
+    expect(service.suspendedMerchantRecords.length, 1);
+    expect(service.suspendedMerchantRecords.first['id'], 'bad-seller-007');
+    expect(find.textContaining('ระงับร้านค้า "ร้านค้าสร้างรายงานเท็จ" เรียบร้อยแล้ว'),
+        findsOneWidget);
+  });
 }
+

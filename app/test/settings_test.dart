@@ -264,5 +264,24 @@ void main() {
 
       expect(controller.themeMode, ThemeMode.dark);
     });
+
+    testWidgets(
+        'SettingsDialog แสดงช่องทางติดต่อฝ่ายสนับสนุน (Support Contact Channel - P0-4)',
+        (tester) async {
+      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpAndSettle();
+
+      // เปิด Settings
+      await tester.tap(find.byKey(const Key('settings-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('settings-contact-email-button')),
+          findsOneWidget);
+      expect(find.byKey(const Key('settings-contact-line-button')),
+          findsOneWidget);
+      expect(find.text('support@codcheck.app'), findsOneWidget);
+      expect(find.text('@codcheck'), findsOneWidget);
+      expect(find.text('ติดต่อเรา & แจ้งปัญหา'), findsOneWidget);
+    });
   });
 }

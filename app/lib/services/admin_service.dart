@@ -14,6 +14,7 @@ class PendingReport {
     required this.evidencePath,
     required this.shopName,
     required this.createdAt,
+    this.sellerId,
   });
 
   final String id;
@@ -25,6 +26,7 @@ class PendingReport {
   final String? evidencePath;
   final String shopName;
   final DateTime createdAt;
+  final String? sellerId;
 
   /// ชื่อที่ใช้แสดงผล หากไม่มีชื่อลูกค้าจะแสดงรหัสรายงานแทน (P0-3)
   String get displayName {
@@ -55,6 +57,7 @@ class PendingReport {
       shopName: json['shop_name'] as String? ?? 'ร้านค้า',
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
+      sellerId: json['seller_id'] as String? ?? json['reported_by'] as String?,
     );
   }
 }
@@ -217,6 +220,16 @@ class AdminService {
   Future<bool> rejectMerchant(String sellerId, String reason) async {
     final res = await _callRpc(
       'admin_reject_merchant',
+      params: {'p_seller_id': sellerId, 'p_reason': reason.trim()},
+    );
+    if (res is Map && res['ok'] == true) return true;
+    return false;
+  }
+
+  /// ระงับร้านค้า (Suspend Merchant) เนื่องจากละเมิดนโยบาย UGC หรือสร้างรายงานเท็จ (P0-4)
+  Future<bool> suspendMerchant(String sellerId, String reason) async {
+    final res = await _callRpc(
+      'admin_suspend_merchant',
       params: {'p_seller_id': sellerId, 'p_reason': reason.trim()},
     );
     if (res is Map && res['ok'] == true) return true;

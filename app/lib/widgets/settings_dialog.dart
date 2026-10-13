@@ -377,6 +377,142 @@ class SettingsDialog extends StatelessWidget {
                 ),
               ),
 
+              // ส่วนที่ 5: ช่องทางติดต่อและแจ้งปัญหา (Support & Contact Channel - P0-4)
+              const SizedBox(height: 18),
+              const Divider(height: 1),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Icon(Icons.headset_mic_outlined, size: 17, color: colors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    strings.contactSection,
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                strings.contactSectionDesc,
+                style: textTheme.bodySmall?.copyWith(color: app.muted),
+              ),
+              const SizedBox(height: 10),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const Key('settings-contact-email-button'),
+                  onTap: () => launchExternalUrl(AppUrls.supportEmailMailto),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: app.neutralBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: app.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.email_outlined,
+                          size: 18,
+                          color: colors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                strings.contactEmail,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                AppUrls.supportEmail,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: app.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 16,
+                          color: app.muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const Key('settings-contact-line-button'),
+                  onTap: () => launchExternalUrl(AppUrls.supportLineUrl),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: app.neutralBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: app.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          size: 18,
+                          color: colors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                strings.contactLine,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                AppUrls.supportLineId,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: app.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 16,
+                          color: app.muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 24),
               Container(
                 decoration: BoxDecoration(

@@ -12,6 +12,15 @@ class AppUrls {
 
   static const String disputePortal =
       'https://3towson.github.io/low-code/dispute.html';
+
+  static const String supportEmail = 'support@codcheck.app';
+
+  static const String supportEmailMailto =
+      'mailto:support@codcheck.app?subject=COD%20Check%20Support';
+
+  static const String supportLineUrl = 'https://line.me/R/ti/p/@codcheck';
+
+  static const String supportLineId = '@codcheck';
 }
 
 /// Helper function สำหรับเปิด URL ภายนอกอย่างปลอดภัย

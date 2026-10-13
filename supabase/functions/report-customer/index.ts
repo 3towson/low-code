@@ -156,17 +156,25 @@ Deno.serve(async (req: Request) => {
       return json(403, { error: "กรุณายืนยันอีเมลก่อนรายงานลูกค้า" });
     }
 
-    // ตรวจสอบว่าร้านค้าได้รับการยืนยันตัวตน (Verified Merchant) หรือยัง
+    // ตรวจสอบว่าร้านค้าได้รับการยืนยันตัวตน (Verified Merchant) หรือไม่ และไม่ถูกระงับ (P0-4, P0-5 fail-closed)
     const { data: seller, error: sellerError } = await admin
       .from("sellers")
       .select("verification_status")
       .eq("id", auth.user.id)
       .maybeSingle();
 
-    if (seller && seller.verification_status !== "approved") {
+    if (sellerError) {
+      console.error("load seller failed:", sellerError);
+      return json(500, { error: "ไม่สามารถตรวจสอบสถานะร้านค้าได้" });
+    }
+
+    if (!seller || seller.verification_status !== "approved") {
+      const isSuspended = seller?.verification_status === "suspended";
       return json(403, {
-        status: "UNVERIFIED_MERCHANT",
-        error: "ร้านค้าของคุณยังไม่ผ่านการยืนยันตัวตน (Verified Merchant) จึงยังไม่สามารถส่งรายงานได้",
+        status: isSuspended ? "SUSPENDED_MERCHANT" : "UNVERIFIED_MERCHANT",
+        error: isSuspended
+          ? "บัญชีร้านค้าของคุณถูกระงับการใช้งาน กรุณาติดต่อฝ่ายสนับสนุนที่ support@codcheck.app"
+          : "ร้านค้าของคุณยังไม่ผ่านการยืนยันตัวตน (Verified Merchant) จึงยังไม่สามารถส่งรายงานได้",
       });
     }
 

@@ -209,7 +209,7 @@ for (const r of results) {
   console.log(`${r.name} | ${r.expected} | ${r.actual} | ${r.ok ? "ผ่าน" : "ไม่ผ่าน"}`);
 }
 const passCount = results.filter((r) => r.ok).length;
-console.log(`\nสรุป: ผ่าน ${passCount}/${results.length}\n`); d
+console.log(`\nสรุป: ผ่าน ${passCount}/${results.length}\n`);
 
 if (passCount !== results.length) {
   // @ts-ignore: Deno global

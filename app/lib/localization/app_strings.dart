@@ -106,6 +106,10 @@ class AppStrings {
     required this.privacyPolicyRequired,
     required this.aboutSection,
     required this.disputePortal,
+    required this.contactSection,
+    required this.contactSectionDesc,
+    required this.contactEmail,
+    required this.contactLine,
   });
 
   final AppLanguage language;
@@ -200,6 +204,10 @@ class AppStrings {
   final String privacyPolicyRequired;
   final String aboutSection;
   final String disputePortal;
+  final String contactSection;
+  final String contactSectionDesc;
+  final String contactEmail;
+  final String contactLine;
 
   bool get isThai => language == AppLanguage.th;
 
@@ -327,6 +335,10 @@ class AppStrings {
     privacyPolicyRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก',
     aboutSection: 'เกี่ยวกับและนโยบาย',
     disputePortal: 'ศูนย์รับเรื่องโต้แย้งข้อมูล (Dispute Portal)',
+    contactSection: 'ติดต่อเรา & แจ้งปัญหา',
+    contactSectionDesc: 'ช่องทางติดต่อทีมงานเพื่อแจ้งปัญหา ร้องเรียนเนื้อหา หรือสอบถามข้อมูล',
+    contactEmail: 'อีเมลฝ่ายสนับสนุน',
+    contactLine: 'LINE Official Account',
   );
 
   static const AppStrings en = AppStrings._(
@@ -427,6 +439,11 @@ class AppStrings {
     privacyPolicyRequired: 'Please agree to the Privacy Policy before signing up',
     aboutSection: 'About & Legal',
     disputePortal: 'Customer Dispute Portal',
+    contactSection: 'Support & Contact',
+    contactSectionDesc:
+        'Contact our team for support, reporting objectionable content, or inquiries',
+    contactEmail: 'Support Email',
+    contactLine: 'Official LINE OA',
   );
 
   static AppStrings of(AppLanguage lang) {

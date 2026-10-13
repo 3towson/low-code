@@ -196,5 +196,76 @@ void main() {
 
       expect(url, 'https://signed.example.com/u1/chat.jpg?expires=900');
     });
+
+    test('approveMerchant calls admin_approve_merchant RPC', () async {
+      String? calledFn;
+      Map<String, dynamic>? calledParams;
+
+      final service = AdminService(
+        null,
+        rpcCaller: (fn, {params}) async {
+          calledFn = fn;
+          calledParams = params;
+          return {'ok': true, 'status': 'approved'};
+        },
+      );
+
+      final ok = await service.approveMerchant('merchant-001');
+
+      expect(calledFn, 'admin_approve_merchant');
+      expect(calledParams, {'p_seller_id': 'merchant-001'});
+      expect(ok, isTrue);
+    });
+
+    test('rejectMerchant calls admin_reject_merchant RPC with reason', () async {
+      String? calledFn;
+      Map<String, dynamic>? calledParams;
+
+      final service = AdminService(
+        null,
+        rpcCaller: (fn, {params}) async {
+          calledFn = fn;
+          calledParams = params;
+          return {'ok': true, 'status': 'rejected'};
+        },
+      );
+
+      final ok = await service.rejectMerchant('merchant-002', '  หลักฐานไม่ชัดเจน  ');
+
+      expect(calledFn, 'admin_reject_merchant');
+      expect(calledParams, {
+        'p_seller_id': 'merchant-002',
+        'p_reason': 'หลักฐานไม่ชัดเจน',
+      });
+      expect(ok, isTrue);
+    });
+
+    test('suspendMerchant calls admin_suspend_merchant RPC with reason (P0-4)',
+        () async {
+      String? calledFn;
+      Map<String, dynamic>? calledParams;
+
+      final service = AdminService(
+        null,
+        rpcCaller: (fn, {params}) async {
+          calledFn = fn;
+          calledParams = params;
+          return {'ok': true, 'status': 'suspended'};
+        },
+      );
+
+      final ok = await service.suspendMerchant(
+        'merchant-999',
+        '  ละเมิดนโยบาย UGC และส่งรายงานเท็จ  ',
+      );
+
+      expect(calledFn, 'admin_suspend_merchant');
+      expect(calledParams, {
+        'p_seller_id': 'merchant-999',
+        'p_reason': 'ละเมิดนโยบาย UGC และส่งรายงานเท็จ',
+      });
+      expect(ok, isTrue);
+    });
   });
 }
+
