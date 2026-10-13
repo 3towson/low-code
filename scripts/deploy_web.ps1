@@ -1,10 +1,13 @@
 # Script to build and deploy Flutter Web to GitHub Pages
 $ErrorActionPreference = "Stop"
 
-Write-Host "--> Building Flutter Web for GitHub Pages..." -ForegroundColor Cyan
+$RootGitDir = (Get-Item $PSScriptRoot).Parent.FullName
+$CommitHash = & git -C $RootGitDir rev-parse --short HEAD
+
+Write-Host "--> Building Flutter Web for GitHub Pages (Commit: $CommitHash)..." -ForegroundColor Cyan
 $AppDir = Resolve-Path "$PSScriptRoot/../app"
 Set-Location -Path $AppDir
-& C:\flutter\bin\flutter.bat build web --base-href "/low-code/" --dart-define-from-file=.env.flutter
+& flutter build web --base-href "/low-code/" --dart-define-from-file=.env.flutter
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Build failed!" -ForegroundColor Red
@@ -22,10 +25,11 @@ if (Test-Path ".git") {
 git init
 git checkout -B gh-pages
 git add -A
-git commit -m "Deploy Flutter Web to GitHub Pages with dynamic other fields"
+git commit -m "Deploy Flutter Web to GitHub Pages ($CommitHash)"
 git remote add origin https://github.com/3towson/low-code.git
 git push -f origin gh-pages
 Remove-Item -Recurse -Force ".git"
 
+Set-Location -Path $RootGitDir
 Write-Host "==> Success! Your web app is live at: https://3towson.github.io/low-code/" -ForegroundColor Green
 
