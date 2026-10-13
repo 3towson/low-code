@@ -376,4 +376,28 @@ void main() {
         'ยอดออเดอร์ยังไม่ถึง 50 ออเดอร์ตามเงื่อนไข');
     expect(find.text('ไม่มีคำขออนุมัติร้านค้าที่รอการตรวจสอบ'), findsOneWidget);
   });
+
+  testWidgets('แสดง fallback displayName เมื่อ customerName เป็นค่าว่าง (P0-3)',
+      (tester) async {
+    final reportNoName = PendingReport(
+      id: '87654321-abcd-ef01-2345-6789abcdef01',
+      customerName: '',
+      platform: 'tiktok',
+      reason: 'fake_address',
+      amount: null,
+      otherDetails: null,
+      evidencePath: null,
+      shopName: 'ร้านค้าตัวอย่าง',
+      createdAt: DateTime(2026, 10, 13, 10, 0),
+    );
+
+    final service = MockAdminService(reports: [reportNoName]);
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // ต้องแสดง 'รายงาน #87654321' แทนชื่อลูกค้า
+    expect(find.text('รายงาน #87654321'), findsOneWidget);
+  });
 }

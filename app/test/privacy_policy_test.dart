@@ -73,6 +73,8 @@ void main() {
       expect(AppUrls.privacyPolicy, contains('privacy-policy.html'));
       expect(AppUrls.accountDeletion, startsWith('https://'));
       expect(AppUrls.accountDeletion, contains('delete-account.html'));
+      expect(AppUrls.disputePortal, startsWith('https://'));
+      expect(AppUrls.disputePortal, contains('dispute.html'));
     });
 
     testWidgets('LoginPage - Signin tab does not show privacy checkbox',
@@ -199,8 +201,12 @@ void main() {
       // Verify About & Legal section and Privacy Policy button in Thai
       expect(find.byKey(const Key('settings-privacy-policy-button')),
           findsOneWidget);
+      expect(find.byKey(const Key('settings-dispute-portal-button')),
+          findsOneWidget);
       expect(find.text('เกี่ยวกับและนโยบาย'), findsOneWidget);
       expect(find.text('นโยบายความเป็นส่วนตัว'), findsOneWidget);
+      expect(find.text('ศูนย์รับเรื่องโต้แย้งข้อมูล (Dispute Portal)'),
+          findsOneWidget);
 
       // Switch language to English using the dialog's language switch button
       await tester.tap(find.byKey(const Key('settings-lang-en')));
@@ -208,9 +214,14 @@ void main() {
 
       expect(find.text('About & Legal'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
+      expect(find.text('Customer Dispute Portal'), findsOneWidget);
 
       // Tap Privacy Policy button without crash
       await tester.tap(find.byKey(const Key('settings-privacy-policy-button')));
+      await tester.pumpAndSettle();
+
+      // Tap Dispute Portal button without crash
+      await tester.tap(find.byKey(const Key('settings-dispute-portal-button')));
       await tester.pumpAndSettle();
     });
   });

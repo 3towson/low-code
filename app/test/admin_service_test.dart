@@ -55,6 +55,7 @@ void main() {
 
       expect(report.id, 'rep-999');
       expect(report.customerName, '');
+      expect(report.displayName, 'รายงาน #rep-999');
       expect(report.platform, 'other');
       expect(report.reason, 'other');
       expect(report.amount, isNull);

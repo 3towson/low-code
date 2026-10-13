@@ -9,6 +9,9 @@ class AppUrls {
 
   static const String accountDeletion =
       'https://3towson.github.io/low-code/delete-account.html';
+
+  static const String disputePortal =
+      'https://3towson.github.io/low-code/dispute.html';
 }
 
 /// Helper function สำหรับเปิด URL ภายนอกอย่างปลอดภัย

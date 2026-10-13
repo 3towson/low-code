@@ -37,7 +37,7 @@ const admin = createClient(
 function validate(body: Record<string, unknown>):
   | {
       ok: true;
-      name: string;
+      name: string | null;
       phone: string;
       platform: string;
       reason: string;
@@ -49,13 +49,18 @@ function validate(body: Record<string, unknown>):
   | { ok: false; errors: FieldError[] } {
   const errors: FieldError[] = [];
 
-  const name = typeof body.customer_name === "string" ? body.customer_name.trim() : "";
-  const nameLength = [...name].length;
-  if (nameLength < 1 || nameLength > MAX_NAME_LENGTH) {
-    errors.push({ field: "customer_name", message: `กรุณากรอกชื่อลูกค้า 1-${MAX_NAME_LENGTH} ตัวอักษร` });
-  } else if (findPhoneCandidates(name).length > 0) {
-    // กันเบอร์จริงหลุดลงฐานข้อมูลผ่านช่องชื่อ
-    errors.push({ field: "customer_name", message: "ชื่อลูกค้าห้ามมีเบอร์โทร" });
+  // P0-3: customer_name เป็น optional และไม่บันทึกลงฐานข้อมูล เพื่อลดข้อมูลตามเกณฑ์ Apple 5.1.1(viii)
+  let name: string | null = null;
+  if (typeof body.customer_name === "string" && body.customer_name.trim().length > 0) {
+    const trimmed = body.customer_name.trim();
+    if ([...trimmed].length > MAX_NAME_LENGTH) {
+      errors.push({ field: "customer_name", message: `ชื่อลูกค้าต้องไม่เกิน ${MAX_NAME_LENGTH} ตัวอักษร` });
+    } else if (findPhoneCandidates(trimmed).length > 0) {
+      // กันเบอร์จริงหลุดลงผ่านช่องชื่อ
+      errors.push({ field: "customer_name", message: "ชื่อลูกค้าห้ามมีเบอร์โทร" });
+    } else {
+      name = trimmed;
+    }
   }
 
   const phone = typeof body.phone === "string" ? normalizeThaiPhone(body.phone) : null;
@@ -190,7 +195,7 @@ Deno.serve(async (req: Request) => {
     const phoneHash = await hashPhone(input.phone, Deno.env.get("PHONE_HASH_SECRET") ?? "");
     const { error: insertError } = await admin.from("cod_reports").insert({
       phone_hash: phoneHash,
-      customer_name: input.name,
+      customer_name: null, // P0-3: ไม่เก็บชื่อลูกค้าปลายทางลงในตารางรายงาน
       reported_by: auth.user.id,
       platform: input.platform,
       reason: input.reason,

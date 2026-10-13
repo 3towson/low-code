@@ -90,8 +90,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ],
         ),
         content: Text(
-          'คุณต้องการอนุมัติรายงานของลูกค้า "${report.customerName}" หรือไม่?\n'
-          'เมื่ออนุมัติแล้ว ข้อมูลจะถูกนำไปคำนวณระดับความเสี่ยงทันที',
+          report.customerName.isNotEmpty
+              ? 'คุณต้องการอนุมัติรายงานของลูกค้า "${report.customerName}" หรือไม่?\n'
+                  'เมื่ออนุมัติแล้ว ข้อมูลจะถูกนำไปคำนวณระดับความเสี่ยงทันที'
+              : 'คุณต้องการอนุมัติ "${report.displayName}" หรือไม่?\n'
+                  'เมื่ออนุมัติแล้ว ข้อมูลจะถูกนำไปคำนวณระดับความเสี่ยงทันที',
         ),
         actions: [
           TextButton(
@@ -118,7 +121,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFF10B981),
-            content: Text('อนุมัติรายงาน "${report.customerName}" เรียบร้อยแล้ว'),
+            content: Text(
+              report.customerName.isNotEmpty
+                  ? 'อนุมัติรายงาน "${report.customerName}" เรียบร้อยแล้ว'
+                  : 'อนุมัติ "${report.displayName}" เรียบร้อยแล้ว',
+            ),
           ),
         );
         _loadData();
@@ -150,7 +157,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('ระบุเหตุผลในการปฏิเสธรายงาน "${report.customerName}":'),
+            Text(
+              report.customerName.isNotEmpty
+                  ? 'ระบุเหตุผลในการปฏิเสธรายงาน "${report.customerName}":'
+                  : 'ระบุเหตุผลในการปฏิเสธ "${report.displayName}":',
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
@@ -190,7 +201,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFFEF4444),
-            content: Text('ปฏิเสธรายงาน "${report.customerName}" เรียบร้อยแล้ว'),
+            content: Text(
+              report.customerName.isNotEmpty
+                  ? 'ปฏิเสธรายงาน "${report.customerName}" เรียบร้อยแล้ว'
+                  : 'ปฏิเสธ "${report.displayName}" เรียบร้อยแล้ว',
+            ),
           ),
         );
         _loadData();
@@ -1028,7 +1043,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      report.customerName,
+                      report.displayName,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -1306,7 +1321,9 @@ class _EvidenceViewerDialogState extends State<_EvidenceViewerDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'หลักฐานของ "${widget.report.customerName}"',
+                      widget.report.customerName.isNotEmpty
+                          ? 'หลักฐานของ "${widget.report.customerName}"'
+                          : 'หลักฐานของ ${widget.report.displayName}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

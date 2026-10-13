@@ -183,6 +183,11 @@ void main() {
 
     testWidgets('กดปุ่มตั้งค่าเปิด SettingsDialog และเปลี่ยนภาษาได้แบบ Realtime',
         (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final controller = AppSettingsController(
         themeMode: ThemeMode.dark,
         language: AppLanguage.th,

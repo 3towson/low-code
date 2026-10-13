@@ -105,6 +105,7 @@ class AppStrings {
     required this.agreeToPrivacyPolicy,
     required this.privacyPolicyRequired,
     required this.aboutSection,
+    required this.disputePortal,
   });
 
   final AppLanguage language;
@@ -198,6 +199,7 @@ class AppStrings {
   final String agreeToPrivacyPolicy;
   final String privacyPolicyRequired;
   final String aboutSection;
+  final String disputePortal;
 
   bool get isThai => language == AppLanguage.th;
 
@@ -324,6 +326,7 @@ class AppStrings {
     agreeToPrivacyPolicy: 'ฉันได้อ่านและยอมรับ',
     privacyPolicyRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก',
     aboutSection: 'เกี่ยวกับและนโยบาย',
+    disputePortal: 'ศูนย์รับเรื่องโต้แย้งข้อมูล (Dispute Portal)',
   );
 
   static const AppStrings en = AppStrings._(
@@ -423,6 +426,7 @@ class AppStrings {
     agreeToPrivacyPolicy: 'I have read and agree to the',
     privacyPolicyRequired: 'Please agree to the Privacy Policy before signing up',
     aboutSection: 'About & Legal',
+    disputePortal: 'Customer Dispute Portal',
   );
 
   static AppStrings of(AppLanguage lang) {

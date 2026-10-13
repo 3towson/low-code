@@ -4,6 +4,5 @@
     "./scripts",
     "./supabase/functions"
   ],
-  "deno.path": "C:\\Users\\thamm\\.deno\\bin\\deno.exe",
   "deno.lint": true
 }

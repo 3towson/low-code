@@ -152,9 +152,9 @@
         <li><strong>ข้อมูลการรายงานลูกค้า COD ที่มีปัญหา:</strong>
           <ul>
             <li><strong>หมายเลขโทรศัพท์ลูกค้า:</strong> เรา<strong>ไม่เก็บหมายเลขโทรศัพท์จริงของลูกค้าลงในฐานข้อมูล</strong> แต่จะแปลงเป็นค่าแฮชด้วยอัลกอริทึม SHA-256 ผสม Salt ความปลอดภัยสูง (<code>phone_hash</code>) บน Edge Function ทันที</li>
-            <li><strong>ชื่อลูกค้า:</strong> สำหรับเป็นข้อมูลอ้างอิงเบื้องต้นในการตรวจสอบ</li>
+            <li><strong>ชื่อลูกค้า:</strong> เรา<strong>ไม่จัดเก็บชื่อจริงของลูกค้าปลายทางลงในฐานข้อมูล</strong> เพื่อปฏิบัติตามหลักการลดข้อมูลส่วนบุคคลให้เหลือน้อยที่สุด (Data Minimization) ตามเกณฑ์ Apple App Store Review Guideline 5.1.1(viii) และ PDPA</li>
             <li><strong>ข้อมูลเหตุการณ์:</strong> แพลตฟอร์มที่เกิดเหตุ, เหตุผลในการรายงาน (เช่น ปฏิเสธการรับพัสดุ, ติดต่อไม่ได้, ที่อยู่ปลอม), มูลค่าความเสียหาย, รายละเอียดเพิ่มเติม</li>
-            <li><strong>ภาพหลักฐาน:</strong> ภาพถ่ายหน้าจอการสั่งซื้อหรือแชตการปฏิเสธพัสดุ (เก็บในระบบจัดเก็บไฟล์แบบส่วนตัว Private Storage)</li>
+            <li><strong>ภาพหลักฐาน:</strong> ภาพถ่ายหน้าจอการสั่งซื้อหรือแชตการปฏิเสธพัสดุ (เก็บในระบบจัดเก็บไฟล์แบบส่วนตัว Private Storage ตรวจสอบโดยแอดมินเท่านั้น)</li>
           </ul>
         </li>
       </ul>
@@ -163,7 +163,7 @@
       <div class="info-box">
         <h3>การส่งข้อมูลไปยัง Google Gemini API</h3>
         <p>
-          ในฟีเจอร์ "ตรวจด้วยข้อความออเดอร์" เมื่อผู้ใช้วางข้อความออเดอร์หรือแชต ข้อความดังกล่าวจะถูกส่งไปยัง <strong>Google Gemini API (Gemini 3.1 Flash Lite)</strong> ผ่าน Edge Function ที่ปลอดภัย เพื่อให้ AI สกัดเฉพาะหมายเลขโทรศัพท์และชื่อลูกค้าออกจากข้อความออเดอร์โดยอัตโนมัติ
+          ในฟีเจอร์ "ตรวจด้วยข้อความออเดอร์" เมื่อผู้ใช้วางข้อความออเดอร์หรือแชต ข้อความดังกล่าวจะถูกส่งไปยัง <strong>Google Gemini API (Gemini 3.1 Flash Lite)</strong> ผ่าน Edge Function ที่ปลอดภัย เพื่อให้ AI สกัดเฉพาะหมายเลขโทรศัพท์ออกจากข้อความออเดอร์โดยอัตโนมัติ
         </p>
         <p style="margin: 0;">
           <strong>ข้อกำหนดด้านความปลอดภัย:</strong> ข้อมูลข้อความออเดอร์จะไม่ถูกบันทึกลงฐานข้อมูลของเรา และไม่ถูกนำไปใช้ฝึกฝนโมเดล AI ของ Google ตามเงื่อนไขการให้บริการของ Google Cloud API สำหรับองค์กร
@@ -190,7 +190,7 @@
         <li><strong>สิทธิในการเข้าถึงและขอรับสำเนาข้อมูลส่วนบุคคล:</strong> สามารถตรวจสอบข้อมูลร้านค้าและประวัติในแอปพลิเคชันได้ตลอดเวลา</li>
         <li><strong>สิทธิในการขอแก้ไขข้อมูล:</strong> สามารถแจ้งขอแก้ไขข้อมูลร้านค้าที่ไม่ถูกต้องให้เป็นปัจจุบันได้</li>
         <li><strong>สิทธิในการขอลบข้อมูล (Right to Erasure):</strong> สามารถกด <strong>"ลบบัญชีผู้ใช้"</strong> ได้โดยตรงจากเมนูการตั้งค่าภายในแอป หรือผ่านหน้าเว็บ <a href="delete-account.html">ขอลบบัญชีผู้ใช้</a></li>
-        <li><strong>สิทธิของลูกค้าปลายทางในการโต้แย้ง (Dispute):</strong> หากท่านเป็นลูกค้าปลายทางที่เชื่อว่าเบอร์โทรศัพท์ของท่านถูกรายงานโดยไม่ถูกต้อง สามารถติดต่อเราทางอีเมลเพื่อยื่นคำร้องขอตรวจสอบและปลดรายงานได้</li>
+        <li><strong>สิทธิของลูกค้าปลายทางในการโต้แย้งและขอลบข้อมูล (Dispute & Erasure):</strong> หากท่านเป็นลูกค้าปลายทางที่เชื่อว่าเบอร์โทรศัพท์ของท่านถูกรายงานโดยไม่ถูกต้อง หรือประสงค์ขอใช้สิทธิตรวจสอบ/ลบข้อมูล สามารถยื่นเรื่องได้โดยตรงผ่าน <a href="dispute.html">ศูนย์รับเรื่องโต้แย้งข้อมูล (Dispute Portal)</a> หรือส่งอีเมลมายัง <a href="mailto:dispute@codcheck.app">dispute@codcheck.app</a> (ดำเนินการภายใน 3 วันทำการ)</li>
       </ol>
 
       <h2>6. ความปลอดภัยของข้อมูล (Security Measures)</h2>
@@ -202,8 +202,9 @@
       <p>หากมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัว หรือต้องการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล สามารถติดต่อได้ที่:</p>
       <ul>
         <li><strong>ผู้ให้บริการ:</strong> COD Customer Check Support Team</li>
-        <li><strong>อีเมลติดต่อ:</strong> <a href="mailto:privacy@codcheck.app">privacy@codcheck.app</a> หรือ <a href="mailto:support@codcheck.app">support@codcheck.app</a></li>
-        <li><strong>เว็บไซต์คำขอลบบัญชี:</strong> <a href="delete-account.html">https://3towson.github.io/low-code/delete-account.html</a></li>
+        <li><strong>ศูนย์รับเรื่องโต้แย้งข้อมูล:</strong> <a href="dispute.html">https://3towson.github.io/low-code/dispute.html</a></li>
+        <li><strong>อีเมลติดต่อ:</strong> <a href="mailto:dispute@codcheck.app">dispute@codcheck.app</a> หรือ <a href="mailto:support@codcheck.app">support@codcheck.app</a></li>
+        <li><strong>เว็บไซต์คำขอลบบัญชีร้านค้า:</strong> <a href="delete-account.html">https://3towson.github.io/low-code/delete-account.html</a></li>
       </ul>
 
       <div class="footer">

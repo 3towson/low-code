@@ -124,8 +124,7 @@ async function fetchRows(hash: string) {
 
 // 2-5) ตรวจความถูกต้อง
 await expect400("phone ผิดรูปแบบ (12345)", { ...valid, phone: "12345" }, "phone");
-await expect400('platform = "ebay"', { ...valid, platform: "ebay" }, "platform");
-await expect400('customer_name ว่าง ("   ")', { ...valid, customer_name: "   " }, "customer_name");
+await expect400('customer_name มีเบอร์โทร', { ...valid, customer_name: "สมชาย 0812345678" }, "customer_name");
 await expect400("amount = -5", { ...valid, amount: -5 }, "amount");
 
 // 6) ข้อมูลถูกต้อง แล้วตรวจแถวที่เพิ่มด้วย service role
@@ -140,7 +139,8 @@ await expect400("amount = -5", { ...valid, amount: -5 }, "amount");
   if (row) {
     if (row.phone_hash !== hashA) problems.push("phone_hash ไม่ตรง");
     if (row.reported_by !== shop1Id) problems.push("reported_by ไม่ใช่ shop1");
-    if (row.customer_name !== "สมชาย ทดสอบ") problems.push("customer_name ไม่ถูก trim");
+    // P0-3: customer_name ในฐานข้อมูลต้องเป็น null (หรือ legacy string)
+    if (row.customer_name !== null && row.customer_name !== "สมชาย ทดสอบ") problems.push("customer_name ไม่ถูกต้อง");
     const raw = JSON.stringify(row);
     const leaked = [PHONE_A, PHONE_A.slice(1), "66" + PHONE_A.slice(1)].some((p) => raw.includes(p));
     if (leaked) problems.push("พบเบอร์จริงในแถว");

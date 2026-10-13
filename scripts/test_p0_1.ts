@@ -198,7 +198,7 @@ try {
   // ล้างข้อมูลทดสอบ
   await sb.from("cod_reports").delete().eq("phone_hash", phoneHash);
   if (testUid) {
-    await sb.auth.admin.deleteUser(testUid).catch(() => {});
+    await sb.auth.admin.deleteUser(testUid).catch(() => { });
   }
 }
 
@@ -209,8 +209,9 @@ for (const r of results) {
   console.log(`${r.name} | ${r.expected} | ${r.actual} | ${r.ok ? "ผ่าน" : "ไม่ผ่าน"}`);
 }
 const passCount = results.filter((r) => r.ok).length;
-console.log(`\nสรุป: ผ่าน ${passCount}/${results.length}\n`);
+console.log(`\nสรุป: ผ่าน ${passCount}/${results.length}\n`); d
 
 if (passCount !== results.length) {
+  // @ts-ignore: Deno global
   Deno.exit(1);
 }

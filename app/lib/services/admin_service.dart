@@ -26,6 +26,13 @@ class PendingReport {
   final String shopName;
   final DateTime createdAt;
 
+  /// ชื่อที่ใช้แสดงผล หากไม่มีชื่อลูกค้าจะแสดงรหัสรายงานแทน (P0-3)
+  String get displayName {
+    if (customerName.trim().isNotEmpty) return customerName.trim();
+    final shortId = id.length >= 8 ? id.substring(0, 8) : id;
+    return 'รายงาน #$shortId';
+  }
+
   /// รายการพาธไฟล์ภาพหลักฐานทั้งหมด (1-3 รูป)
   List<String> get evidencePaths {
     if (evidencePath == null || evidencePath!.trim().isEmpty) return const [];
