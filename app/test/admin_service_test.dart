@@ -266,6 +266,44 @@ void main() {
       });
       expect(ok, isTrue);
     });
+
+    test('getAuditLogs calls admin_get_audit_logs RPC and deserializes results (P2)',
+        () async {
+      String? calledFn;
+      Map<String, dynamic>? calledParams;
+
+      final service = AdminService(
+        null,
+        rpcCaller: (fn, {params}) async {
+          calledFn = fn;
+          calledParams = params;
+          return [
+            {
+              'id': 'log-001',
+              'admin_id': 'admin-uuid',
+              'action': 'approve_report',
+              'target_type': 'cod_report',
+              'target_id': 'rep-123',
+              'details': {'action': 'approve', 'new_status': 'active'},
+              'created_at': '2026-10-13T10:00:00Z',
+            },
+          ];
+        },
+      );
+
+      final logs = await service.getAuditLogs(limit: 20, offset: 5);
+
+      expect(calledFn, 'admin_get_audit_logs');
+      expect(calledParams, {'p_limit': 20, 'p_offset': 5});
+      expect(logs.length, 1);
+      expect(logs.first.id, 'log-001');
+      expect(logs.first.adminId, 'admin-uuid');
+      expect(logs.first.action, 'approve_report');
+      expect(logs.first.targetType, 'cod_report');
+      expect(logs.first.targetId, 'rep-123');
+      expect(logs.first.details['action'], 'approve');
+      expect(logs.first.createdAt.toUtc().year, 2026);
+    });
   });
 }
 

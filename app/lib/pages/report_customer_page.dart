@@ -113,7 +113,47 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     super.dispose();
   }
 
-  void _handleClose() {
+  bool get _hasUnsavedChanges =>
+      _nameController.text.trim().isNotEmpty ||
+      _phoneController.text.trim().isNotEmpty ||
+      _amountController.text.trim().isNotEmpty ||
+      _chatController.text.trim().isNotEmpty ||
+      _otherPlatformController.text.trim().isNotEmpty ||
+      _otherReasonController.text.trim().isNotEmpty ||
+      _selectedEvidences.isNotEmpty;
+
+  Future<bool> _confirmDiscard() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('ยกเลิกการรายงาน?'),
+        content: const Text(
+          'ข้อมูลและภาพหลักฐานที่คุณกรอกไว้จะสูญหาย ต้องการปิดหน้ารายงานหรือไม่?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('กรอกต่อ'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('ปิดและละทิ้งข้อมูล'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _handleClose() async {
+    if (_hasUnsavedChanges) {
+      final discard = await _confirmDiscard();
+      if (!discard) return;
+    }
+    if (!mounted) return;
     if (widget.onClose != null) {
       widget.onClose!();
     } else if (Navigator.of(context).canPop()) {
@@ -427,8 +467,22 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         : const Color(0xFFE2E8F0);
     final fieldBg = isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFF);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final discard = await _confirmDiscard();
+        if (discard && context.mounted) {
+          if (widget.onClose != null) {
+            widget.onClose!();
+          } else if (navigator.canPop()) {
+            navigator.pop();
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -493,6 +547,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                             border: Border.all(color: borderColor),
                           ),
                           child: IconButton(
+                            key: const Key('report-close-button'),
                             tooltip: strings.close,
                             onPressed: (_submitting || _extracting)
                                 ? null
@@ -906,7 +961,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildEvidenceSection(BuildContext context) {

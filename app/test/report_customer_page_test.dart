@@ -368,5 +368,74 @@ void main() {
     expect(service.inputs.single.evidencePath,
         'user/mock_evidence.jpg,user/mock_evidence.jpg,user/mock_evidence.jpg');
   });
+
+  testWidgets('ฟอร์มว่าง กดปุ่มปิดสามารถปิดได้ทันทีโดยไม่ขึ้นกล่องยืนยัน (P2)',
+      (tester) async {
+    final service = FakeReportService();
+    var closed = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ReportCustomerPage(
+          reportService: service,
+          storageService: FakeEvidenceStorageService(),
+          onClose: () => closed = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('report-close-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ยกเลิกการรายงาน?'), findsNothing);
+    expect(closed, isTrue);
+  });
+
+  testWidgets(
+      'มีข้อมูลค้าง กดปุ่มปิดจะถามยืนยัน หากกดยกเลิกจะไม่ปิด หากกดยืนยันจะปิด (P2)',
+      (tester) async {
+    final service = FakeReportService();
+    var closed = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ReportCustomerPage(
+          reportService: service,
+          storageService: FakeEvidenceStorageService(),
+          onClose: () => closed = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // กรอกชื่อลูกค้า
+    await tester.enterText(
+        find.byKey(const Key('report-name')), 'ลูกค้าทดสอบ');
+    await tester.pump();
+
+    // กดปุ่มปิด
+    await tester.tap(find.byKey(const Key('report-close-button')));
+    await tester.pumpAndSettle();
+
+    // ต้องแสดงกล่องข้อความยืนยัน
+    expect(find.text('ยกเลิกการรายงาน?'), findsOneWidget);
+    expect(closed, isFalse);
+
+    // กด "กรอกต่อ" -> dialog ปิด แต่หน้าฟอร์มยังอยู่ และ onClose ยังไม่ถูกเรียก
+    await tester.tap(find.text('กรอกต่อ'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ยกเลิกการรายงาน?'), findsNothing);
+    expect(closed, isFalse);
+    expect(find.text('ลูกค้าทดสอบ'), findsOneWidget);
+
+    // กดปุ่มปิดอีกครั้งแล้วเลือก "ปิดและละทิ้งข้อมูล"
+    await tester.tap(find.byKey(const Key('report-close-button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('ปิดและละทิ้งข้อมูล'));
+    await tester.pumpAndSettle();
+
+    expect(closed, isTrue);
+  });
 }
 

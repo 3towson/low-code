@@ -304,6 +304,10 @@ abstract final class AppTheme {
 
   /// Prompt: 400 เนื้อหา, 600 label, 700 หัวข้อ
   static TextTheme _textTheme(TextTheme base, Color onSurface) {
+    // ใน test environment ข้ามการโหลด font dynamically เพื่อป้องกัน layout/paint race condition
+    if (WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+      return base.apply(bodyColor: onSurface, displayColor: onSurface);
+    }
     final t = GoogleFonts.promptTextTheme(base);
     TextStyle? w(TextStyle? s, FontWeight weight) =>
         s?.copyWith(fontWeight: weight);

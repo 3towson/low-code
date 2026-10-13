@@ -179,14 +179,69 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
     }
   }
 
+  bool get _hasUnsavedChanges {
+    final initialUrl = widget.initialInfo?.shopUrl ?? '';
+    final initialPhone = widget.initialInfo?.contactPhone ?? '';
+    return (_urlController.text.trim() != initialUrl &&
+            _urlController.text.trim().isNotEmpty) ||
+        (_phoneController.text.trim() != initialPhone &&
+            _phoneController.text.trim().isNotEmpty) ||
+        _selectedEvidences.isNotEmpty;
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('ยกเลิกการยืนยันตัวตน?'),
+        content: const Text(
+          'ข้อมูลและภาพหลักฐานที่คุณกรอกไว้จะสูญหาย ต้องการปิดหน้าต่างนี้หรือไม่?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('กรอกต่อ'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('ปิดและละทิ้งข้อมูล'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _handleClose() async {
+    if (_hasUnsavedChanges) {
+      final discard = await _confirmDiscard();
+      if (!discard) return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDarkMode;
     final cardBg = isDark ? const Color(0xFF131D31) : Colors.white;
     final borderColor = isDark ? const Color(0xFF22304A) : const Color(0xFFE2E8F0);
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final discard = await _confirmDiscard();
+        if (discard && context.mounted) {
+          navigator.pop();
+        }
+      },
+      child: Dialog(
+        backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 580),
@@ -252,7 +307,8 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
                         ),
                       ),
                       IconButton(
-                        onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+                        key: const Key('merchant-kyc-close-button'),
+                        onPressed: _submitting ? null : _handleClose,
                         icon: const Icon(Icons.close_rounded, size: 20),
                       ),
                     ],
@@ -598,6 +654,6 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
           ),
         ),
       ),
-    );
+    ));
   }
 }

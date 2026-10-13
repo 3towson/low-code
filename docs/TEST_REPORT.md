@@ -20,11 +20,12 @@
 | P0-4 | UGC Moderation & Merchant Suspension | `scripts/test_p0_4.ts` + `admin_service_test.dart` | 22 | 22 |
 | P0-5 | Merchant KYC System (>50 ออเดอร์) | `scripts/test_part7.ts` + `merchant_kyc_test.dart` | 15 | 15 |
 | P0-6 | Postgres Rate Limiting (Guest / User) | `scripts/test_p0_6.ts` | 7 | 7 |
+| P2 | Offline Fonts, Discard Confirm, Admin Audit Logs | `report_customer_page_test.dart` + `merchant_kyc_test.dart` + `admin_service_test.dart` | 4 | 4 |
 | 11 | End-to-End ผ่าน Edge Functions จริง | `scripts/e2e_test.ts` | 12 | 12 |
-| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **211** | **211 (100%)** |
+| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **215** | **215 (100%)** |
 | | **Automated Backend & Script Tests** | Deno & PostgreSQL | **160+** | **160+ (100%)** |
 
-`flutter test` ทั้งโปรเจกต์: **211/211 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
+`flutter test` ทั้งโปรเจกต์: **215/215 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
 
 ---
 

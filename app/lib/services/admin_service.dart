@@ -246,6 +246,24 @@ class AdminService {
     } catch (_) {}
     return 0;
   }
+
+  /// ดึงบันทึกการกระทำของผู้ดูแลระบบ (Admin Audit Logs - P2)
+  Future<List<AdminAuditLog>> getAuditLogs({
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final res = await _callRpc(
+      'admin_get_audit_logs',
+      params: {'p_limit': limit, 'p_offset': offset},
+    );
+    if (res is List) {
+      return res
+          .whereType<Map>()
+          .map((item) => AdminAuditLog.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    return [];
+  }
 }
 
 /// ข้อมูลคำขอยืนยันตัวตนร้านค้าที่รอการตรวจสอบ
@@ -289,6 +307,42 @@ class PendingMerchant {
       contactPhone: json['contact_phone'] as String?,
       evidencePath: json['evidence_path'] as String?,
       submittedAt: DateTime.tryParse(json['submitted_at']?.toString() ?? ''),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+}
+
+/// ข้อมูลบันทึกการกระทำของผู้ดูแลระบบ (Admin Audit Log Entry - P2)
+class AdminAuditLog {
+  const AdminAuditLog({
+    required this.id,
+    this.adminId,
+    required this.action,
+    required this.targetType,
+    required this.targetId,
+    this.details = const {},
+    required this.createdAt,
+  });
+
+  final String id;
+  final String? adminId;
+  final String action;
+  final String targetType;
+  final String targetId;
+  final Map<String, dynamic> details;
+  final DateTime createdAt;
+
+  factory AdminAuditLog.fromJson(Map<String, dynamic> json) {
+    return AdminAuditLog(
+      id: json['id'] as String,
+      adminId: json['admin_id'] as String?,
+      action: json['action'] as String? ?? '',
+      targetType: json['target_type'] as String? ?? '',
+      targetId: json['target_id'] as String? ?? '',
+      details: json['details'] is Map
+          ? Map<String, dynamic>.from(json['details'] as Map)
+          : const {},
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
     );

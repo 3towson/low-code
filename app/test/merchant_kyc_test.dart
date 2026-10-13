@@ -336,6 +336,78 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('KYC dialog ปิดได้ทันทีหากฟอร์มว่าง แต่ถ้ามีข้อมูลจะถามยืนยันก่อนปิด (P2)',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final kycService = MockMerchantKycService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showDialog(
+                    context: ctx,
+                    builder: (_) => MerchantKycDialog(
+                      shopName: 'ร้านฟรุ้งฟริ้ง',
+                      kycService: kycService,
+                    ),
+                  ),
+                  child: const Text('Open Dialog'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // เปิด dialog ครั้งแรก (ฟอร์มว่าง)
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MerchantKycDialog), findsOneWidget);
+
+      // กดปุ่มปิดตอนยังไม่ได้กรอกอะไร -> ต้องปิดได้ทันทีโดยไม่ขึ้น confirm dialog
+      await tester.tap(find.byKey(const Key('merchant-kyc-close-button')));
+      await tester.pumpAndSettle();
+      expect(find.byType(MerchantKycDialog), findsNothing);
+      expect(find.text('ยกเลิกการยืนยันตัวตน?'), findsNothing);
+
+      // เปิด dialog อีกครั้ง
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MerchantKycDialog), findsOneWidget);
+
+      // กรอก URL ร้านค้า
+      await tester.enterText(
+          find.byKey(const Key('kyc-store-url')), 'https://shopee.co.th/shop123');
+      await tester.pump();
+
+      // กดปุ่มปิด -> ต้องขึ้น Dialog ยืนยัน
+      await tester.tap(find.byKey(const Key('merchant-kyc-close-button')));
+      await tester.pumpAndSettle();
+      expect(find.text('ยกเลิกการยืนยันตัวตน?'), findsOneWidget);
+
+      // กด "กรอกต่อ" -> dialog ยืนยันปิด แต่ KYC dialog ยังคงอยู่
+      await tester.tap(find.text('กรอกต่อ'));
+      await tester.pumpAndSettle();
+      expect(find.text('ยกเลิกการยืนยันตัวตน?'), findsNothing);
+      expect(find.byType(MerchantKycDialog), findsOneWidget);
+
+      // กดปุ่มปิดอีกครั้งแล้วเลือก "ปิดและละทิ้งข้อมูล"
+      await tester.tap(find.byKey(const Key('merchant-kyc-close-button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ปิดและละทิ้งข้อมูล'));
+      await tester.pumpAndSettle();
+
+      // Dialog ต้องถูกปิดสำเร็จ
+      expect(find.byType(MerchantKycDialog), findsNothing);
+    });
   });
 
   group('HomePage KYC Gate & Badges Tests', () {

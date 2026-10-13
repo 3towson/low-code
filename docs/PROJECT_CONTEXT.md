@@ -49,7 +49,10 @@
 - **ความเป็นส่วนตัวของชื่อลูกค้า (P0-3)**: ไม่เก็บ `customer_name` ลงในตาราง `cod_reports` เพื่อลดปริมาณข้อมูลส่วนบุคคลที่จัดเก็บ
 - **ข้อยกเว้นสำหรับเบอร์โทรของร้านค้า**: ฟิลด์ `contact_phone` ในตาราง `sellers` ได้รับการยกเว้น เนื่องจากเป็นข้อมูลติดต่อของตัวร้านค้าเองเพื่อใช้ยืนยันตัวตน KYC โดยแอดมิน และไม่ได้เปิดเผยสู่สาธารณะ
 - ร้านค้าทั่วไปห้าม query ตาราง `cod_reports` โดยตรง ต้องผ่าน Edge Function หรือ RPC เท่านั้น
+- ตาราง `sellers` ถูกจำกัดสิทธิ์ `revoke insert, update, delete` จาก role `authenticated` (อนุญาตเฉพาะ `select` ผ่าน RLS เท่านั้น) โดยการสร้างแถวทำผ่าน trigger `handle_new_user` และการแก้ไขทำผ่าน Security Definer RPCs (`submit_merchant_kyc`, `admin_approve_merchant`)
 - สิทธิ์ผู้ดูแลระบบ (Admin) ตรวจสอบผ่าน `public.is_admin()` ซึ่งรองรับทั้งตาราง `admin_users` และ `auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'`
+- การกระทำของผู้ดูแลระบบทั้งหมด (อนุมัติ/ปฏิเสธรายงาน, อนุมัติ/ปฏิเสธ/ระงับร้านค้า) จะถูกบันทึกประวัติลงในตาราง `admin_audit_logs`
+- แอปพลิเคชันฝังฟอนต์ Prompt ไว้ใน `assets/fonts/` เพื่อรองรับการทำงานแบบ Offline โดยกำหนด `GoogleFonts.config.allowRuntimeFetching = false`
 
 ## กฎ Normalize เบอร์โทร
 1. แปลงเลขไทย ๐-๙ เป็น 0-9
