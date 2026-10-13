@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
+import '../utils/url_helper.dart';
 import '../utils/validators.dart';
 
 enum AuthTab { signin, signup }
@@ -35,6 +36,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   String? _error;
   bool _signupSuccess = false;
+  bool _acceptedPrivacy = false;
 
   @override
   void dispose() {
@@ -56,6 +58,11 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _submit() async {
     setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
+
+    if (_tab == AuthTab.signup && !_acceptedPrivacy) {
+      setState(() => _error = context.strings.privacyPolicyRequired);
+      return;
+    }
 
     setState(() => _loading = true);
     try {
@@ -156,6 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                             children: [
                               Expanded(
                                 child: _TabButton(
+                                  key: const Key('auth-tab-signin'),
                                   label: strings.signIn,
                                   icon: Icons.login_rounded,
                                   active: _tab == AuthTab.signin,
@@ -166,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: _TabButton(
+                                  key: const Key('auth-tab-signup'),
                                   label: strings.signUp,
                                   icon: Icons.person_add_alt_1_rounded,
                                   active: _tab == AuthTab.signup,
@@ -434,6 +443,61 @@ class _LoginPageState extends State<LoginPage> {
                                 ? validateLoginPassword
                                 : validatePassword,
                           ),
+                          if (_tab == AuthTab.signup) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Checkbox(
+                                    key: const Key('login-privacy-checkbox'),
+                                    value: _acceptedPrivacy,
+                                    activeColor: const Color(0xFF2563EB),
+                                    onChanged: _loading
+                                        ? null
+                                        : (val) => setState(
+                                            () => _acceptedPrivacy = val ?? false,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Wrap(
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${strings.agreeToPrivacyPolicy} ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        key: const Key('login-privacy-link'),
+                                        onTap: () => launchExternalUrl(
+                                          AppUrls.privacyPolicy,
+                                        ),
+                                        child: Text(
+                                          strings.privacyPolicy,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF3B82F6),
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 22),
 
                           // Submit Button with Primary Gradient
@@ -453,6 +517,7 @@ class _LoginPageState extends State<LoginPage> {
                               ],
                             ),
                             child: FilledButton(
+                              key: const Key('auth-submit-button'),
                               onPressed: _loading ? null : _submit,
                               style: FilledButton.styleFrom(
                                 backgroundColor: Colors.transparent,
@@ -514,6 +579,7 @@ class _LoginPageState extends State<LoginPage> {
 
 class _TabButton extends StatelessWidget {
   const _TabButton({
+    super.key,
     required this.label,
     required this.icon,
     required this.active,

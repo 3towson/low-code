@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>นโยบายความเป็นส่วนตัว (Privacy Policy) — COD Customer Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0F172A;
+      --card-bg: #1E293B;
+      --border: #334155;
+      --primary: #3B82F6;
+      --primary-hover: #2563EB;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent: #10B981;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 32px 16px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563EB, #3B82F6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 10px;
+      color: #60A5FA;
+    }
+    p, li {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    ul, ol {
+      margin-left: 22px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    strong {
+      color: var(--text);
+    }
+    .info-box {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 12px;
+      padding: 18px;
+      margin: 20px 0;
+    }
+    .info-box h3 {
+      font-size: 15px;
+      color: #93C5FD;
+      margin-bottom: 8px;
+    }
+    .warning-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 12px;
+      padding: 18px;
+      margin: 20px 0;
+    }
+    .warning-box h3 {
+      font-size: 15px;
+      color: #FCD34D;
+      margin-bottom: 8px;
+    }
+    .footer {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo-icon">🛡️</div>
+        <div>
+          <h1>นโยบายความเป็นส่วนตัว (Privacy Policy)</h1>
+          <p style="margin: 0; font-size: 13px;">COD Customer Check (COD Risk Shield) · มีผลบังคับใช้: 13 ตุลาคม 2026</p>
+        </div>
+      </div>
+
+      <p>
+        แอปพลิเคชัน <strong>COD Customer Check</strong> ("เรา", "ผู้ให้บริการ") ให้ความสำคัญอย่างยิ่งต่อการคุ้มครองข้อมูลส่วนบุคคลของผู้ใช้งาน ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA) รวมถึงหลักเกณฑ์ของ Apple App Store และ Google Play Store เอกสารนี้จัดทำขึ้นเพื่ออธิบายประเภทของข้อมูลที่เรารวบรวม วัตถุประสงค์ การประมวลผล ระยะเวลาการจัดเก็บ และสิทธิของเจ้าของข้อมูล
+      </p>
+
+      <h2>1. ข้อมูลส่วนบุคคลที่เราจัดเก็บ</h2>
+      <p>เราเก็บรวบรวมข้อมูลส่วนบุคคลเท่าที่จำเป็นต่อการให้บริการ ดังนี้:</p>
+      <ul>
+        <li><strong>ข้อมูลบัญชีร้านค้า (Merchant Profile):</strong> ที่อยู่อีเมล, รหัสผ่าน (เก็บในรูปแบบเข้ารหัสทางเดียว Secure Hash โดยระบบ Supabase Auth), ชื่อร้านค้า</li>
+        <li><strong>ข้อมูลการยืนยันตัวตนร้านค้า (Merchant KYC):</strong> ลิงก์ร้านค้า (Shop URL), หมวดหมู่สินค้า, เบอร์โทรศัพท์สำหรับติดต่อร้านค้า, ภาพถ่ายหลักฐานการมีตัวตนจริงของร้านค้า</li>
+        <li><strong>ข้อมูลการรายงานลูกค้า COD ที่มีปัญหา:</strong>
+          <ul>
+            <li><strong>หมายเลขโทรศัพท์ลูกค้า:</strong> เรา<strong>ไม่เก็บหมายเลขโทรศัพท์จริงของลูกค้าลงในฐานข้อมูล</strong> แต่จะแปลงเป็นค่าแฮชด้วยอัลกอริทึม SHA-256 ผสม Salt ความปลอดภัยสูง (<code>phone_hash</code>) บน Edge Function ทันที</li>
+            <li><strong>ชื่อลูกค้า:</strong> สำหรับเป็นข้อมูลอ้างอิงเบื้องต้นในการตรวจสอบ</li>
+            <li><strong>ข้อมูลเหตุการณ์:</strong> แพลตฟอร์มที่เกิดเหตุ, เหตุผลในการรายงาน (เช่น ปฏิเสธการรับพัสดุ, ติดต่อไม่ได้, ที่อยู่ปลอม), มูลค่าความเสียหาย, รายละเอียดเพิ่มเติม</li>
+            <li><strong>ภาพหลักฐาน:</strong> ภาพถ่ายหน้าจอการสั่งซื้อหรือแชตการปฏิเสธพัสดุ (เก็บในระบบจัดเก็บไฟล์แบบส่วนตัว Private Storage)</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h2>2. การประมวลผลข้อมูลด้วยปัญญาประดิษฐ์ (Google Gemini AI)</h2>
+      <div class="info-box">
+        <h3>การส่งข้อมูลไปยัง Google Gemini API</h3>
+        <p>
+          ในฟีเจอร์ "ตรวจด้วยข้อความออเดอร์" เมื่อผู้ใช้วางข้อความออเดอร์หรือแชต ข้อความดังกล่าวจะถูกส่งไปยัง <strong>Google Gemini API (Gemini 3.1 Flash Lite)</strong> ผ่าน Edge Function ที่ปลอดภัย เพื่อให้ AI สกัดเฉพาะหมายเลขโทรศัพท์และชื่อลูกค้าออกจากข้อความออเดอร์โดยอัตโนมัติ
+        </p>
+        <p style="margin: 0;">
+          <strong>ข้อกำหนดด้านความปลอดภัย:</strong> ข้อมูลข้อความออเดอร์จะไม่ถูกบันทึกลงฐานข้อมูลของเรา และไม่ถูกนำไปใช้ฝึกฝนโมเดล AI ของ Google ตามเงื่อนไขการให้บริการของ Google Cloud API สำหรับองค์กร
+        </p>
+      </div>
+
+      <h2>3. วัตถุประสงค์ในการประมวลผลข้อมูล</h2>
+      <ul>
+        <li>เพื่อยืนยันตัวตนและป้องกันการรายงานข้อมูลเท็จโดยร้านค้าที่ไม่มีตัวตนจริง (Merchant KYC)</li>
+        <li>เพื่อคำนวณและประเมินระดับความเสี่ยงของพฤติกรรมการปฏิเสธพัสดุเก็บเงินปลายทาง (COD) ช่วยปกป้องผู้ประกอบการร้านค้าออนไลน์จากการทุจริต</li>
+        <li>เพื่อให้บริการระบบและรักษาความปลอดภัยของระบบฐานข้อมูล</li>
+      </ul>
+
+      <h2>4. ระยะเวลาในการเก็บรักษาข้อมูล (Data Retention)</h2>
+      <ul>
+        <li><strong>การคำนวณระดับความเสี่ยง:</strong> ระบบจะนำรายงานที่ได้รับอนุมัติในช่วง <strong>12 เดือนล่าสุด</strong> มาคำนวณระดับความเสี่ยง (เขียว/เหลือง/แดง) รายงานที่มีอายุเกิน 12 เดือนจะไม่ถูกนำมาคิดระดับความเสี่ยง</li>
+        <li><strong>ข้อมูลบัญชีร้านค้าและภาพหลักฐาน:</strong> จะถูกจัดเก็บไว้ตราบเท่าที่บัญชีผู้ใช้ยังคงเปิดใช้งาน และจะถูกลบถาวรทันทีเมื่อผู้ใช้ดำเนินการ <a href="delete-account.html">ลบบัญชีผู้ใช้ (Account Deletion)</a></li>
+        <li><strong>รายงานความเสี่ยงหลังลบบัญชี:</strong> ข้อมูลรายงานความเสี่ยงจะถูกตัดความเชื่อมโยงกับบัญชีผู้รายงานอย่างถาวร (Anonymized) เพื่อประโยชน์สาธารณะในการเตือนภัยทุจริตอย่างต่อเนื่อง</li>
+      </ul>
+
+      <h2>5. สิทธิของเจ้าของข้อมูลส่วนบุคคล (Data Subject Rights)</h2>
+      <p>ภายใต้กฎหมาย PDPA คุณมีสิทธิดังต่อไปนี้:</p>
+      <ol>
+        <li><strong>สิทธิในการเข้าถึงและขอรับสำเนาข้อมูลส่วนบุคคล:</strong> สามารถตรวจสอบข้อมูลร้านค้าและประวัติในแอปพลิเคชันได้ตลอดเวลา</li>
+        <li><strong>สิทธิในการขอแก้ไขข้อมูล:</strong> สามารถแจ้งขอแก้ไขข้อมูลร้านค้าที่ไม่ถูกต้องให้เป็นปัจจุบันได้</li>
+        <li><strong>สิทธิในการขอลบข้อมูล (Right to Erasure):</strong> สามารถกด <strong>"ลบบัญชีผู้ใช้"</strong> ได้โดยตรงจากเมนูการตั้งค่าภายในแอป หรือผ่านหน้าเว็บ <a href="delete-account.html">ขอลบบัญชีผู้ใช้</a></li>
+        <li><strong>สิทธิของลูกค้าปลายทางในการโต้แย้ง (Dispute):</strong> หากท่านเป็นลูกค้าปลายทางที่เชื่อว่าเบอร์โทรศัพท์ของท่านถูกรายงานโดยไม่ถูกต้อง สามารถติดต่อเราทางอีเมลเพื่อยื่นคำร้องขอตรวจสอบและปลดรายงานได้</li>
+      </ol>
+
+      <h2>6. ความปลอดภัยของข้อมูล (Security Measures)</h2>
+      <p>
+        เราใช้มาตรการทางเทคนิคและการบริหารจัดการที่เข้มงวดเพื่อรักษาความลับและความปลอดภัยของข้อมูล ได้แก่ การเข้ารหัสข้อมูลระหว่างรับส่ง (HTTPS/TLS), การแฮชเบอร์โทรศัพท์ (SHA-256 + Secret Salt) บน Edge Function เท่านั้น, การควบคุมสิทธิ์การเข้าถึงฐานข้อมูลระดับแถว (Row Level Security: RLS) และการจัดเก็บภาพหลักฐานใน Private Storage Buckets
+      </p>
+
+      <h2>7. ช่องทางการติดต่อ (Contact Information)</h2>
+      <p>หากมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัว หรือต้องการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล สามารถติดต่อได้ที่:</p>
+      <ul>
+        <li><strong>ผู้ให้บริการ:</strong> COD Customer Check Support Team</li>
+        <li><strong>อีเมลติดต่อ:</strong> <a href="mailto:privacy@codcheck.app">privacy@codcheck.app</a> หรือ <a href="mailto:support@codcheck.app">support@codcheck.app</a></li>
+        <li><strong>เว็บไซต์คำขอลบบัญชี:</strong> <a href="delete-account.html">https://3towson.github.io/low-code/delete-account.html</a></li>
+      </ul>
+
+      <div class="footer">
+        © 2026 COD Customer Check. สงวนลิขสิทธิ์ทั้งหมดตามกฎหมาย.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

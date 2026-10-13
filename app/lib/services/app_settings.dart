@@ -75,8 +75,7 @@ class AppSettingsScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(AppSettingsScope oldWidget) =>
-      controller != oldWidget.controller;
+  bool updateShouldNotify(AppSettingsScope oldWidget) => true;
 }
 
 /// Extension บน BuildContext เพื่อเรียกใช้ settings และ strings ได้สะดวก

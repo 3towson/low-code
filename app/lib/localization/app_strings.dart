@@ -101,6 +101,10 @@ class AppStrings {
     required this.deleteAccountBack,
     required this.deleteAccountSuccess,
     required this.deleteAccountFailed,
+    required this.privacyPolicy,
+    required this.agreeToPrivacyPolicy,
+    required this.privacyPolicyRequired,
+    required this.aboutSection,
   });
 
   final AppLanguage language;
@@ -190,6 +194,10 @@ class AppStrings {
   final String deleteAccountBack;
   final String deleteAccountSuccess;
   final String deleteAccountFailed;
+  final String privacyPolicy;
+  final String agreeToPrivacyPolicy;
+  final String privacyPolicyRequired;
+  final String aboutSection;
 
   bool get isThai => language == AppLanguage.th;
 
@@ -312,6 +320,10 @@ class AppStrings {
     deleteAccountBack: 'ย้อนกลับ',
     deleteAccountSuccess: 'ลบบัญชีผู้ใช้สำเร็จ',
     deleteAccountFailed: 'ลบบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
+    privacyPolicy: 'นโยบายความเป็นส่วนตัว',
+    agreeToPrivacyPolicy: 'ฉันได้อ่านและยอมรับ',
+    privacyPolicyRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก',
+    aboutSection: 'เกี่ยวกับและนโยบาย',
   );
 
   static const AppStrings en = AppStrings._(
@@ -407,6 +419,10 @@ class AppStrings {
     deleteAccountBack: 'Back',
     deleteAccountSuccess: 'Account deleted successfully',
     deleteAccountFailed: 'Failed to delete account. Please try again.',
+    privacyPolicy: 'Privacy Policy',
+    agreeToPrivacyPolicy: 'I have read and agree to the',
+    privacyPolicyRequired: 'Please agree to the Privacy Policy before signing up',
+    aboutSection: 'About & Legal',
   );
 
   static AppStrings of(AppLanguage lang) {

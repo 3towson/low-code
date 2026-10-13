@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
+import '../utils/url_helper.dart';
 import 'delete_account_dialog.dart';
 
 /// กล่องโต้ตอบการตั้งค่า (Settings Dialog)
@@ -270,6 +271,67 @@ class SettingsDialog extends StatelessWidget {
                   ),
                 ),
               ],
+
+              // ส่วนที่ 4: เกี่ยวกับและนโยบาย (About & Legal)
+              const SizedBox(height: 18),
+              const Divider(height: 1),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Icon(Icons.shield_outlined, size: 17, color: colors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    strings.aboutSection,
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const Key('settings-privacy-policy-button'),
+                  onTap: () => launchExternalUrl(AppUrls.privacyPolicy),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: app.neutralBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: app.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.privacy_tip_outlined,
+                          size: 18,
+                          color: colors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            strings.privacyPolicy,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 16,
+                          color: app.muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 24),
               Container(

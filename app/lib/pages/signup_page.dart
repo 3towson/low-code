@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
+import '../utils/url_helper.dart';
 import '../utils/validators.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/page_body.dart';
@@ -24,6 +26,7 @@ class _SignupPageState extends State<SignupPage> {
   final _shopNameController = TextEditingController();
   bool _loading = false;
   bool _obscurePassword = true;
+  bool _acceptedPrivacy = false;
   String? _error;
 
   @override
@@ -38,6 +41,11 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _submit() async {
     setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
+
+    if (!_acceptedPrivacy) {
+      setState(() => _error = context.strings.privacyPolicyRequired);
+      return;
+    }
 
     setState(() => _loading = true);
     try {
@@ -56,6 +64,7 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
     if (!mounted) return;
+    setState(() => _loading = false);
 
     await showDialog<void>(
       context: context,
@@ -149,6 +158,52 @@ class _SignupPageState extends State<SignupPage> {
                 onFieldSubmitted: (_) => _loading ? null : _submit(),
                 validator: (value) =>
                     validateConfirmPassword(value, _passwordController.text),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      key: const Key('signup-privacy-checkbox'),
+                      value: _acceptedPrivacy,
+                      activeColor: const Color(0xFF2563EB),
+                      onChanged: _loading
+                          ? null
+                          : (val) => setState(() => _acceptedPrivacy = val ?? false),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '${context.strings.agreeToPrivacyPolicy} ',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: app.muted,
+                          ),
+                        ),
+                        GestureDetector(
+                          key: const Key('signup-privacy-link'),
+                          onTap: () => launchExternalUrl(AppUrls.privacyPolicy),
+                          child: Text(
+                            context.strings.privacyPolicy,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF3B82F6),
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               if (_error != null) ...[
                 const SizedBox(height: 16),
