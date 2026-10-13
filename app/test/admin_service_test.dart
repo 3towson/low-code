@@ -326,6 +326,48 @@ void main() {
       expect(logs.first.details['action'], 'approve');
       expect(logs.first.createdAt.toUtc().year, 2026);
     });
+
+    test('listMerchants calls admin_list_merchants RPC with status, limit, offset (S1)',
+        () async {
+      String? calledFn;
+      Map<String, dynamic>? calledParams;
+
+      final service = AdminService(
+        null,
+        rpcCaller: (fn, {params}) async {
+          calledFn = fn;
+          calledParams = params;
+          return [
+            {
+              'id': 'seller-s9',
+              'shop_name': 'ร้านถูกระงับ',
+              'verification_status': 'suspended',
+              'rejection_reason': 'ผิดนโยบาย',
+              'status_before_suspend': 'approved',
+              'created_at': '2026-10-10T00:00:00Z',
+            }
+          ];
+        },
+      );
+
+      final merchants = await service.listMerchants(
+        status: 'suspended',
+        limit: 10,
+        offset: 0,
+      );
+
+      expect(calledFn, 'admin_list_merchants');
+      expect(calledParams, {
+        'p_status': 'suspended',
+        'p_limit': 10,
+        'p_offset': 0,
+      });
+      expect(merchants.length, 1);
+      expect(merchants.first.id, 'seller-s9');
+      expect(merchants.first.verificationStatus, 'suspended');
+      expect(merchants.first.rejectionReason, 'ผิดนโยบาย');
+      expect(merchants.first.statusBeforeSuspend, 'approved');
+    });
   });
 }
 

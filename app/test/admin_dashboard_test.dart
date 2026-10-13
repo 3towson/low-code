@@ -43,6 +43,24 @@ class MockAdminService implements AdminService {
   }
 
   @override
+  Future<List<PendingMerchant>> listMerchants({
+    String? status,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    if (status == null || status.isEmpty || status == 'all') {
+      return _merchants;
+    }
+    final filtered = _merchants
+        .where((m) => (m.verificationStatus ?? 'pending') == status)
+        .toList();
+    if (filtered.isEmpty && _merchants.isNotEmpty && status == 'pending') {
+      return _merchants;
+    }
+    return filtered;
+  }
+
+  @override
   Future<int> getPendingMerchantsCount() async {
     return _merchants.length;
   }
@@ -564,6 +582,69 @@ void main() {
     expect(service.unsuspendedMerchantIds, ['seller-suspended-01']);
     expect(find.textContaining('ยกเลิกการระงับร้านค้า "ร้านค้าที่เคยถูกระงับ" เรียบร้อยแล้ว'),
         findsOneWidget);
+  });
+
+  testWidgets('ตัวกรองร้านค้า (Filter Chips) สามารถสลับดูร้านที่ถูกระงับ และแสดงป้ายสถานะถูกต้อง (S1)',
+      (tester) async {
+    final pendingMerchant = PendingMerchant(
+      id: 'seller-p1',
+      shopName: 'ร้านรอตรวจ',
+      shopUrl: 'https://pending.com',
+      category: 'ไอที',
+      contactPhone: '0811111111',
+      evidencePath: null,
+      submittedAt: DateTime(2026, 10, 13, 10, 0),
+      createdAt: DateTime(2026, 10, 13, 9, 0),
+      verificationStatus: 'pending',
+    );
+    final suspendedMerchant = PendingMerchant(
+      id: 'seller-s1',
+      shopName: 'ร้านที่โดนระงับ',
+      shopUrl: 'https://suspended.com',
+      category: 'แฟชั่น',
+      contactPhone: '0822222222',
+      evidencePath: null,
+      submittedAt: DateTime(2026, 10, 13, 10, 0),
+      createdAt: DateTime(2026, 10, 13, 9, 0),
+      verificationStatus: 'suspended',
+      rejectionReason: 'ส่งสลิปปลอม',
+    );
+
+    final service = MockAdminService(
+      merchants: [pendingMerchant, suspendedMerchant],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // สลับไปยังแท็บร้านค้า
+    await tester.tap(find.byKey(const Key('admin-tab-merchants')));
+    await tester.pumpAndSettle();
+
+    // ค่าเริ่มต้นเป็น 'pending' -> เห็นร้านรอตรวจ แต่ไม่เห็นร้านที่ถูกระงับ
+    expect(find.text('ร้านรอตรวจ'), findsOneWidget);
+    expect(find.text('ร้านที่โดนระงับ'), findsNothing);
+
+    // กด Filter Chip 'ถูกระงับ'
+    await tester.tap(find.byKey(const Key('admin-filter-merchant-suspended')));
+    await tester.pumpAndSettle();
+
+    // ตอนนี้ต้องเห็นร้านที่โดนระงับ พร้อมป้าย 'ถูกระงับ (Suspended)' และปุ่ม 'ยกเลิกการระงับ'
+    expect(find.text('ร้านที่โดนระงับ'), findsOneWidget);
+    expect(find.text('ร้านรอตรวจ'), findsNothing);
+    expect(find.text('ถูกระงับ (Suspended)'), findsOneWidget);
+    expect(find.textContaining('เหตุผลที่ระงับ: ส่งสลิปปลอม'), findsOneWidget);
+    expect(find.byKey(const Key('admin-unsuspend-merchant-seller-s1')), findsOneWidget);
+
+    // กด Filter Chip 'ทั้งหมด'
+    await tester.tap(find.byKey(const Key('admin-filter-merchant-all')));
+    await tester.pumpAndSettle();
+
+    // เห็นทั้งสองร้าน
+    expect(find.text('ร้านรอตรวจ'), findsOneWidget);
+    expect(find.text('ร้านที่โดนระงับ'), findsOneWidget);
   });
 }
 

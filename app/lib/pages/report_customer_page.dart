@@ -71,7 +71,6 @@ class ReportCustomerPage extends StatefulWidget {
 
 class _ReportCustomerPageState extends State<ReportCustomerPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
   final _chatController = TextEditingController();
@@ -95,7 +94,6 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
   @override
   void dispose() {
     _chatController.dispose();
-    _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
     _otherPlatformController.dispose();
@@ -266,7 +264,6 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
       _submitting = false;
       if (result is ReportSuccess) {
         _formKey.currentState!.reset();
-        _nameController.clear();
         _phoneController.clear();
         _amountController.clear();
         _platform = null;

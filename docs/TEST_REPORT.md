@@ -22,10 +22,10 @@
 | P0-6 | Postgres Rate Limiting (Guest / User) | `scripts/test_p0_6.ts` | 7 | 7 |
 | P2 | Offline Fonts, Discard Confirm, Admin Audit Logs | `report_customer_page_test.dart` + `merchant_kyc_test.dart` + `admin_service_test.dart` | 4 | 4 |
 | 11 | End-to-End ผ่าน Edge Functions จริง | `scripts/e2e_test.ts` | 12 | 12 |
-| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **216** | **216 (100%)** |
+| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **220** | **220 (100%)** |
 | | **Automated Backend & Script Tests** | Deno & PostgreSQL | **160+** | **160+ (100%)** |
 
-`flutter test` ทั้งโปรเจกต์: **216/216 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
+`flutter test` ทั้งโปรเจกต์: **220/220 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
 
 ---
 
@@ -306,9 +306,9 @@ Unit test (Gemini ปลอม) 26 เคส:
 | P0-1 | Edge Function `delete-account` | ปรับสถานะรายงาน `pending` เป็น `rejected` ก่อนลบ | ตามคาด (N6) | ผ่าน |
 | P0-1 | ลบ Storage แบบแบ่งหน้า | วนลบจนหมดไม่ติดขีดจำกัด 1,000 ไฟล์ | ตามคาด (N6) | ผ่าน |
 | P0-1 | ลบ `auth.users` ก่อนเคลียร์ Storage | ป้องกันไฟล์หายแต่บัญชียังค้าง | ตามคาด (N6) | ผ่าน |
-| P0-1 | Database FK `on delete set null` | ลบผู้ใช้แล้วรายงานเดิมยังอยู่ (reported_by = null) | เตรียม migration แล้ว (20261013000002)* | ผ่าน |
+| P0-1 | Database FK `on delete set null` | ลบผู้ใช้แล้วรายงานเดิมยังอยู่ (reported_by = null) | รอ deploy migration `000001`–`000011` | ยังไม่ทดสอบ |
 
-*หมายเหตุ: บน Supabase Cloud project ต้อง deploy migration `20261013000001` ถึง `20261013000008` เพื่อให้การทดสอบ `test_p0_1.ts` ผ่านครบ 100% บนเซิร์ฟเวอร์จริง
+*หมายเหตุ: บน Supabase Cloud project ต้อง deploy migration `20261013000001` ถึง `20261014000011` เพื่อให้การทดสอบ `test_p0_1.ts` ผ่านครบ 100% บนเซิร์ฟเวอร์จริง
 
 ## ส่วนที่ P0-4: UGC Moderation & Merchant Suspension
 
@@ -319,8 +319,9 @@ Unit test (Gemini ปลอม) 26 เคส:
 | P0-4 | สถานะ `suspended` ใน `MerchantKycStatus` | แปลงค่า enum ได้ถูกต้อง ไม่หลุดเป็น unverified | ตามคาด (N7) | ผ่าน |
 | P0-4 | แบนเนอร์แจ้งเตือนร้านถูกระงับ | แสดงกล่องสีแดงพร้อมเหตุผลและช่องทางติดต่อ | ตามคาด (N7) | ผ่าน |
 | P0-4 | ปิดกั้นการส่งรายงานเมื่อถูกระงับ | แจ้งเตือนข้อความชัดเจน ไม่ให้กรอกฟอร์ม | ตามคาด (N7) | ผ่าน |
-| P0-4 | RPC `admin_suspend_merchant` | ปรับสถานะเป็น suspended + auto-reject pending reports | เตรียม migration แล้ว (20261013000008) | ผ่าน |
-| P0-4 | RPC `admin_unsuspend_merchant` | ฟังก์ชันยกเลิกการระงับและคืนสถานะร้านค้า | เตรียม migration แล้ว (20261013000008) | ผ่าน |
+| P0-4 | RPC `admin_suspend_merchant` | ปรับสถานะเป็น suspended + reject_reason + audit log | รอ deploy migration `000009`/`000011` | ยังไม่ทดสอบ |
+| P0-4 | RPC `admin_unsuspend_merchant` | ยกเลิกการระงับ คืนสถานะตาม status_before_suspend | รอ deploy migration `000009`/`000011` | ยังไม่ทดสอบ |
+| P0-4 | RPC `admin_list_merchants` | ดึงรายชื่อร้านค้าตามสถานะ พร้อม verification_status | รอ deploy migration `000011` | ยังไม่ทดสอบ |
 
 ## ส่วนที่ P0-6: Postgres Rate Limiting
 
@@ -328,8 +329,8 @@ Unit test (Gemini ปลอม) 26 เคส:
 
 | ส่วน | เคส | ผลที่คาด | ผลจริง | ผ่าน/ไม่ผ่าน |
 |---|---|---|---|---|
-| P0-6 | Revoke execute on `hit_rate_limit` | ปลดสิทธิ์ execution จาก role `authenticated` | เตรียม migration แล้ว (N3) | ผ่าน |
-| P0-6 | Client IP anti-spoofing | ให้ความสำคัญกับ CF-Connecting-IP / X-Real-IP / IP ตัวสุดท้ายใน X-Forwarded-For | ตามคาด (N2) | ผ่าน |
+| P0-6 | Revoke execute on `hit_rate_limit` | ปลดสิทธิ์ execution จาก role `authenticated` | รอ deploy migration (N3) | ยังไม่ทดสอบ |
+| P0-6 | Client IP anti-spoofing | ให้ความสำคัญกับ CF-Connecting-IP / X-Real-IP / IP ตัวสุดท้ายใน XFF | รอทดสอบ curl (R4) | ยังไม่ทดสอบ |
 | P0-6 | Guest Global Ceiling | จำกัดเพดานรวมของ Guest ที่ส่ง text ไม่เกิน 3,000 req/day | ตามคาด (N2) | ผ่าน |
 | P0-6 | Guest Fail-closed | ปฏิเสธคำขอเมื่อเกิดข้อผิดพลาดในการตรวจสอบ Rate Limit | ตามคาด (N2) | ผ่าน |
 

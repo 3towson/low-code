@@ -36,7 +36,7 @@ Deno.serve(async (req: Request) => {
     // 1) ตรวจสอบสิทธิ์: ต้องมี Bearer token (Service Role Key หรือ Admin User)
     const authHeader = req.headers.get("Authorization") ?? "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const isServiceRole = authHeader.includes(serviceKey);
+    const isServiceRole = serviceKey.length > 0 && authHeader === `Bearer ${serviceKey}`;
 
     if (!isServiceRole) {
       const token = authHeader.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -44,9 +44,16 @@ Deno.serve(async (req: Request) => {
       const { data: auth, error: authErr } = await admin.auth.getUser(token);
       if (authErr || !auth.user) return json(401, { error: "UNAUTHORIZED" });
 
-      // ตรวจสอบ role ใน admin_users หรือ app_metadata
-      const { data: isAdmin } = await admin.rpc("is_admin");
-      if (!isAdmin) return json(403, { error: "FORBIDDEN" });
+      // ตรวจสอบสิทธิ์ admin จาก admin_users หรือ app_metadata
+      const { data: adminUser, error: adminErr } = await admin
+        .from("admin_users")
+        .select("id")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+
+      const isAppAdmin =
+        auth.user.app_metadata?.role === "admin" || (!adminErr && !!adminUser);
+      if (!isAppAdmin) return json(403, { error: "FORBIDDEN" });
     }
 
     // 2) คำนวณวันที่ย้อนหลัง 12 เดือน (Rolling window 365 วัน)
@@ -54,22 +61,28 @@ Deno.serve(async (req: Request) => {
     cutoffDate.setDate(cutoffDate.getDate() - 365);
     const cutoffIso = cutoffDate.toISOString();
 
-    // 3) ค้นหารายงานที่มี evidence_path และสร้างก่อน cutoffDate
-    const { data: oldReports, error: queryErr } = await admin
-      .from("cod_reports")
-      .select("id, evidence_path")
-      .not("evidence_path", "is", null)
-      .lt("created_at", cutoffIso);
-
-    if (queryErr) {
-      console.error("Query old reports error:", queryErr.message);
-      return json(500, { error: "Failed to query expired reports" });
-    }
-
     let deletedFilesCount = 0;
     let updatedReportsCount = 0;
+    const BATCH_SIZE = 500;
 
-    if (oldReports && oldReports.length > 0) {
+    // 3) ค้นหารายงานที่มี evidence_path และสร้างก่อน cutoffDate (วนซ้ำเป็น Batch จนหมด)
+    while (true) {
+      const { data: oldReports, error: queryErr } = await admin
+        .from("cod_reports")
+        .select("id, evidence_path")
+        .not("evidence_path", "is", null)
+        .lt("created_at", cutoffIso)
+        .limit(BATCH_SIZE);
+
+      if (queryErr) {
+        console.error("Query old reports error:", queryErr.message);
+        return json(500, { error: "Failed to query expired reports" });
+      }
+
+      if (!oldReports || oldReports.length === 0) {
+        break;
+      }
+
       const filePathsToDelete: string[] = [];
       const reportIdsToClear: string[] = [];
 
@@ -105,8 +118,13 @@ Deno.serve(async (req: Request) => {
 
       if (updateErr) {
         console.error("Update cod_reports error:", updateErr.message);
-      } else {
-        updatedReportsCount = reportIdsToClear.length;
+        return json(500, { error: "Failed to update cod_reports evidence_path" });
+      }
+
+      updatedReportsCount += reportIdsToClear.length;
+
+      if (oldReports.length < BATCH_SIZE) {
+        break;
       }
     }
 

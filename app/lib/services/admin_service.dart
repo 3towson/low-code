@@ -192,16 +192,44 @@ class AdminService {
     int limit = 50,
     int offset = 0,
   }) async {
-    final res = await _callRpc(
-      'admin_get_pending_merchants',
-      params: {'p_limit': limit, 'p_offset': offset},
-    );
-    if (res is List) {
-      return res
-          .whereType<Map>()
-          .map((item) =>
-              PendingMerchant.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
+    return listMerchants(status: 'pending', limit: limit, offset: offset);
+  }
+
+  /// ดึงรายการร้านค้าตามสถานะ เช่น 'pending', 'suspended', 'all' (S1)
+  Future<List<PendingMerchant>> listMerchants({
+    String? status,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    try {
+      final res = await _callRpc(
+        'admin_list_merchants',
+        params: {
+          'p_status': status,
+          'p_limit': limit,
+          'p_offset': offset,
+        },
+      );
+      if (res is List) {
+        return res
+            .whereType<Map>()
+            .map((item) =>
+                PendingMerchant.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      }
+    } catch (_) {
+      // Fallback หากยังไม่ได้รัน migration admin_list_merchants
+      final res = await _callRpc(
+        'admin_get_pending_merchants',
+        params: {'p_limit': limit, 'p_offset': offset},
+      );
+      if (res is List) {
+        return res
+            .whereType<Map>()
+            .map((item) =>
+                PendingMerchant.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      }
     }
     return [];
   }
@@ -288,6 +316,9 @@ class PendingMerchant {
     required this.submittedAt,
     required this.createdAt,
     this.verificationStatus,
+    this.rejectionReason,
+    this.verifiedAt,
+    this.statusBeforeSuspend,
   });
 
   final String id;
@@ -299,6 +330,9 @@ class PendingMerchant {
   final DateTime? submittedAt;
   final DateTime createdAt;
   final String? verificationStatus;
+  final String? rejectionReason;
+  final DateTime? verifiedAt;
+  final String? statusBeforeSuspend;
 
   /// รายการพาธไฟล์ภาพหลักฐานทั้งหมด
   List<String> get evidencePaths {
@@ -322,6 +356,9 @@ class PendingMerchant {
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
       verificationStatus: json['verification_status'] as String?,
+      rejectionReason: json['rejection_reason'] as String?,
+      verifiedAt: DateTime.tryParse(json['verified_at']?.toString() ?? ''),
+      statusBeforeSuspend: json['status_before_suspend'] as String?,
     );
   }
 }

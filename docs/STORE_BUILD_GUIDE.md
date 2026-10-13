@@ -109,3 +109,18 @@ flutter build ipa --release
 - [x] มีเทมเพลตและระบบโหลด signing configuration จาก `key.properties`
 - [x] มีหน้าเว็บ Account Deletion URL และ Privacy Policy URL พร้อมใช้งาน (จาก P0-1, P0-2)
 - [ ] ใส่หมายเหตุการรีวิว (Reviewer Notes) พร้อมบัญชีทดสอบที่ผ่านและไม่ผ่าน KYC (P0-8)
+
+---
+
+## 7. การตั้งค่าระบบตั้งเวลาลบหลักฐานอัตโนมัติ (PDPA 12 เดือน - R5.1 / S2)
+
+ตามนโยบายความเป็นส่วนตัว ระบบจะต้องลบภาพหลักฐานที่เก่ากว่า 12 เดือนโดยอัตโนมัติ ผ่าน Edge Function `purge-old-evidence`
+
+### ขั้นตอนตั้งค่าใน Supabase Dashboard:
+1. ไปที่ **Supabase Dashboard** -> เลือกโปรเจกต์ของคุณ
+2. ไปที่เมนู **Edge Functions** -> คลิกฟังก์ชัน `purge-old-evidence`
+3. ในแถบ **Scheduled Triggers / Invocations** หรือเมนู **Integrations -> Cron**:
+   - ตั้งค่า Schedule: `0 20 * * *` (03:00 น. ตามเวลาไทย UTC+7)
+   - HTTP Method: `POST`
+   - Headers: ใส่ `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
+4. ทดสอบกด **Invoke** เพื่อให้มั่นใจว่าฟังก์ชันทำงานและตอบกลับ `200 OK`

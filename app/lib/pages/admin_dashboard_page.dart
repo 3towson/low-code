@@ -22,6 +22,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   bool _loading = true;
   String? _error;
   int _selectedTab = 0; // 0 = Reports, 1 = Merchants
+  String _merchantFilter = 'pending'; // 'pending', 'suspended', 'all'
   List<PendingReport> _reports = [];
   List<PendingMerchant> _merchants = [];
   AdminStats _stats = const AdminStats(
@@ -34,6 +35,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  Future<void> _setMerchantFilter(String filter) async {
+    if (_merchantFilter == filter) return;
+    setState(() {
+      _merchantFilter = filter;
+      _loading = true;
+    });
+    try {
+      final merchants =
+          await widget.adminService.listMerchants(status: _merchantFilter);
+      if (!mounted) return;
+      setState(() {
+        _merchants = merchants;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _loadData() async {
@@ -53,9 +74,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final reports = await widget.adminService.getPendingReports();
       List<PendingMerchant> merchants = [];
       try {
-        merchants = await widget.adminService.getPendingMerchants();
+        merchants = await widget.adminService.listMerchants(status: _merchantFilter);
       } catch (_) {
-        // Fallback หากยังไม่ได้รัน migration merchant_kyc
+        try {
+          merchants = await widget.adminService.getPendingMerchants();
+        } catch (_) {
+          // Fallback หากยังไม่ได้รัน migration merchant_kyc
+        }
       }
       if (!mounted) return;
       setState(() {
@@ -721,17 +746,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           ),
                         )
                       : SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               // Metric Cards
                               _buildMetricCards(),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 14),
 
                               // Tab Switcher
                               _buildTabSelector(),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 12),
 
                               // Header Queue Section
                               Row(
@@ -748,7 +774,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                     child: Text(
                                       _selectedTab == 0
                                           ? 'คิวรายงานลูกค้าที่รอตรวจ (${_reports.length} รายการ)'
-                                          : 'คิวคำขอยืนยันตัวตนร้านค้า (${_merchants.length} ร้าน)',
+                                          : _merchantFilter == 'suspended'
+                                              ? 'ร้านค้าที่ถูกระงับ (${_merchants.length} ร้าน)'
+                                              : _merchantFilter == 'all'
+                                                  ? 'ร้านค้าทั้งหมด (${_merchants.length} ร้าน)'
+                                                  : 'คิวคำขอยืนยันตัวตนร้านค้า (${_merchants.length} ร้าน)',
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
@@ -774,6 +804,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                         _buildReportCard(_reports[i]),
                                   ),
                               ] else ...[
+                                _buildMerchantFilterChips(),
+                                const SizedBox(height: 14),
                                 if (_merchants.isEmpty)
                                   _buildEmptyMerchantState()
                                 else
@@ -1009,7 +1041,122 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  Widget _buildMerchantFilterChips() {
+    final filters = [
+      {'key': 'pending', 'label': 'รอตรวจ KYC', 'icon': Icons.hourglass_top_rounded},
+      {'key': 'suspended', 'label': 'ถูกระงับ', 'icon': Icons.block_rounded},
+      {'key': 'all', 'label': 'ทั้งหมด', 'icon': Icons.list_alt_rounded},
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: filters.map((f) {
+          final isSelected = _merchantFilter == f['key'];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              key: Key('admin-filter-merchant-${f['key']}'),
+              selected: isSelected,
+              showCheckmark: false,
+              avatar: Icon(
+                f['icon'] as IconData,
+                size: 15,
+                color: isSelected ? Colors.white : Colors.grey,
+              ),
+              label: Text(
+                f['label'] as String,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? Colors.white : null,
+                ),
+              ),
+              selectedColor: const Color(0xFF3B82F6),
+              onSelected: (_) => _setMerchantFilter(f['key'] as String),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMerchantStatusBadge(PendingMerchant merchant) {
+    final status = merchant.verificationStatus ?? 'pending';
+    Color bg;
+    Color fg;
+    String label;
+    IconData icon;
+
+    switch (status) {
+      case 'suspended':
+        bg = const Color(0xFFEF4444).withValues(alpha: 0.12);
+        fg = const Color(0xFFDC2626);
+        label = 'ถูกระงับ (Suspended)';
+        icon = Icons.block_rounded;
+        break;
+      case 'approved':
+        bg = const Color(0xFF10B981).withValues(alpha: 0.12);
+        fg = const Color(0xFF059669);
+        label = 'อนุมัติแล้ว (Verified)';
+        icon = Icons.verified_rounded;
+        break;
+      case 'rejected':
+        bg = const Color(0xFF6B7280).withValues(alpha: 0.12);
+        fg = const Color(0xFF4B5563);
+        label = 'ไม่อนุมัติ (Rejected)';
+        icon = Icons.cancel_rounded;
+        break;
+      case 'pending':
+      default:
+        bg = const Color(0xFFF59E0B).withValues(alpha: 0.12);
+        fg = const Color(0xFFD97706);
+        label = 'รอตรวจสอบ (Pending)';
+        icon = Icons.hourglass_top_rounded;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: fg.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: fg),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyMerchantState() {
+    String title = 'ไม่มีคำขออนุมัติร้านค้าที่รอการตรวจสอบ';
+    String subtitle =
+        'คำขอยืนยันตัวตนร้านค้าทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว';
+    IconData icon = Icons.verified_user_rounded;
+
+    if (_merchantFilter == 'suspended') {
+      title = 'ไม่มีร้านค้าที่ถูกระงับ';
+      subtitle = 'ไม่มีข้อมูลร้านค้าที่อยู่ในสถานะระงับการใช้งานในขณะนี้';
+      icon = Icons.check_circle_outline_rounded;
+    } else if (_merchantFilter == 'all') {
+      title = 'ไม่พบข้อมูลร้านค้า';
+      subtitle = 'ยังไม่มีข้อมูลร้านค้าในระบบ';
+      icon = Icons.storefront_outlined;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       decoration: BoxDecoration(
@@ -1017,24 +1164,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.verified_user_rounded,
+              icon,
               size: 48,
-              color: Color(0xFF10B981),
+              color: const Color(0xFF10B981),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
-              'ไม่มีคำขออนุมัติร้านค้าที่รอการตรวจสอบ',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
-              'คำขอยืนยันตัวตนร้านค้าทั้งหมดได้รับการตรวจสอบเรียบร้อยแล้ว',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
+              subtitle,
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
           ],
         ),
@@ -1097,6 +1244,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        if (merchant.verificationStatus != null)
+                          _buildMerchantStatusBadge(merchant),
                         if (merchant.category != null &&
                             merchant.category!.isNotEmpty)
                           Container(
@@ -1161,6 +1310,37 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ),
             ],
           ),
+          if (merchant.verificationStatus == 'suspended' &&
+              merchant.rejectionReason != null &&
+              merchant.rejectionReason!.trim().isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded,
+                      size: 14, color: Color(0xFFDC2626)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'เหตุผลที่ระงับ: ${merchant.rejectionReason}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           // Evidence info
           if (merchant.evidencePaths.isNotEmpty) ...[
@@ -1189,13 +1369,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             const SizedBox(height: 10),
           ],
-          // Action Buttons: Suspend / Reject / Approve
+          // Action Buttons: Suspend / Reject / Approve / Unsuspend
           Wrap(
             alignment: WrapAlignment.end,
             spacing: 10,
             runSpacing: 8,
             children: [
-              if (merchant.verificationStatus == 'suspended')
+              if (merchant.verificationStatus == 'suspended') ...[
                 OutlinedButton.icon(
                   key: Key('admin-unsuspend-merchant-${merchant.id}'),
                   onPressed: () => _unsuspendMerchant(merchant),
@@ -1205,8 +1385,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   icon: const Icon(Icons.check_circle_outline_rounded, size: 15),
                   label: const Text('ยกเลิกการระงับ'),
-                )
-              else
+                ),
+              ] else ...[
                 OutlinedButton.icon(
                   key: Key('admin-suspend-merchant-${merchant.id}'),
                   onPressed: () => _suspendMerchant(merchant),
@@ -1217,25 +1397,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   icon: const Icon(Icons.block_rounded, size: 15),
                   label: const Text('ระงับร้านค้า'),
                 ),
-              OutlinedButton.icon(
-                key: Key('admin-reject-merchant-${merchant.id}'),
-                onPressed: () => _rejectMerchant(merchant),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFEF4444),
-                  side: const BorderSide(color: Color(0xFFEF4444)),
-                ),
-                icon: const Icon(Icons.close_rounded, size: 15),
-                label: const Text('ไม่อนุมัติ'),
-              ),
-              FilledButton.icon(
-                key: Key('admin-approve-merchant-${merchant.id}'),
-                onPressed: () => _approveMerchant(merchant),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                ),
-                icon: const Icon(Icons.check_rounded, size: 15),
-                label: const Text('อนุมัติร้านค้า (Verified)'),
-              ),
+                if (merchant.verificationStatus != 'approved') ...[
+                  OutlinedButton.icon(
+                    key: Key('admin-reject-merchant-${merchant.id}'),
+                    onPressed: () => _rejectMerchant(merchant),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFEF4444),
+                      side: const BorderSide(color: Color(0xFFEF4444)),
+                    ),
+                    icon: const Icon(Icons.close_rounded, size: 15),
+                    label: const Text('ไม่อนุมัติ'),
+                  ),
+                  FilledButton.icon(
+                    key: Key('admin-approve-merchant-${merchant.id}'),
+                    onPressed: () => _approveMerchant(merchant),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                    ),
+                    icon: const Icon(Icons.check_rounded, size: 15),
+                    label: const Text('อนุมัติร้านค้า (Verified)'),
+                  ),
+                ],
+              ],
             ],
           ),
         ],
