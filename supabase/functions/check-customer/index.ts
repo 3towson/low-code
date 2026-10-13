@@ -37,35 +37,17 @@ const admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
-// Rate limiter สำหรับ Guest Mode (30 คำขอ / 60 วินาที ต่อ IP)
-const GUEST_RATE_LIMIT = 30;
-const GUEST_WINDOW_MS = 60_000;
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
 function getClientIp(req: Request): string {
-  return (
-    req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-real-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
-}
-
-function isRateLimited(ip: string): boolean {
-  if (ip === "unknown") return false;
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + GUEST_WINDOW_MS });
-    if (rateLimitMap.size > 10_000) {
-      for (const [k, v] of rateLimitMap.entries()) {
-        if (now > v.resetAt) rateLimitMap.delete(k);
-      }
-    }
-    return false;
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const ip = forwarded.split(",")[0]?.trim();
+    if (ip && ip !== "") return ip;
   }
-  entry.count++;
-  return entry.count > GUEST_RATE_LIMIT;
+  return (
+    req.headers.get("cf-connecting-ip")?.trim() ??
+    req.headers.get("x-real-ip")?.trim() ??
+    "127.0.0.1"
+  );
 }
 
 Deno.serve(async (req: Request) => {
@@ -80,18 +62,29 @@ Deno.serve(async (req: Request) => {
       return json(401, { error: "กรุณาระบุ apikey หรือเข้าสู่ระบบก่อนใช้งาน" });
     }
 
-    const expectedAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const expectedAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     if (!authHeader && expectedAnonKey && apiKey !== expectedAnonKey) {
       return json(401, { error: "apikey ไม่ถูกต้อง หรือกรุณาเข้าสู่ระบบก่อนใช้งาน" });
     }
 
-    // 1.1) ตรวจ Rate Limit สำหรับ Guest Mode (ป้องกันการยิงสแปมทำลายโควต้า Gemini)
-    if (!authHeader) {
-      const clientIp = getClientIp(req);
-      if (isRateLimited(clientIp)) {
-        return json(429, { error: "คำขอถี่เกินไป กรุณารอสักครู่แล้วลองใหม่" });
+    // แยกว่าเป็น user จริง หรือเป็น guest (P0-6):
+    // ถ้าไม่มี bearer token, หรือ token เท่ากับ anon key, หรือ getUser ไม่สำเร็จ ให้ถือเป็น guest
+    const tokenMatch = authHeader?.match(/^Bearer\s+(.+)$/i);
+    const token = tokenMatch ? tokenMatch[1].trim() : null;
+
+    let userId: string | null = null;
+    if (token && token !== expectedAnonKey) {
+      try {
+        const { data: authUser, error: authError } = await admin.auth.getUser(token);
+        if (!authError && authUser?.user) {
+          userId = authUser.user.id;
+        }
+      } catch (_) {
+        // หาก token ไม่ถูกต้องหรือไม่พบผู้ใช้ จะนับเป็น guest
       }
     }
+
+    const isGuest = (userId === null);
 
     // 2) อ่าน body: ต้องมี text หรือ phone อย่างใดอย่างหนึ่งที่ไม่ว่าง
     let body: unknown;
@@ -105,6 +98,74 @@ Deno.serve(async (req: Request) => {
       : {}) as { text?: unknown; phone?: unknown };
     if (nonEmpty(text) === nonEmpty(phone)) {
       return json(400, { error: "กรุณาส่งข้อความออเดอร์หรือเบอร์โทรอย่างใดอย่างหนึ่ง" });
+    }
+
+    const isTextMode = nonEmpty(text);
+
+    // 2.1) ตรวจ Rate Limit ใน Postgres ผ่าน RPC hit_rate_limit (P0-6)
+    const clientIp = getClientIp(req);
+    const identifier = isGuest ? clientIp : userId!;
+    const prefix = isGuest ? `guest:${identifier}` : `user:${identifier}`;
+
+    // A) Rate limit ต่อนาที (Window 60 วินาที)
+    const minLimit = isGuest ? 30 : 120;
+    const { data: minAllowed, error: minErr } = await admin.rpc("hit_rate_limit", {
+      p_key: `${prefix}:min`,
+      p_limit: minLimit,
+      p_window_seconds: 60,
+    });
+    if (!minErr && minAllowed === false) {
+      return json(429, {
+        status: "RATE_LIMITED",
+        error: "คำขอถี่เกินไป กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง",
+      });
+    }
+
+    // B) Rate limit ต่อวัน (Window 86,400 วินาที)
+    const dayLimit = isGuest ? 300 : 2000;
+    const { data: dayAllowed, error: dayErr } = await admin.rpc("hit_rate_limit", {
+      p_key: `${prefix}:day`,
+      p_limit: dayLimit,
+      p_window_seconds: 86400,
+    });
+    if (!dayErr && dayAllowed === false) {
+      return json(429, {
+        status: "RATE_LIMITED",
+        error: isGuest
+          ? "คุณใช้โควตาตรวจสอบสำหรับผู้เยี่ยมชมครบ 300 ครั้งประจำวันแล้ว กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ"
+          : "คุณใช้โควตาตรวจสอบประจำวันครบแล้ว กรุณาลองใหม่ในวันพรุ่งนี้",
+      });
+    }
+
+    // C) Rate limit สำหรับ Gemini AI (โหมด text)
+    if (isTextMode) {
+      const textMinLimit = isGuest ? 10 : 40;
+      const { data: tMinAllowed } = await admin.rpc("hit_rate_limit", {
+        p_key: `${prefix}:text:min`,
+        p_limit: textMinLimit,
+        p_window_seconds: 60,
+      });
+      if (tMinAllowed === false) {
+        return json(429, {
+          status: "RATE_LIMITED",
+          error: "การใช้ AI สกัดข้อความถี่เกินไป กรุณารอสักครู่ หรือกรอกเบอร์โทรโดยตรง",
+        });
+      }
+
+      const textDayLimit = isGuest ? 60 : 500;
+      const { data: tDayAllowed } = await admin.rpc("hit_rate_limit", {
+        p_key: `${prefix}:text:day`,
+        p_limit: textDayLimit,
+        p_window_seconds: 86400,
+      });
+      if (tDayAllowed === false) {
+        return json(429, {
+          status: "RATE_LIMITED",
+          error: isGuest
+            ? "โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว (60 ครั้ง/วัน) กรุณาเข้าสู่ระบบ หรือกรอกเบอร์โทรโดยตรง"
+            : "โควตา AI สกัดข้อความประจำวันครบแล้ว กรุณากรอกเบอร์โทรโดยตรง",
+        });
+      }
     }
 
     // 3) หาเบอร์ที่ normalize แล้ว

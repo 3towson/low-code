@@ -128,4 +128,29 @@ void main() {
     expect(r, isA<CheckError>());
     expect((r as CheckError).message, 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
   });
+
+  test('429 RATE_LIMITED -> CheckError ใช้ข้อความ rate limit จาก server (P0-6)',
+      () async {
+    final r = await _run(() async => throw const FunctionsHttpException(
+        status: 429,
+        details: {
+          'status': 'RATE_LIMITED',
+          'error': 'คำขอถี่เกินไป กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง'
+        }));
+    expect(r, isA<CheckError>());
+    expect((r as CheckError).message,
+        'คำขอถี่เกินไป กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง');
+  });
+
+  test(
+      '429 RATE_LIMITED ที่ details เป็น json string -> CheckError แปลงได้ถูกต้อง (P0-6)',
+      () async {
+    final r = await _run(() async => throw const FunctionsHttpException(
+        status: 429,
+        details:
+            '{"status":"RATE_LIMITED","error":"โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว"}'));
+    expect(r, isA<CheckError>());
+    expect((r as CheckError).message,
+        'โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว');
+  });
 }

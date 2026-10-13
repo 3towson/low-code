@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -221,9 +222,22 @@ CheckResult checkResultFromData(Object? data) {
 
 /// แปลง response ที่ไม่ใช่ 2xx เป็น [CheckResult]
 CheckResult checkResultFromError(int status, Object? details) {
-  final body = details is Map ? details : const {};
+  Map<dynamic, dynamic> body;
+  if (details is Map) {
+    body = details;
+  } else if (details is String && details.trim().startsWith('{')) {
+    try {
+      final decoded = jsonDecode(details);
+      body = decoded is Map ? decoded : const {};
+    } catch (_) {
+      body = const {};
+    }
+  } else {
+    body = const {};
+  }
+
   if (body['status'] == 'INVALID_PHONE') return const CheckInvalidPhone();
-  // 400/401/405/500 server ส่งข้อความภาษาไทยมาใน error
+  // 400/401/405/429/500 server ส่งข้อความภาษาไทยมาใน error
   return CheckError(_nonEmptyString(body['error']) ?? _genericMessage);
 }
 
