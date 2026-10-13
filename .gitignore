@@ -4,3 +4,6 @@
 supabase/.temp/
 supabase/.branches/
 app/build/
+key.properties
+*.jks
+*.keystore

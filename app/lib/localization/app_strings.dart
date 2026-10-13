@@ -240,7 +240,7 @@ class AppStrings {
 
   static const AppStrings th = AppStrings._(
     language: AppLanguage.th,
-    appTitle: 'ตรวจสอบลูกค้า COD',
+    appTitle: 'COD Risk Shield',
     appHeadline: 'COD Risk Shield',
     appSubtitle: 'ตรวจก่อนส่ง ป้องกันพัสดุตีกลับ',
     signIn: 'เข้าสู่ระบบ',
@@ -343,7 +343,7 @@ class AppStrings {
 
   static const AppStrings en = AppStrings._(
     language: AppLanguage.en,
-    appTitle: 'COD Customer Check',
+    appTitle: 'COD Risk Shield',
     appHeadline: 'COD Risk Shield',
     appSubtitle: 'Check before shipping, prevent returned parcels',
     signIn: 'Sign In',

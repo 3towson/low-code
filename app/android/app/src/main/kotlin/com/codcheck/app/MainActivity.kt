@@ -1,4 +1,4 @@
-package com.codcheck.cod_customer_check
+package com.codcheck.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,0 +1,11 @@
+# Template สำหรับตั้งค่า Signing Keystore ในการ Build Release (Google Play)
+# 1. คัดลอกไฟล์นี้เป็น android/key.properties (ไฟล์นี้ถูกใส่ใน .gitignore แล้ว ห้าม commit)
+# 2. แก้ไขค่าด้านล่างให้ตรงกับ Keystore ที่สร้างด้วย keytool
+#
+# ตัวอย่างคำสั่งสร้าง Keystore:
+# keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+storePassword=your_store_password_here
+keyPassword=your_key_password_here
+keyAlias=upload
+storeFile=../upload-keystore.jks
