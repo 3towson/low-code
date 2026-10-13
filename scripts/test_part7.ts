@@ -77,12 +77,20 @@ async function call(body: unknown, withToken = true): Promise<Res> {
   return { status: res.status, body: parsed };
 }
 
+// อัปโหลดไฟล์หลักฐานจำลองสำหรับ shop1
+const dummyFile = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+await sb.storage.from("report-evidences").upload(`${shop1Id}/test_proof.jpg`, dummyFile, {
+  contentType: "image/jpeg",
+  upsert: true,
+});
+
 const valid = {
   customer_name: "  สมชาย ทดสอบ  ",
   phone: PHONE_A,
   platform: "shopee",
   reason: "refused_delivery",
   amount: 350,
+  evidence_paths: [`${shop1Id}/test_proof.jpg`],
 };
 
 function errorFields(r: Res): string[] {
@@ -122,10 +130,82 @@ async function fetchRows(hash: string) {
   record("ไม่แนบ token", "401", summary(r), r.status === 401);
 }
 
+// 1.1 - 1.5) P0-5: การตรวจ KYC ใน report-customer (Fail-Closed)
+// เกณฑ์ผ่าน: เพิ่มเคสใน test_part7.ts ให้ร้าน unverified, pending และร้านที่ไม่มีแถวใน sellers ได้ 403 ทั้งหมด
+
+// A) unverified ได้ 403 UNVERIFIED_MERCHANT
+await sb.from("sellers").update({ verification_status: "unverified" }).eq("id", shop1Id);
+{
+  const r = await call(valid);
+  record(
+    "KYC: ร้านค้า unverified ได้ 403 (Fail-closed)",
+    "403 UNVERIFIED_MERCHANT",
+    summary(r),
+    r.status === 403 && r.body?.status === "UNVERIFIED_MERCHANT",
+  );
+}
+
+// B) pending ได้ 403 UNVERIFIED_MERCHANT
+await sb.from("sellers").update({ verification_status: "pending" }).eq("id", shop1Id);
+{
+  const r = await call(valid);
+  record(
+    "KYC: ร้านค้า pending ได้ 403 (Fail-closed)",
+    "403 UNVERIFIED_MERCHANT",
+    summary(r),
+    r.status === 403 && r.body?.status === "UNVERIFIED_MERCHANT",
+  );
+}
+
+// C) rejected ได้ 403 UNVERIFIED_MERCHANT
+await sb.from("sellers").update({ verification_status: "rejected" }).eq("id", shop1Id);
+{
+  const r = await call(valid);
+  record(
+    "KYC: ร้านค้า rejected ได้ 403 (Fail-closed)",
+    "403 UNVERIFIED_MERCHANT",
+    summary(r),
+    r.status === 403 && r.body?.status === "UNVERIFIED_MERCHANT",
+  );
+}
+
+// D) suspended ได้ 403 SUSPENDED_MERCHANT (P0-4)
+await sb.from("sellers").update({ verification_status: "suspended" }).eq("id", shop1Id);
+{
+  const r = await call(valid);
+  record(
+    "KYC: ร้านค้า suspended ได้ 403 SUSPENDED_MERCHANT",
+    "403 SUSPENDED_MERCHANT",
+    summary(r),
+    r.status === 403 && r.body?.status === "SUSPENDED_MERCHANT",
+  );
+}
+
+// E) ไม่มีแถวใน sellers ได้ 403 UNVERIFIED_MERCHANT (Fail-closed)
+const { data: savedSeller } = await sb.from("sellers").select("*").eq("id", shop1Id).single();
+await sb.from("sellers").delete().eq("id", shop1Id);
+{
+  const r = await call(valid);
+  record(
+    "KYC: ร้านค้าที่ไม่มีแถวใน sellers ได้ 403 (Fail-closed)",
+    "403 UNVERIFIED_MERCHANT",
+    summary(r),
+    r.status === 403 && r.body?.status === "UNVERIFIED_MERCHANT",
+  );
+}
+// คืนค่าแถว sellers เดิม
+if (savedSeller) {
+  await sb.from("sellers").insert(savedSeller);
+}
+
+// ตั้งค่ากลับเป็น approved เพื่อให้ shop1 สามารถทดสอบขั้นตอนถัดไปได้
+await sb.from("sellers").update({ verification_status: "approved" }).eq("id", shop1Id);
+
 // 2-5) ตรวจความถูกต้อง
 await expect400("phone ผิดรูปแบบ (12345)", { ...valid, phone: "12345" }, "phone");
 await expect400('customer_name มีเบอร์โทร', { ...valid, customer_name: "สมชาย 0812345678" }, "customer_name");
 await expect400("amount = -5", { ...valid, amount: -5 }, "amount");
+await expect400("ไม่มี evidence_path", { ...valid, evidence_paths: [] }, "evidence_path");
 
 // 6) ข้อมูลถูกต้อง แล้วตรวจแถวที่เพิ่มด้วย service role
 {
@@ -184,6 +264,7 @@ await user.auth.signOut();
 
 // 9) ลบข้อมูลทดสอบ
 {
+  await sb.storage.from("report-evidences").remove([`${shop1Id}/test_proof.jpg`]);
   const deleted = await cleanup();
   const left = (await fetchRows(hashA)).length + (await fetchRows(hashB)).length;
   record("ลบข้อมูลเบอร์ทดสอบ", "ลบ 2 แถว เหลือ 0", `ลบ ${deleted} แถว เหลือ ${left}`, deleted === 2 && left === 0);
