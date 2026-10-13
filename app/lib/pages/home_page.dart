@@ -8,9 +8,11 @@ import '../services/admin_service.dart';
 import '../services/app_settings.dart';
 import '../services/auth_service.dart';
 import '../services/check_service.dart';
+import '../services/merchant_kyc_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
 import '../widgets/check_panel.dart';
+import '../widgets/merchant_kyc_dialog.dart';
 import '../widgets/page_body.dart';
 import '../widgets/settings_dialog.dart';
 import 'admin_dashboard_page.dart';
@@ -18,7 +20,7 @@ import 'login_page.dart';
 import 'report_customer_page.dart';
 
 /// หน้าแรกของแอป ใช้ตรวจสอบลูกค้าได้โดยไม่ต้อง login
-/// การรายงานลูกค้าต้อง login ก่อน
+/// การรายงานลูกค้าต้อง login ก่อน และร้านค้าต้องได้รับการยืนยันตัวตน (Verified Merchant)
 class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
@@ -26,6 +28,7 @@ class HomePage extends StatefulWidget {
     required this.checkService,
     required this.reportService,
     this.adminService,
+    this.kycService,
     required this.signedIn,
     this.animatePulse = true,
   });
@@ -34,6 +37,7 @@ class HomePage extends StatefulWidget {
   final CheckService checkService;
   final ReportService reportService;
   final AdminService? adminService;
+  final MerchantKycService? kycService;
   final bool signedIn;
   final bool animatePulse;
 
@@ -43,6 +47,42 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _signingOut = false;
+  MerchantKycInfo? _kycInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKycStatus();
+  }
+
+  @override
+  void didUpdateWidget(HomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.signedIn != oldWidget.signedIn) {
+      _loadKycStatus();
+    }
+  }
+
+  MerchantKycService? get _effectiveKycService {
+    if (widget.kycService != null) return widget.kycService;
+    try {
+      return MerchantKycService(Supabase.instance.client);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _loadKycStatus() async {
+    if (!widget.signedIn) {
+      if (mounted) setState(() => _kycInfo = null);
+      return;
+    }
+    final kycSvc = _effectiveKycService;
+    if (kycSvc != null) {
+      final info = await kycSvc.getKycStatus();
+      if (mounted) setState(() => _kycInfo = info);
+    }
+  }
 
   Future<void> _signOut() async {
     setState(() => _signingOut = true);
@@ -94,16 +134,101 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _openKycDialog() {
+    final kycSvc = _effectiveKycService;
+    if (kycSvc == null) return;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => MerchantKycDialog(
+        shopName: widget.authService.shopName,
+        kycService: kycSvc,
+        initialInfo: _kycInfo,
+        onSubmitted: () => _loadKycStatus(),
+      ),
+    );
+  }
+
   void _openReport() {
     Widget report(BuildContext _) => ReportCustomerPage(
       reportService: widget.reportService,
       checkService: widget.checkService,
     );
-    if (widget.signedIn) {
-      Navigator.of(context).push(_modalRoute(report));
-    } else {
+
+    if (!widget.signedIn) {
       _openLogin(next: report);
+      return;
     }
+
+    // ตรวจสอบสถานะ KYC ของร้านค้า
+    if (_kycInfo != null) {
+      if (_kycInfo!.isApproved) {
+        Navigator.of(context).push(_modalRoute(report));
+        return;
+      }
+
+      if (_kycInfo!.isPending) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            icon: const Icon(
+              Icons.hourglass_top_rounded,
+              color: Color(0xFFF59E0B),
+              size: 36,
+            ),
+            title: const Text('อยู่ระหว่างรอการอนุมัติร้านค้า'),
+            content: Text(
+              'คำขอยืนยันตัวตนของร้าน "${widget.authService.shopName}" อยู่ระหว่างการตรวจสอบโดยผู้ดูแลระบบ (ใช้เวลา 24-48 ชม.)\n\n'
+              'เมื่อผ่านการอนุมัติแล้ว คุณจะได้รับสิทธิ์ส่งรายงานลูกค้า COD ทันที',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('รับทราบ'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      // unverified หรือ rejected
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(
+            Icons.verified_user_outlined,
+            color: Color(0xFF3B82F6),
+            size: 36,
+          ),
+          title: const Text('ต้องยืนยันตัวตนร้านค้าก่อนรายงาน'),
+          content: const Text(
+            'เพื่อป้องกันการสแปมและรักษาความน่าเชื่อถือของฐานข้อมูล '
+            'ร้านค้าต้องส่งหลักฐานการเปิดร้านและประวัติการส่งสินค้าจริง (>50 ออเดอร์) '
+            'และได้รับการอนุมัติจากผู้ดูแลระบบก่อนส่งรายงานลูกค้า',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('ไว้คราวหลัง'),
+            ),
+            FilledButton.icon(
+              key: const Key('open-kyc-from-prompt'),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _openKycDialog();
+              },
+              icon: const Icon(Icons.badge_outlined, size: 16),
+              label: const Text('ยืนยันตัวตนร้านค้า'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // fallback หากยังไม่มีข้อมูล KYC
+    Navigator.of(context).push(_modalRoute(report));
   }
 
   @override
@@ -137,6 +262,8 @@ class _HomePageState extends State<HomePage> {
                   signedIn: widget.signedIn,
                   isAdmin: widget.signedIn && widget.authService.isAdmin,
                   shopName: widget.signedIn ? widget.authService.shopName : null,
+                  kycInfo: _kycInfo,
+                  onOpenKyc: _openKycDialog,
                   signingOut: _signingOut,
                   onSignOut: _signingOut ? null : _signOut,
                   onOpenLogin: _openLogin,
@@ -475,6 +602,8 @@ class _TopNavbar extends StatelessWidget {
     required this.signedIn,
     this.isAdmin = false,
     this.shopName,
+    this.kycInfo,
+    this.onOpenKyc,
     required this.signingOut,
     required this.onSignOut,
     required this.onOpenLogin,
@@ -484,6 +613,8 @@ class _TopNavbar extends StatelessWidget {
   final bool signedIn;
   final bool isAdmin;
   final String? shopName;
+  final MerchantKycInfo? kycInfo;
+  final VoidCallback? onOpenKyc;
   final bool signingOut;
   final VoidCallback? onSignOut;
   final VoidCallback onOpenLogin;
@@ -624,6 +755,8 @@ class _TopNavbar extends StatelessWidget {
                     if (signedIn)
                       _AccountBar(
                         shopName: shopName ?? '',
+                        kycInfo: kycInfo,
+                        onOpenKyc: onOpenKyc,
                         onSignOut: signingOut ? null : onSignOut,
                       )
                     else
@@ -777,11 +910,18 @@ class _Logo extends StatelessWidget {
   }
 }
 
-/// ชื่อร้านและปุ่มออกจากระบบ มุมขวาบน
+/// ชื่อร้าน สถานะยืนยันตัวตน และปุ่มออกจากระบบ มุมขวาบน
 class _AccountBar extends StatelessWidget {
-  const _AccountBar({required this.shopName, required this.onSignOut});
+  const _AccountBar({
+    required this.shopName,
+    this.kycInfo,
+    this.onOpenKyc,
+    required this.onSignOut,
+  });
 
   final String shopName;
+  final MerchantKycInfo? kycInfo;
+  final VoidCallback? onOpenKyc;
   final VoidCallback? onSignOut;
 
   @override
@@ -808,7 +948,7 @@ class _AccountBar extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 60),
+            constraints: const BoxConstraints(maxWidth: 80),
             child: Text(
               shopName,
               key: const Key('home-shop-name'),
@@ -817,6 +957,10 @@ class _AccountBar extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             ),
           ),
+          if (kycInfo != null) ...[
+            const SizedBox(width: 4),
+            _KycBadge(kycInfo: kycInfo!, onOpenKyc: onOpenKyc),
+          ],
           IconButton(
             key: const Key('home-logout'),
             tooltip: strings.signOut,
@@ -835,6 +979,101 @@ class _AccountBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _KycBadge extends StatelessWidget {
+  const _KycBadge({required this.kycInfo, this.onOpenKyc});
+
+  final MerchantKycInfo kycInfo;
+  final VoidCallback? onOpenKyc;
+
+  @override
+  Widget build(BuildContext context) {
+    if (kycInfo.isApproved) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_rounded, size: 10, color: Color(0xFF10B981)),
+            SizedBox(width: 2),
+            Text(
+              'Verified',
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF10B981),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (kycInfo.isPending) {
+      return Tooltip(
+        message: 'คำขอยืนยันร้านค้าอยู่ระหว่างรอตรวจสอบ',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.hourglass_top_rounded,
+                  size: 10, color: Color(0xFFF59E0B)),
+              SizedBox(width: 2),
+              Text(
+                'รออนุมัติ',
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFF59E0B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return InkWell(
+      key: const Key('home-verify-store-badge'),
+      onTap: onOpenKyc,
+      borderRadius: BorderRadius.circular(6),
+      child: Tooltip(
+        message: 'คลิกเพื่อส่งหลักฐานยืนยันตัวตนร้านค้า',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.shield_outlined, size: 10, color: Color(0xFF3B82F6)),
+              SizedBox(width: 2),
+              Text(
+                'ยืนยันร้าน',
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF3B82F6),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

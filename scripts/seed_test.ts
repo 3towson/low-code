@@ -45,11 +45,12 @@ for (const shop of TEST_SHOPS) {
   }
   ids[key] = id;
 
-  // 2) ตั้ง sellers.created_at (upsert เผื่อผู้ใช้ถูกสร้างก่อนมี trigger)
+  // 2) ตั้ง sellers.created_at และ verification_status (upsert เผื่อผู้ใช้ถูกสร้างก่อนมี trigger)
   const { error } = await sb.from("sellers").upsert({
     id,
     shop_name: shop.shopName,
     created_at: daysAgo(shop.ageDays),
+    verification_status: "approved",
   });
   if (error) fail(`ตั้งค่า sellers ของ ${shop.email}`, error.message);
 }

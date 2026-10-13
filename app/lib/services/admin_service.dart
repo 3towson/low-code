@@ -162,10 +162,116 @@ class AdminService {
   }
 
   /// ขอ Signed URL สำหรับเปิดดูรูปภาพหลักฐาน
-  Future<String> getEvidenceSignedUrl(String evidencePath) {
-    if (_storageService == null) {
+  Future<String> getEvidenceSignedUrl(
+    String evidencePath, {
+    String bucket = 'report-evidences',
+  }) {
+    final client = _supabase;
+    if (client != null && bucket != 'report-evidences') {
+      return client.storage.from(bucket).createSignedUrl(evidencePath, 900);
+    }
+    final storage = _storageService;
+    if (storage == null) {
       throw StateError('Storage service is not configured');
     }
-    return _storageService.createSignedUrl(evidencePath, expiresIn: 900);
+    return storage.createSignedUrl(evidencePath, expiresIn: 900);
+  }
+
+  /// ดึงรายการคำขออนุมัติร้านค้าที่รอการตรวจสอบ
+  Future<List<PendingMerchant>> getPendingMerchants({
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final res = await _callRpc(
+      'admin_get_pending_merchants',
+      params: {'p_limit': limit, 'p_offset': offset},
+    );
+    if (res is List) {
+      return res
+          .whereType<Map>()
+          .map((item) =>
+              PendingMerchant.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    return [];
+  }
+
+  /// อนุมัติการยืนยันตัวตนร้านค้า
+  Future<bool> approveMerchant(String sellerId) async {
+    final res = await _callRpc(
+      'admin_approve_merchant',
+      params: {'p_seller_id': sellerId},
+    );
+    if (res is Map && res['ok'] == true) return true;
+    return false;
+  }
+
+  /// ปฏิเสธการยืนยันตัวตนร้านค้าพร้อมระบุเหตุผล
+  Future<bool> rejectMerchant(String sellerId, String reason) async {
+    final res = await _callRpc(
+      'admin_reject_merchant',
+      params: {'p_seller_id': sellerId, 'p_reason': reason.trim()},
+    );
+    if (res is Map && res['ok'] == true) return true;
+    return false;
+  }
+
+  /// สถิติจำนวนร้านค้าที่รออนุมัติ
+  Future<int> getPendingMerchantsCount() async {
+    try {
+      final res = await _callRpc('admin_get_merchant_stats');
+      if (res is List && res.isNotEmpty && res.first is Map) {
+        return (res.first['pending_merchants_count'] as num?)?.toInt() ?? 0;
+      }
+    } catch (_) {}
+    return 0;
   }
 }
+
+/// ข้อมูลคำขอยืนยันตัวตนร้านค้าที่รอการตรวจสอบ
+class PendingMerchant {
+  const PendingMerchant({
+    required this.id,
+    required this.shopName,
+    required this.shopUrl,
+    required this.category,
+    required this.contactPhone,
+    required this.evidencePath,
+    required this.submittedAt,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String shopName;
+  final String? shopUrl;
+  final String? category;
+  final String? contactPhone;
+  final String? evidencePath;
+  final DateTime? submittedAt;
+  final DateTime createdAt;
+
+  /// รายการพาธไฟล์ภาพหลักฐานทั้งหมด
+  List<String> get evidencePaths {
+    if (evidencePath == null || evidencePath!.trim().isEmpty) return const [];
+    return evidencePath!
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  factory PendingMerchant.fromJson(Map<String, dynamic> json) {
+    return PendingMerchant(
+      id: json['id'] as String,
+      shopName: json['shop_name'] as String? ?? 'ร้านค้า',
+      shopUrl: json['shop_url'] as String?,
+      category: json['category'] as String?,
+      contactPhone: json['contact_phone'] as String?,
+      evidencePath: json['evidence_path'] as String?,
+      submittedAt: DateTime.tryParse(json['submitted_at']?.toString() ?? ''),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+}
+

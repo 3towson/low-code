@@ -6,8 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 class MockAdminService implements AdminService {
   MockAdminService({
     List<PendingReport>? reports,
+    List<PendingMerchant>? merchants,
     AdminStats? stats,
   })  : _reports = reports ?? [],
+        _merchants = merchants ?? [],
         _stats = stats ??
             const AdminStats(
               pendingCount: 0,
@@ -16,9 +18,12 @@ class MockAdminService implements AdminService {
             );
 
   List<PendingReport> _reports;
+  List<PendingMerchant> _merchants;
   AdminStats _stats;
   final List<String> approvedIds = [];
   final List<Map<String, String>> rejectedRecords = [];
+  final List<String> approvedMerchantIds = [];
+  final List<Map<String, String>> rejectedMerchantRecords = [];
 
   @override
   Future<List<PendingReport>> getPendingReports({
@@ -26,6 +31,33 @@ class MockAdminService implements AdminService {
     int offset = 0,
   }) async {
     return _reports;
+  }
+
+  @override
+  Future<List<PendingMerchant>> getPendingMerchants({
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    return _merchants;
+  }
+
+  @override
+  Future<int> getPendingMerchantsCount() async {
+    return _merchants.length;
+  }
+
+  @override
+  Future<bool> approveMerchant(String sellerId) async {
+    approvedMerchantIds.add(sellerId);
+    _merchants = _merchants.where((m) => m.id != sellerId).toList();
+    return true;
+  }
+
+  @override
+  Future<bool> rejectMerchant(String sellerId, String reason) async {
+    rejectedMerchantRecords.add({'id': sellerId, 'reason': reason});
+    _merchants = _merchants.where((m) => m.id != sellerId).toList();
+    return true;
   }
 
   @override
@@ -58,7 +90,10 @@ class MockAdminService implements AdminService {
   }
 
   @override
-  Future<String> getEvidenceSignedUrl(String evidencePath) async {
+  Future<String> getEvidenceSignedUrl(
+    String evidencePath, {
+    String bucket = 'report-evidences',
+  }) async {
     return 'https://example.com/evidence/$evidencePath';
   }
 
@@ -212,5 +247,133 @@ void main() {
     await tester.pump();
 
     expect(find.text('หลักฐานของ "สมชาย เบี้ยวนัด"'), findsOneWidget);
+  });
+
+  testWidgets('สลับแท็บไปยังคำขออนุมัติร้านค้า และแสดงข้อมูลร้านค้า',
+      (tester) async {
+    final merchant = PendingMerchant(
+      id: 'seller-001',
+      shopName: 'ร้านบอส อุปกรณ์ช่าง',
+      category: 'เครื่องมือช่าง',
+      shopUrl: 'https://shopee.co.th/boss_tools',
+      contactPhone: '0812345678',
+      evidencePath: 'merchants/seller-001/proof1.jpg',
+      submittedAt: DateTime(2026, 10, 10, 14, 0),
+      createdAt: DateTime(2026, 10, 10, 13, 0),
+    );
+
+    final service = MockAdminService(
+      reports: [],
+      merchants: [merchant],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // เริ่มต้นอยู่ที่แท็บรายงาน (ว่าง)
+    expect(find.text('ไม่มีรายงานที่รอการตรวจสอบ'), findsOneWidget);
+
+    // สลับไปยังแท็บร้านค้า
+    await tester.tap(find.byKey(const Key('admin-tab-merchants')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ร้านบอส อุปกรณ์ช่าง'), findsOneWidget);
+    expect(find.text('เครื่องมือช่าง'), findsOneWidget);
+    expect(find.text('https://shopee.co.th/boss_tools'), findsOneWidget);
+    expect(find.text('0812345678'), findsOneWidget);
+    expect(find.text('อนุมัติร้านค้า (Verified)'), findsOneWidget);
+    expect(find.text('ไม่อนุมัติ'), findsOneWidget);
+  });
+
+  testWidgets('อนุมัติร้านค้า เรียก approveMerchant และอัปเดตหน้าจอ',
+      (tester) async {
+    final merchant = PendingMerchant(
+      id: 'seller-001',
+      shopName: 'ร้านบอส อุปกรณ์ช่าง',
+      category: 'เครื่องมือช่าง',
+      shopUrl: 'https://shopee.co.th/boss_tools',
+      contactPhone: '0812345678',
+      evidencePath: 'merchants/seller-001/proof1.jpg',
+      submittedAt: DateTime(2026, 10, 10, 14, 0),
+      createdAt: DateTime(2026, 10, 10, 13, 0),
+    );
+
+    final service = MockAdminService(
+      merchants: [merchant],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // สลับไปยังแท็บร้านค้า
+    await tester.tap(find.byKey(const Key('admin-tab-merchants')));
+    await tester.pumpAndSettle();
+
+    // กดปุ่มอนุมัติ
+    await tester.tap(find.byKey(const Key('admin-approve-merchant-seller-001')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ยืนยันอนุมัติร้านค้า'), findsOneWidget);
+
+    // กดยืนยันใน dialog
+    await tester.tap(find.widgetWithText(FilledButton, 'อนุมัติร้านค้า'));
+    await tester.pumpAndSettle();
+
+    expect(service.approvedMerchantIds, ['seller-001']);
+    expect(find.textContaining('อนุมัติร้านค้า "ร้านบอส อุปกรณ์ช่าง" เรียบร้อยแล้ว'),
+        findsOneWidget);
+    expect(find.text('ไม่มีคำขออนุมัติร้านค้าที่รอการตรวจสอบ'), findsOneWidget);
+  });
+
+  testWidgets('ปฏิเสธร้านค้า พร้อมระบุเหตุผล และเรียก rejectMerchant',
+      (tester) async {
+    final merchant = PendingMerchant(
+      id: 'seller-001',
+      shopName: 'ร้านบอส อุปกรณ์ช่าง',
+      category: 'เครื่องมือช่าง',
+      shopUrl: 'https://shopee.co.th/boss_tools',
+      contactPhone: '0812345678',
+      evidencePath: 'merchants/seller-001/proof1.jpg',
+      submittedAt: DateTime(2026, 10, 10, 14, 0),
+      createdAt: DateTime(2026, 10, 10, 13, 0),
+    );
+
+    final service = MockAdminService(
+      merchants: [merchant],
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AdminDashboardPage(adminService: service),
+    ));
+    await tester.pumpAndSettle();
+
+    // สลับไปยังแท็บร้านค้า
+    await tester.tap(find.byKey(const Key('admin-tab-merchants')));
+    await tester.pumpAndSettle();
+
+    // กดปุ่มไม่อนุมัติ
+    await tester.tap(find.byKey(const Key('admin-reject-merchant-seller-001')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ไม่อนุมัติร้านค้า'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+
+    // แก้ไขเหตุผล
+    await tester.enterText(
+        find.byType(TextField), 'ยอดออเดอร์ยังไม่ถึง 50 ออเดอร์ตามเงื่อนไข');
+
+    // กดยืนยันปฏิเสธ
+    await tester.tap(find.widgetWithText(FilledButton, 'ยืนยันปฏิเสธ'));
+    await tester.pumpAndSettle();
+
+    expect(service.rejectedMerchantRecords.length, 1);
+    expect(service.rejectedMerchantRecords.first['id'], 'seller-001');
+    expect(service.rejectedMerchantRecords.first['reason'],
+        'ยอดออเดอร์ยังไม่ถึง 50 ออเดอร์ตามเงื่อนไข');
+    expect(find.text('ไม่มีคำขออนุมัติร้านค้าที่รอการตรวจสอบ'), findsOneWidget);
   });
 }

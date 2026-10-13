@@ -112,15 +112,17 @@ async function setup() {
     ids[u.key] = data.user.id;
     if (!data.user.email_confirmed_at) problems.push(`${u.key} ยังไม่ยืนยันอีเมล`);
 
-    if (u.ageDays > 0) {
-      const { data: rows, error: upError } = await sb
-        .from("sellers")
-        .update({ created_at: new Date(Date.now() - u.ageDays * DAY_MS).toISOString() })
-        .eq("id", data.user.id)
-        .select("id");
-      if (upError || rows?.length !== 1) {
-        throw new Error(`แก้ sellers.created_at ของ ${u.key} ล้มเหลว: ${upError?.message ?? "ไม่พบแถว"}`);
-      }
+    const { error: upError } = await sb
+      .from("sellers")
+      .update({
+        verification_status: "approved",
+        ...(u.ageDays > 0
+          ? { created_at: new Date(Date.now() - u.ageDays * DAY_MS).toISOString() }
+          : {}),
+      })
+      .eq("id", data.user.id);
+    if (upError) {
+      throw new Error(`แก้ sellers ของ ${u.key} ล้มเหลว: ${upError.message}`);
     }
 
     const anon = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {

@@ -35,6 +35,8 @@
         "web-server",
         "--web-port",
         "8080",
+        "--web-hostname",
+        "any",
         "--dart-define-from-file",
         ".env.flutter"
       ]

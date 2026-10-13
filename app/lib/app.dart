@@ -8,6 +8,7 @@ import 'services/admin_service.dart';
 import 'services/app_settings.dart';
 import 'services/auth_service.dart';
 import 'services/check_service.dart';
+import 'services/merchant_kyc_service.dart';
 import 'services/report_service.dart';
 import 'theme.dart';
 
@@ -18,6 +19,7 @@ class CodCheckApp extends StatefulWidget {
     required this.checkService,
     required this.reportService,
     this.adminService,
+    this.kycService,
     this.themeMode = ThemeMode.dark,
     this.settingsController,
     this.animatePulse = true,
@@ -27,6 +29,7 @@ class CodCheckApp extends StatefulWidget {
   final CheckService checkService;
   final ReportService reportService;
   final AdminService? adminService;
+  final MerchantKycService? kycService;
   final ThemeMode themeMode;
   final AppSettingsController? settingsController;
   final bool animatePulse;
@@ -86,6 +89,7 @@ class _CodCheckAppState extends State<CodCheckApp> {
               checkService: widget.checkService,
               reportService: widget.reportService,
               adminService: widget.adminService,
+              kycService: widget.kycService,
               navigatorKey: _navigatorKey,
               animatePulse: widget.animatePulse,
             ),
@@ -106,6 +110,7 @@ class AuthGate extends StatefulWidget {
     required this.checkService,
     required this.reportService,
     this.adminService,
+    this.kycService,
     required this.navigatorKey,
     this.animatePulse = true,
   });
@@ -114,6 +119,7 @@ class AuthGate extends StatefulWidget {
   final CheckService checkService;
   final ReportService reportService;
   final AdminService? adminService;
+  final MerchantKycService? kycService;
   final GlobalKey<NavigatorState> navigatorKey;
   final bool animatePulse;
 
@@ -156,6 +162,7 @@ class _AuthGateState extends State<AuthGate> {
       checkService: widget.checkService,
       reportService: widget.reportService,
       adminService: widget.adminService,
+      kycService: widget.kycService,
       signedIn: _session != null,
       animatePulse: widget.animatePulse,
     );

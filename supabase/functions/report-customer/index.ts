@@ -151,6 +151,20 @@ Deno.serve(async (req: Request) => {
       return json(403, { error: "กรุณายืนยันอีเมลก่อนรายงานลูกค้า" });
     }
 
+    // ตรวจสอบว่าร้านค้าได้รับการยืนยันตัวตน (Verified Merchant) หรือยัง
+    const { data: seller, error: sellerError } = await admin
+      .from("sellers")
+      .select("verification_status")
+      .eq("id", auth.user.id)
+      .maybeSingle();
+
+    if (seller && seller.verification_status !== "approved") {
+      return json(403, {
+        status: "UNVERIFIED_MERCHANT",
+        error: "ร้านค้าของคุณยังไม่ผ่านการยืนยันตัวตน (Verified Merchant) จึงยังไม่สามารถส่งรายงานได้",
+      });
+    }
+
     // 2) อ่านและตรวจ body
     let body: unknown;
     try {

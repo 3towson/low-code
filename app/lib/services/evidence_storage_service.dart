@@ -16,11 +16,12 @@ abstract class EvidenceStorageService {
   Future<String> createSignedUrl(String path, {int expiresIn = 900});
 }
 
-/// การทำงานจริงเชื่อมต่อกับ Supabase Storage bucket 'report-evidences'
+/// การทำงานจริงเชื่อมต่อกับ Supabase Storage
 class SupabaseEvidenceStorageService implements EvidenceStorageService {
-  SupabaseEvidenceStorageService(this._supabase);
+  SupabaseEvidenceStorageService(this._supabase, {this.bucket = 'report-evidences'});
 
   final SupabaseClient _supabase;
+  final String bucket;
 
   /// แปลงนามสกุลไฟล์เป็น MIME type ที่มาตรฐาน IANA และ Supabase Storage Bucket อนุญาต
   static String resolveMimeType(String extension) {
@@ -56,7 +57,7 @@ class SupabaseEvidenceStorageService implements EvidenceStorageService {
     final path = '$userId/evidence_${timestamp}_$rand.$ext';
     final mimeType = resolveMimeType(ext);
 
-    await _supabase.storage.from('report-evidences').uploadBinary(
+    await _supabase.storage.from(bucket).uploadBinary(
           path,
           bytes,
           fileOptions: FileOptions(
@@ -70,7 +71,7 @@ class SupabaseEvidenceStorageService implements EvidenceStorageService {
   @override
   Future<String> createSignedUrl(String path, {int expiresIn = 900}) async {
     return _supabase.storage
-        .from('report-evidences')
+        .from(bucket)
         .createSignedUrl(path, expiresIn);
   }
 }
