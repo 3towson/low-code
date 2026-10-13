@@ -51,7 +51,6 @@ void main() {
     await ReportService(fake).submit(_input);
     expect(fake.calledName, 'report-customer');
     expect(fake.calledBody, {
-      'customer_name': 'สมชาย',
       'phone': '๐๘๑-๒๓๔-๕๖๗๘',
       'platform': 'line',
       'reason': 'fake_address',
@@ -63,7 +62,6 @@ void main() {
     final fake = FakeFunctionsClient(
         () async => const FunctionResponse(data: {'status': 'CREATED'}, status: 201));
     const inputWithOther = ReportInput(
-      customerName: 'สมศักดิ์',
       phone: '0812345678',
       platform: ReportPlatform.other,
       reason: ReportReason.other,
@@ -72,7 +70,6 @@ void main() {
     );
     await ReportService(fake).submit(inputWithOther);
     expect(fake.calledBody, {
-      'customer_name': 'สมศักดิ์',
       'phone': '0812345678',
       'platform': 'other',
       'reason': 'other',

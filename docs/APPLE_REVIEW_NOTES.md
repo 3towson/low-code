@@ -74,25 +74,21 @@ We respect the rights of data subjects and provide transparent, accessible chann
 ---
 
 ### 4. Demo Accounts for Review
-To assist with your testing, please use the following pre-configured credentials:
+To assist with your testing, please use the following pre-configured credentials (please provide the actual password securely in App Store Connect "Sign-In Information" fields; do not commit passwords to source control):
 
 1. **Verified Merchant Account (KYC Approved):**
    - **Email:** `reviewer_approved@codcheck.app`
-   - **Password:** `Password123!`
+   - **Password:** [Enter the reviewer password configured in App Store Connect]
    - **Role:** Approved Merchant
    - **Purpose:** Test core features immediately: check customer COD delivery risk, view statistics, and submit problematic customer reports with photo evidence.
 
 2. **New Merchant Account (Unverified / KYC Pending):**
    - **Email:** `reviewer_unverified@codcheck.app`
-   - **Password:** `Password123!`
+   - **Password:** [Enter the reviewer password configured in App Store Connect]
    - **Role:** Unverified Merchant
    - **Purpose:** Experience the Merchant KYC Verification workflow. When tapping the report button, this account will be prompted to submit shop verification documents before reporting is unlocked.
 
-3. **Administrator Account:**
-   - **Email:** `admin@codcheck.app`
-   - **Password:** `Password123!`
-   - **Role:** System Administrator
-   - **Purpose:** Inspect the Admin Moderation Dashboard (Settings > Admin Dashboard) to review/approve/reject customer reports and review merchant KYC submissions.
+*(Note: Administrator moderation workflows are demonstrated via attached demo video if requested, in accordance with zero-trust security best practices.)*
 
 ---
 

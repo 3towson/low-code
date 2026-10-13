@@ -53,7 +53,7 @@ enum ReportReason {
 
 class ReportInput {
   const ReportInput({
-    required this.customerName,
+    this.customerName,
     required this.phone,
     required this.platform,
     required this.reason,
@@ -63,7 +63,7 @@ class ReportInput {
     this.otherDetails,
   });
 
-  final String customerName;
+  final String? customerName;
 
   /// เบอร์ตามที่ผู้ใช้กรอก Edge Function เป็นคน normalize และ hash
   final String phone;
@@ -86,7 +86,7 @@ class ReportInput {
         paths.isNotEmpty ? paths.join(',') : evidencePath.trim();
 
     return {
-      'customer_name': customerName.trim(),
+      // Data minimization (PDPA & Store Review v2 N5): ไม่ส่ง customer_name ขึ้น server
       'phone': phone,
       'platform': platform.value,
       'reason': reason.value,

@@ -222,6 +222,33 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      if (info.isSuspended) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            icon: const Icon(
+              Icons.block_rounded,
+              color: Color(0xFFEF4444),
+              size: 36,
+            ),
+            title: const Text('บัญชีร้านค้าถูกระงับการใช้งาน'),
+            content: Text(
+              'ร้านค้าของคุณถูกระงับสิทธิ์การรายงานลูกค้า COD ชั่วคราว '
+              'เนื่องจากละเมิดข้อกำหนดการใช้งาน UGC หรือสร้างรายงานเท็จ\n\n'
+              'เหตุผล: ${info?.rejectionReason ?? "ละเมิดข้อกำหนดการใช้งาน UGC"}\n\n'
+              'หากเห็นว่าเป็นข้อผิดพลาด สามารถติดต่อทีมงานได้ที่ support@codcheck.app',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('รับทราบ'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       if (info.isPending) {
         showDialog<void>(
           context: context,

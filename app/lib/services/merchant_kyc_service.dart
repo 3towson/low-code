@@ -8,7 +8,8 @@ enum MerchantKycStatus {
   unverified('unverified', 'ยังไม่ยืนยัน'),
   pending('pending', 'รอการอนุมัติ'),
   approved('approved', 'ยืนยันแล้ว'),
-  rejected('rejected', 'ไม่อนุมัติ');
+  rejected('rejected', 'ไม่อนุมัติ'),
+  suspended('suspended', 'ถูกระงับการใช้งาน');
 
   const MerchantKycStatus(this.value, this.label);
   final String value;
@@ -50,6 +51,7 @@ class MerchantKycInfo {
   bool get isPending => status == MerchantKycStatus.pending;
   bool get isUnverified => status == MerchantKycStatus.unverified;
   bool get isRejected => status == MerchantKycStatus.rejected;
+  bool get isSuspended => status == MerchantKycStatus.suspended;
 
   /// รายการพาธไฟล์ภาพหลักฐานทั้งหมด
   List<String> get evidencePaths {

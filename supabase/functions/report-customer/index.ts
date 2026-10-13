@@ -207,24 +207,23 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    try {
-      const { data: objects, error: listError } = await admin.storage
+    // ตรวจสอบว่าไฟล์หลักฐานมีอยู่จริงใน bucket report-evidences (N8)
+    for (const p of input.evidence_paths) {
+      const fileName = p.slice(auth.user.id.length + 1);
+      const { data: found, error: listError } = await admin.storage
         .from("report-evidences")
-        .list(auth.user.id);
-      if (!listError && objects && objects.length > 0) {
-        const fileNames = new Set(objects.map((o) => o.name));
-        for (const p of input.evidence_paths) {
-          const fileName = p.slice(auth.user.id.length + 1);
-          if (!fileNames.has(fileName)) {
-            return json(400, {
-              status: "INVALID_INPUT",
-              errors: [{ field: "evidence_path", message: `ไม่พบไฟล์ภาพหลักฐาน ${fileName} ในระบบ` }],
-            });
-          }
-        }
+        .list(auth.user.id, { search: fileName, limit: 10 });
+      if (listError) {
+        console.error(`Storage check error for ${p}:`, listError.message);
+        return json(500, { error: "ไม่สามารถตรวจสอบไฟล์ภาพหลักฐานได้ กรุณาลองใหม่อีกครั้ง" });
       }
-    } catch {
-      // หากเกิดข้อผิดพลาดในการตรวจสอบ storage ไม่บล็อกการทำงาน
+      const match = found?.some((f) => f.name === fileName);
+      if (!match) {
+        return json(400, {
+          status: "INVALID_INPUT",
+          errors: [{ field: "evidence_path", message: `ไม่พบไฟล์ภาพหลักฐาน ${fileName} ในระบบ กรุณาอัปโหลดใหม่` }],
+        });
+      }
     }
 
     // 3) hash เบอร์แล้ว insert (reported_by มาจาก token เท่านั้น)

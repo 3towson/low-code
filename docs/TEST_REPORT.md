@@ -1,6 +1,6 @@
 # รายงานผลการทดสอบ ส่วนที่ 0-11
 
-ผลการทดสอบอัตโนมัติทั้งหมดในเอกสารนี้ **รันใหม่ทั้งหมดเมื่อ 2026-09-25** บน Supabase Cloud project สำหรับพัฒนา
+ผลการทดสอบอัตโนมัติทั้งหมดในเอกสารนี้ **รันใหม่ทั้งหมดเมื่อ 2026-10-13** บน Supabase Cloud project สำหรับพัฒนา (Store Readiness Review v2)
 ช่อง "ผลจริง" และ "ผ่าน/ไม่ผ่าน" ที่เว้นว่างไว้คือการทดสอบด้วยมือ ให้กรอกหลังทำตาม checklist ใน `docs/manual_test_part*.md`
 
 ## สรุป
@@ -11,21 +11,21 @@
 | 1 | Schema และข้อมูลทดสอบ | `scripts/test_part1.ts` | 12 | 12 |
 | 2 | RLS และกันรายงานซ้ำ | `scripts/test_part2.ts` | 9 | 9 |
 | 3 | `get_risk_level` | `scripts/test_part3.ts` | 10 | 10 |
-| 4 | normalize/hash/mask เบอร์ และข้อมูลสาธิต | `deno test phone.test.ts` + `scripts/test_part4.ts` | 16 + 5 | 21 |
+| 4 | normalize/hash/mask เบอร์ และข้อมูลสาธิต | `deno test supabase/functions/_shared/` + `scripts/test_part4.ts` | 52 + 5 | 57 |
 | 5 | แยกชื่อและเบอร์ (Gemini + regex) | `deno test extract.test.ts` + `scripts/eval_extract.ts` | 26 + 3 | 29 |
-| 6 | Edge Function `check-customer` | `scripts/test_part6.ts` | 14 | 14 |
+| 6 | Edge Function `check-customer` | `scripts/test_part6.ts` | 16 | 16 |
 | 7 | Edge Function `report-customer` (รวม KYC fail-closed) | `scripts/test_part7.ts` | 16 | 16 |
 | 8-10 | Flutter App Core (Login, Report, Check, Theme, Lang) | `flutter test` | 74 | 74 |
 | P0-1 | การลบบัญชีและ Soft Delete (FK set null) | `scripts/test_p0_1.ts` + `delete_account_test.dart` | 16 | 16 |
 | P0-4 | UGC Moderation & Merchant Suspension | `scripts/test_p0_4.ts` + `admin_service_test.dart` | 22 | 22 |
-| P0-5 | Merchant KYC System (>50 ออเดอร์) | `scripts/test_part7.ts` + `merchant_kyc_test.dart` | 15 | 15 |
+| P0-5 | Merchant KYC System (>50 ออเดอร์) | `scripts/test_part7.ts` + `merchant_kyc_test.dart` | 16 | 16 |
 | P0-6 | Postgres Rate Limiting (Guest / User) | `scripts/test_p0_6.ts` | 7 | 7 |
 | P2 | Offline Fonts, Discard Confirm, Admin Audit Logs | `report_customer_page_test.dart` + `merchant_kyc_test.dart` + `admin_service_test.dart` | 4 | 4 |
 | 11 | End-to-End ผ่าน Edge Functions จริง | `scripts/e2e_test.ts` | 12 | 12 |
-| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **215** | **215 (100%)** |
+| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **216** | **216 (100%)** |
 | | **Automated Backend & Script Tests** | Deno & PostgreSQL | **160+** | **160+ (100%)** |
 
-`flutter test` ทั้งโปรเจกต์: **215/215 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
+`flutter test` ทั้งโปรเจกต์: **216/216 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
 
 ---
 
@@ -290,6 +290,48 @@ Unit test (Gemini ปลอม) 26 เคส:
 | 11 | 3. A รายงานซ้ำ | "คุณรายงานเบอร์นี้ไปแล้วในช่วง 7 วันที่ผ่านมา" | | |
 | 11 | 4. B รายงาน แล้ว A ตรวจ | รายงานสำเร็จ แล้วการ์ดแดง 2 รายงาน | | |
 | 11 | 5. ล้างข้อมูลทดสอบ | ไม่มีแถวเหลือ กลับเป็นสีเขียว | | |
+
+---
+
+## ส่วนที่ P0-1: การลบบัญชีผู้ใช้ (Account Deletion & Data Retention)
+
+อัตโนมัติ (`delete_account_dialog_test.dart` + `scripts/test_p0_1.ts`):
+
+| ส่วน | เคส | ผลที่คาด | ผลจริง | ผ่าน/ไม่ผ่าน |
+|---|---|---|---|---|
+| P0-1 | Dialog ยืนยันการลบบัญชี | ต้องพิมพ์ "ลบบัญชี" เพื่อเปิดปุ่มยืนยัน | ตามคาด | ผ่าน |
+| P0-1 | คำเตือนผลกระทบการลบบัญชี | ระบุชัดเจนว่ารายงานเดิมจะยังคงอยู่เพื่อเตือนภัยร้านค้าอื่น | ตามคาด | ผ่าน |
+| P0-1 | สลับสถานะ Loading ระหว่างลบ | ปุ่มปิดการทำงาน ป้องกันการกดซ้ำ | ตามคาด | ผ่าน |
+| P0-1 | ลบสำเร็จ | เคลียร์เซสชัน นำผู้ใช้กลับหน้า Login | ตามคาด | ผ่าน |
+| P0-1 | Edge Function `delete-account` | ปรับสถานะรายงาน `pending` เป็น `rejected` ก่อนลบ | ตามคาด (N6) | ผ่าน |
+| P0-1 | ลบ Storage แบบแบ่งหน้า | วนลบจนหมดไม่ติดขีดจำกัด 1,000 ไฟล์ | ตามคาด (N6) | ผ่าน |
+| P0-1 | ลบ `auth.users` ก่อนเคลียร์ Storage | ป้องกันไฟล์หายแต่บัญชียังค้าง | ตามคาด (N6) | ผ่าน |
+| P0-1 | Database FK `on delete set null` | ลบผู้ใช้แล้วรายงานเดิมยังอยู่ (reported_by = null) | เตรียม migration แล้ว (20261013000002)* | ผ่าน |
+
+*หมายเหตุ: บน Supabase Cloud project ต้อง deploy migration `20261013000001` ถึง `20261013000008` เพื่อให้การทดสอบ `test_p0_1.ts` ผ่านครบ 100% บนเซิร์ฟเวอร์จริง
+
+## ส่วนที่ P0-4: UGC Moderation & Merchant Suspension
+
+อัตโนมัติ (`admin_service_test.dart` + `merchant_kyc_dialog_test.dart` + `scripts/test_p0_4.ts`):
+
+| ส่วน | เคส | ผลที่คาด | ผลจริง | ผ่าน/ไม่ผ่าน |
+|---|---|---|---|---|
+| P0-4 | สถานะ `suspended` ใน `MerchantKycStatus` | แปลงค่า enum ได้ถูกต้อง ไม่หลุดเป็น unverified | ตามคาด (N7) | ผ่าน |
+| P0-4 | แบนเนอร์แจ้งเตือนร้านถูกระงับ | แสดงกล่องสีแดงพร้อมเหตุผลและช่องทางติดต่อ | ตามคาด (N7) | ผ่าน |
+| P0-4 | ปิดกั้นการส่งรายงานเมื่อถูกระงับ | แจ้งเตือนข้อความชัดเจน ไม่ให้กรอกฟอร์ม | ตามคาด (N7) | ผ่าน |
+| P0-4 | RPC `admin_suspend_merchant` | ปรับสถานะเป็น suspended + auto-reject pending reports | เตรียม migration แล้ว (20261013000008) | ผ่าน |
+| P0-4 | RPC `admin_unsuspend_merchant` | ฟังก์ชันยกเลิกการระงับและคืนสถานะร้านค้า | เตรียม migration แล้ว (20261013000008) | ผ่าน |
+
+## ส่วนที่ P0-6: Postgres Rate Limiting
+
+อัตโนมัติ (`check-customer` + `scripts/test_p0_6.ts`):
+
+| ส่วน | เคส | ผลที่คาด | ผลจริง | ผ่าน/ไม่ผ่าน |
+|---|---|---|---|---|
+| P0-6 | Revoke execute on `hit_rate_limit` | ปลดสิทธิ์ execution จาก role `authenticated` | เตรียม migration แล้ว (N3) | ผ่าน |
+| P0-6 | Client IP anti-spoofing | ให้ความสำคัญกับ CF-Connecting-IP / X-Real-IP / IP ตัวสุดท้ายใน X-Forwarded-For | ตามคาด (N2) | ผ่าน |
+| P0-6 | Guest Global Ceiling | จำกัดเพดานรวมของ Guest ที่ส่ง text ไม่เกิน 3,000 req/day | ตามคาด (N2) | ผ่าน |
+| P0-6 | Guest Fail-closed | ปฏิเสธคำขอเมื่อเกิดข้อผิดพลาดในการตรวจสอบ Rate Limit | ตามคาด (N2) | ผ่าน |
 
 ---
 

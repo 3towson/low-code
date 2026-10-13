@@ -27,28 +27,35 @@ const admin = createClient(
 
 async function deleteFolderFiles(bucketName: string, prefix: string): Promise<void> {
   try {
-    const { data: files, error: listError } = await admin.storage
-      .from(bucketName)
-      .list(prefix, { limit: 1000 });
+    while (true) {
+      const { data: files, error: listError } = await admin.storage
+        .from(bucketName)
+        .list(prefix, { limit: 100 });
 
-    if (listError) {
-      console.error(`List files error in bucket ${bucketName}/${prefix}:`, listError.message);
-      return;
-    }
+      if (listError) {
+        console.error(`List files error in bucket ${bucketName}/${prefix}:`, listError.message);
+        break;
+      }
 
-    if (files && files.length > 0) {
+      if (!files || files.length === 0) {
+        break;
+      }
+
       const pathsToDelete = files
         .filter((f) => f.name && f.name !== ".emptyFolderPlaceholder")
         .map((f) => `${prefix}/${f.name}`);
 
-      if (pathsToDelete.length > 0) {
-        const { error: removeError } = await admin.storage
-          .from(bucketName)
-          .remove(pathsToDelete);
+      if (pathsToDelete.length === 0) {
+        break;
+      }
 
-        if (removeError) {
-          console.error(`Remove files error in bucket ${bucketName}:`, removeError.message);
-        }
+      const { error: removeError } = await admin.storage
+        .from(bucketName)
+        .remove(pathsToDelete);
+
+      if (removeError) {
+        console.error(`Remove files error in bucket ${bucketName}:`, removeError.message);
+        break;
       }
     }
   } catch (err) {
@@ -79,19 +86,35 @@ Deno.serve(async (req: Request) => {
 
     const uid = auth.user.id;
 
-    // 2) ลบไฟล์หลักฐานทั้งหมดใน Storage buckets ของผู้ใช้
+    // 2) เปลี่ยนสถานะรายงานที่ยังรอการอนุมัติ (pending) ของผู้ใช้นี้ให้เป็น rejected (N6)
+    //    เนื่องจากหลังจากลบบัญชีและภาพหลักฐานแล้ว แอดมินจะไม่สามารถตรวจหลักฐานได้
+    try {
+      await admin
+        .from("cod_reports")
+        .update({
+          status: "rejected",
+          review_notes: "ผู้รายงานขอลบบัญชีผู้ใช้ (Account Deleted)",
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("reported_by", uid)
+        .eq("status", "pending");
+    } catch (e) {
+      console.warn("Failed to update pending reports before account deletion:", e);
+    }
+
+    // 3) ลบบัญชีผู้ใช้ใน auth.users ก่อน (N6)
+    //    หากลบผู้ใช้ไม่สำเร็จ ข้อมูลและไฟล์จะยังคงปลอดภัย ไม่สูญหายบางส่วน
+    const { error: deleteError } = await admin.auth.admin.deleteUser(uid);
+    if (deleteError) {
+      console.error("deleteUser failed:", deleteError.message);
+      return json(500, { error: "เกิดข้อผิดพลาดในการลบบัญชีผู้ใช้ กรุณาลองใหม่อีกครั้ง หรือติดต่อฝ่ายสนับสนุน" });
+    }
+
+    // 4) เมื่อลบผู้ใช้สำเร็จ จึงลบไฟล์หลักฐานทั้งหมดใน Storage buckets ของผู้ใช้ (วนลบจนหมด)
     await Promise.all([
       deleteFolderFiles("report-evidences", uid),
       deleteFolderFiles("merchant-evidences", uid),
     ]);
-
-    // 3) ลบบัญชีผู้ใช้ใน auth.users ด้วย service role
-    //    ฐานข้อมูลจะ cascade ไปยังตาราง sellers และปรับ foreign keys ใน cod_reports เป็น null อัตโนมัติ
-    const { error: deleteError } = await admin.auth.admin.deleteUser(uid);
-    if (deleteError) {
-      console.error("deleteUser failed:", deleteError.message);
-      return json(500, { error: `ลบบัญชีไม่สำเร็จ: ${deleteError.message}` });
-    }
 
     return json(200, {
       ok: true,
@@ -99,6 +122,6 @@ Deno.serve(async (req: Request) => {
     });
   } catch (err) {
     console.error("delete-account unexpected error:", err);
-    return json(500, { error: "เกิดข้อผิดพลาดในการลบบัญชี กรุณาลองใหม่อีกครั้ง" });
+    return json(500, { error: "เกิดข้อผิดพลาดในการลบบัญชี กรุณาลองใหม่อีกครั้ง หรือติดต่อฝ่ายสนับสนุน" });
   }
 });

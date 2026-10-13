@@ -68,8 +68,10 @@ const reporterStrings: string[] = [];
 type Res = { status: number; raw: string; body: Record<string, unknown> | null };
 
 async function call(body: string | null, withToken = true, method = "POST"): Promise<Res> {
-  const headers: Record<string, string> = { apikey: env.SUPABASE_ANON_KEY };
-  if (withToken) headers.Authorization = `Bearer ${token}`;
+  const headers: Record<string, string> = {
+    apikey: env.SUPABASE_ANON_KEY,
+    Authorization: withToken ? `Bearer ${token}` : `Bearer ${env.SUPABASE_ANON_KEY}`,
+  };
   if (body !== null) headers["content-type"] = "application/json";
   const res = await fetch(FN_URL, {
     method,

@@ -38,16 +38,21 @@ const admin = createClient(
 );
 
 function getClientIp(req: Request): string {
+  // Cloudflare และ Supabase Edge Runtime จะกำหนด cf-connecting-ip หรือ x-real-ip
+  const cfIp = req.headers.get("cf-connecting-ip")?.trim();
+  if (cfIp) return cfIp;
+
+  const realIp = req.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {
-    const ip = forwarded.split(",")[0]?.trim();
-    if (ip && ip !== "") return ip;
+    const parts = forwarded.split(",").map((p) => p.trim()).filter(Boolean);
+    // ใช้ IP ตัวสุดท้ายที่ proxy ฝั่ง platform เติม ป้องกัน client ปลอมค่าตัวแรก
+    const lastIp = parts[parts.length - 1];
+    if (lastIp) return lastIp;
   }
-  return (
-    req.headers.get("cf-connecting-ip")?.trim() ??
-    req.headers.get("x-real-ip")?.trim() ??
-    "127.0.0.1"
-  );
+  return "127.0.0.1";
 }
 
 Deno.serve(async (req: Request) => {
@@ -102,7 +107,7 @@ Deno.serve(async (req: Request) => {
 
     const isTextMode = nonEmpty(text);
 
-    // 2.1) ตรวจ Rate Limit ใน Postgres ผ่าน RPC hit_rate_limit (P0-6)
+    // 2.1) ตรวจ Rate Limit ใน Postgres ผ่าน RPC hit_rate_limit (P0-6, N2)
     const clientIp = getClientIp(req);
     const identifier = isGuest ? clientIp : userId!;
     const prefix = isGuest ? `guest:${identifier}` : `user:${identifier}`;
@@ -114,7 +119,8 @@ Deno.serve(async (req: Request) => {
       p_limit: minLimit,
       p_window_seconds: 60,
     });
-    if (!minErr && minAllowed === false) {
+    // สำหรับ Guest: หาก RPC มีข้อผิดพลาด ให้ fail-closed ปฏิเสธคำขอทันที
+    if ((isGuest && minErr) || minAllowed === false) {
       return json(429, {
         status: "RATE_LIMITED",
         error: "คำขอถี่เกินไป กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง",
@@ -128,7 +134,7 @@ Deno.serve(async (req: Request) => {
       p_limit: dayLimit,
       p_window_seconds: 86400,
     });
-    if (!dayErr && dayAllowed === false) {
+    if ((isGuest && dayErr) || dayAllowed === false) {
       return json(429, {
         status: "RATE_LIMITED",
         error: isGuest
@@ -139,13 +145,28 @@ Deno.serve(async (req: Request) => {
 
     // C) Rate limit สำหรับ Gemini AI (โหมด text)
     if (isTextMode) {
+      // เพดานรวมของ guest ทั้งระบบต่อวัน ป้องกันค่าใช้จ่าย Gemini บานปลาย
+      if (isGuest) {
+        const { data: gTextAllowed, error: gTextErr } = await admin.rpc("hit_rate_limit", {
+          p_key: "guest:global:text:day",
+          p_limit: 3000,
+          p_window_seconds: 86400,
+        });
+        if (gTextErr || gTextAllowed === false) {
+          return json(429, {
+            status: "RATE_LIMITED",
+            error: "โควตา AI สำหรับผู้เยี่ยมชมของระบบเต็มแล้วสำหรับวันนี้ กรุณาเข้าสู่ระบบ หรือกรอกเบอร์โทรโดยตรง",
+          });
+        }
+      }
+
       const textMinLimit = isGuest ? 10 : 40;
-      const { data: tMinAllowed } = await admin.rpc("hit_rate_limit", {
+      const { data: tMinAllowed, error: tMinErr } = await admin.rpc("hit_rate_limit", {
         p_key: `${prefix}:text:min`,
         p_limit: textMinLimit,
         p_window_seconds: 60,
       });
-      if (tMinAllowed === false) {
+      if ((isGuest && tMinErr) || tMinAllowed === false) {
         return json(429, {
           status: "RATE_LIMITED",
           error: "การใช้ AI สกัดข้อความถี่เกินไป กรุณารอสักครู่ หรือกรอกเบอร์โทรโดยตรง",
@@ -153,12 +174,12 @@ Deno.serve(async (req: Request) => {
       }
 
       const textDayLimit = isGuest ? 60 : 500;
-      const { data: tDayAllowed } = await admin.rpc("hit_rate_limit", {
+      const { data: tDayAllowed, error: tDayErr } = await admin.rpc("hit_rate_limit", {
         p_key: `${prefix}:text:day`,
         p_limit: textDayLimit,
         p_window_seconds: 86400,
       });
-      if (tDayAllowed === false) {
+      if ((isGuest && tDayErr) || tDayAllowed === false) {
         return json(429, {
           status: "RATE_LIMITED",
           error: isGuest

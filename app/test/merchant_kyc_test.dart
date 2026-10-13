@@ -540,5 +540,47 @@ void main() {
       // เปิดหน้ารายงานลูกค้าได้สำเร็จ
       expect(find.byType(ReportCustomerPage), findsOneWidget);
     });
+
+    testWidgets('ร้านค้า suspended แสดง dialog ระงับการใช้งานและไม่เปิดหน้า ReportCustomerPage (N7)',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final kycService = MockMerchantKycService(
+        initialInfo: const MerchantKycInfo(
+          shopName: 'ร้านที่ถูกแบน',
+          status: MerchantKycStatus.suspended,
+          rejectionReason: 'รายงานข้อมูลเท็จซ้ำซาก',
+        ),
+      );
+
+      final authService = FakeAuthService(mockShopName: 'ร้านที่ถูกแบน');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HomePage(
+            signedIn: true,
+            animatePulse: false,
+            authService: authService,
+            checkService: FakeCheckService(),
+            reportService: FakeReportService(),
+            kycService: kycService,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // กดปุ่มรายงานลูกค้า
+      final reportBtn = find.byKey(const Key('home-report'));
+      await tester.ensureVisible(reportBtn);
+      await tester.tap(reportBtn);
+      await tester.pumpAndSettle();
+
+      // ต้องแสดง Dialog ระงับการใช้งาน และไม่เปิด ReportCustomerPage
+      expect(find.text('บัญชีร้านค้าถูกระงับการใช้งาน'), findsOneWidget);
+      expect(find.textContaining('รายงานข้อมูลเท็จซ้ำซาก'), findsOneWidget);
+      expect(find.byType(ReportCustomerPage), findsNothing);
+    });
   });
 }

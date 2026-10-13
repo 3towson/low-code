@@ -93,7 +93,6 @@ Future<void> _select(WidgetTester tester, String key, String label) async {
 
 Future<void> _fillValid(WidgetTester tester,
     {String phone = '081-234-5678'}) async {
-  await tester.enterText(find.byKey(const Key('report-name')), 'สมชาย ทดสอบ');
   await tester.enterText(find.byKey(const Key('report-phone')), phone);
   await _select(tester, 'report-platform', 'Shopee');
   await _select(tester, 'report-reason', 'ปฏิเสธรับสินค้า');
@@ -110,7 +109,6 @@ void main() {
 
     await _tapSubmit(tester);
 
-    expect(find.text('กรุณากรอกชื่อลูกค้า'), findsOneWidget);
     expect(find.text('กรุณากรอกเบอร์โทร'), findsOneWidget);
     expect(find.text('กรุณาเลือกแพลตฟอร์ม'), findsOneWidget);
     expect(find.text('กรุณาเลือกเหตุผล'), findsOneWidget);
@@ -195,7 +193,6 @@ void main() {
 
     // ส่งค่า enum ตาม PROJECT_CONTEXT พร้อม evidence_path
     expect(service.inputs.single.toJson(), {
-      'customer_name': 'สมชาย ทดสอบ',
       'phone': '081-234-5678',
       'platform': 'shopee',
       'reason': 'refused_delivery',
@@ -272,8 +269,6 @@ void main() {
 
     // กรอกข้อมูลทั่วไป
     await tester.enterText(
-        find.byKey(const Key('report-name')), 'สมชาย ทดสอบ');
-    await tester.enterText(
         find.byKey(const Key('report-phone')), '081-234-5678');
 
     // เลือกแพลตฟอร์มเป็น 'อื่นๆ'
@@ -299,7 +294,6 @@ void main() {
     await _tapSubmit(tester);
     expect(service.inputs, hasLength(1));
     expect(service.inputs.single.toJson(), {
-      'customer_name': 'สมชาย ทดสอบ',
       'phone': '081-234-5678',
       'platform': 'other',
       'reason': 'other',
@@ -407,9 +401,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // กรอกชื่อลูกค้า
+    // กรอกเบอร์โทร
     await tester.enterText(
-        find.byKey(const Key('report-name')), 'ลูกค้าทดสอบ');
+        find.byKey(const Key('report-phone')), '0812345678');
     await tester.pump();
 
     // กดปุ่มปิด
@@ -426,7 +420,7 @@ void main() {
 
     expect(find.text('ยกเลิกการรายงาน?'), findsNothing);
     expect(closed, isFalse);
-    expect(find.text('ลูกค้าทดสอบ'), findsOneWidget);
+    expect(find.text('0812345678'), findsOneWidget);
 
     // กดปุ่มปิดอีกครั้งแล้วเลือก "ปิดและละทิ้งข้อมูล"
     await tester.tap(find.byKey(const Key('report-close-button')));

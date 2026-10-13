@@ -235,32 +235,45 @@
         </ul>
       </div>
 
-      <div id="successPanel" class="success-panel">
-        <h3>✅ บันทึกคำร้องเรียบร้อยแล้ว</h3>
-        <p>เจ้าหน้าที่แอดมินกลางจะตรวจสอบข้อมูลและหลักฐาน พร้อมแจ้งผลการพิจารณาภายใน <strong>3 วันทำการ</strong></p>
-        <div>รหัสอ้างอิงคำร้อง (Ticket ID):</div>
-        <div id="ticketId" class="ticket-badge">TKT-XXXX-XXXX</div>
-        <p style="font-size: 12.5px; color: var(--text-muted);">
-          ท่านสามารถใช้อีเมลหรือช่องทางติดต่อที่ระบุไว้ในการติดตามสถานะคำร้องได้ที่ <a href="mailto:dispute@codcheck.app">dispute@codcheck.app</a>
+      <div id="successPanel" class="success-panel" style="display: none;">
+        <h3>📨 พร้อมส่งคำร้องทางอีเมล</h3>
+        <p style="margin-bottom: 12px;">
+          ระบบได้เตรียมข้อความคำร้องของท่านไว้เรียบร้อยแล้ว กรุณากดปุ่มด้านล่างเพื่อเปิดโปรแกรมอีเมลและส่งคำร้องไปยังทีมงานเจ้าหน้าที่คุ้มครองข้อมูล
         </p>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 16px 0;">
+          <a id="mailtoBtn" href="#" class="btn-submit" style="text-decoration: none; display: inline-block; padding: 12px 20px;">
+            ✉️ เปิดโปรแกรมอีเมลเพื่อส่งทันที
+          </a>
+          <button type="button" id="copyBtn" onclick="handleCopy()" class="btn-submit" style="background: #334155;">
+            📋 คัดลอกข้อความคำร้อง
+          </button>
+        </div>
+
+        <div style="text-align: left; background: #0B1120; border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-size: 13px; color: #CBD5E1; white-space: pre-wrap; font-family: monospace; max-height: 200px; overflow-y: auto;" id="emailPreview"></div>
+
+        <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 14px;">
+          เจ้าหน้าที่จะตรวจสอบข้อมูลและติดต่อกลับตามช่องทางที่ระบุไว้ หรือส่งอีเมลโดยตรงได้ที่ <a href="mailto:dispute@codcheck.app">dispute@codcheck.app</a>
+        </p>
+        <button type="button" onclick="resetForm()" style="margin-top: 10px; background: transparent; border: none; color: #60A5FA; cursor: pointer; text-decoration: underline; font-family: inherit;">← แก้ไขข้อมูลในฟอร์ม</button>
       </div>
 
       <form id="disputeForm" onsubmit="handleSubmit(event)">
         <div class="form-group">
           <label for="phone">หมายเลขโทรศัพท์มือถือที่ต้องการยื่นเรื่อง *</label>
           <input type="tel" id="phone" required placeholder="เช่น 0812345678" pattern="[0-9]{9,10}" maxlength="10">
-          <span style="font-size: 11.5px; color: var(--text-muted);">กรอกเฉพาะตัวเลข 10 หลัก (จะถูกแปลงเป็น Hash เพื่อค้นหาในระบบ)</span>
+          <span style="font-size: 11.5px; color: var(--text-muted);">กรอกเฉพาะตัวเลข 10 หลัก</span>
         </div>
 
         <div class="form-group">
           <label for="disputeType">ประเภทคำร้อง *</label>
           <select id="disputeType" required>
             <option value="">-- กรุณาเลือกประเภทคำร้อง --</option>
-            <option value="incorrect_data">ข้อมูลไม่ถูกต้อง / ไม่เคยสั่งซื้อหรือปฏิเสธพัสดุดังกล่าว</option>
-            <option value="order_completed">ได้รับพัสดุและชำระเงินเรียบร้อยแล้ว (ร้านค้ารายงานผิดพลาด)</option>
-            <option value="identity_theft">ถูกแอบอ้างนำเบอร์โทรศัพท์ไปใช้สั่งซื้อโดยไม่ทราบเรื่อง</option>
-            <option value="right_to_erasure">ขอลบข้อมูลตามสิทธิเจ้าของข้อมูลส่วนบุคคล (Right to Erasure - PDPA)</option>
-            <option value="other">อื่นๆ</option>
+            <option value="ข้อมูลไม่ถูกต้อง / ไม่เคยสั่งซื้อหรือปฏิเสธพัสดุดังกล่าว">ข้อมูลไม่ถูกต้อง / ไม่เคยสั่งซื้อหรือปฏิเสธพัสดุดังกล่าว</option>
+            <option value="ได้รับพัสดุและชำระเงินเรียบร้อยแล้ว (ร้านค้ารายงานผิดพลาด)">ได้รับพัสดุและชำระเงินเรียบร้อยแล้ว (ร้านค้ารายงานผิดพลาด)</option>
+            <option value="ถูกแอบอ้างนำเบอร์โทรศัพท์ไปใช้สั่งซื้อโดยไม่ทราบเรื่อง">ถูกแอบอ้างนำเบอร์โทรศัพท์ไปใช้สั่งซื้อโดยไม่ทราบเรื่อง</option>
+            <option value="ขอลบข้อมูลตามสิทธิเจ้าของข้อมูลส่วนบุคคล (Right to Erasure - PDPA)">ขอลบข้อมูลตามสิทธิเจ้าของข้อมูลส่วนบุคคล (Right to Erasure - PDPA)</option>
+            <option value="อื่นๆ">อื่นๆ</option>
           </select>
         </div>
 
@@ -271,7 +284,7 @@
 
         <div class="form-group">
           <label for="details">รายละเอียดเพิ่มเติม / ข้อโต้แย้ง</label>
-          <textarea id="details" placeholder="ระบุรายละเอียด เช่น เลขพัสดุ แพลตฟอร์มที่สั่งซื้อ หรือข้อเท็จจริงเพื่อประกอบการพิจารณาของแอดมิน"></textarea>
+          <textarea id="details" placeholder="ระบุรายละเอียด เช่น เลขพัสดุ แพลตฟอร์มที่สั่งซื้อ หรือข้อเท็จจริงเพื่อประกอบการพิจารณา"></textarea>
         </div>
 
         <div class="checkbox-group">
@@ -281,7 +294,7 @@
           </label>
         </div>
 
-        <button type="submit" class="btn-submit">ส่งคำร้องโต้แย้งข้อมูล</button>
+        <button type="submit" class="btn-submit">สร้างคำร้องและส่งอีเมลโต้แย้ง</button>
       </form>
 
       <div class="footer-links">
@@ -292,26 +305,53 @@
   </div>
 
   <script>
+    let generatedEmailBody = "";
+
     function handleSubmit(e) {
       e.preventDefault();
       const phone = document.getElementById('phone').value.trim();
       const type = document.getElementById('disputeType').value;
       const contact = document.getElementById('contactInfo').value.trim();
+      const details = document.getElementById('details').value.trim() || 'ไม่ได้ระบุ';
 
       if (!phone || !type || !contact) {
         alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
         return;
       }
 
-      // สุ่มรหัส Ticket ID สำหรับอ้างอิง
-      const randHex = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' +
-                      Math.random().toString(36).substring(2, 6).toUpperCase();
-      const ticket = 'DISP-' + randHex;
+      const subject = `[คำร้องโต้แย้งข้อมูล / PDPA] หมายเลข ${phone}`;
+      generatedEmailBody = `เรียน ทีมงานคุ้มครองข้อมูลส่วนบุคคล COD Risk Shield,\n\nข้าพเจ้ามีความประสงค์ยื่นเรื่องโต้แย้ง/ใช้สิทธิเจ้าของข้อมูลส่วนบุคคล ดังนี้:\n` +
+        `- หมายเลขโทรศัพท์: ${phone}\n` +
+        `- ประเภทคำร้อง: ${type}\n` +
+        `- ช่องทางติดต่อกลับ: ${contact}\n` +
+        `- รายละเอียดเพิ่มเติม: ${details}\n\n` +
+        `ขอยืนยันว่าเป็นเจ้าของหมายเลขโทรศัพท์ดังกล่าวจริง\n\nวันที่ยื่นเรื่อง: ${new Date().toLocaleString('th-TH')}`;
 
-      document.getElementById('ticketId').innerText = ticket;
+      const mailtoUrl = `mailto:dispute@codcheck.app?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(generatedEmailBody)}`;
+      
+      document.getElementById('mailtoBtn').href = mailtoUrl;
+      document.getElementById('emailPreview').innerText = generatedEmailBody;
       document.getElementById('disputeForm').style.display = 'none';
       document.getElementById('successPanel').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // พยายามเปิดโปรแกรมเมลอัตโนมัติ
+      window.location.href = mailtoUrl;
+    }
+
+    function handleCopy() {
+      if (!generatedEmailBody) return;
+      navigator.clipboard.writeText(generatedEmailBody).then(function() {
+        const btn = document.getElementById('copyBtn');
+        btn.innerText = '✅ คัดลอกสำเร็จแล้ว!';
+        setTimeout(() => { btn.innerText = '📋 คัดลอกข้อความคำร้อง'; }, 2000);
+      }).catch(function() {
+        alert('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาคัดลอกข้อความจากกล่องข้อความ');
+      });
+    }
+
+    function resetForm() {
+      document.getElementById('disputeForm').style.display = 'flex';
+      document.getElementById('successPanel').style.display = 'none';
     }
   </script>
 </body>

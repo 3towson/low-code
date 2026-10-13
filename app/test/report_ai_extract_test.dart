@@ -109,23 +109,22 @@ void main() {
     );
     await tester.pump();
 
-    expect(_fieldText(tester, 'report-name'), 'สมหญิง ใจดี');
     expect(_fieldText(tester, 'report-phone'), '0812345678');
     expect(
       tester.widget<Text>(_aiMessage).data,
-      'กรอกชื่อและเบอร์โทรให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
+      'กรอกเบอร์โทรให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
     );
 
     // ผู้ใช้แก้ค่าที่ AI กรอกได้
     await tester.enterText(
-      find.byKey(const Key('report-name')),
-      'สมหญิง แก้ไข',
+      find.byKey(const Key('report-phone')),
+      '0899999999',
     );
-    expect(_fieldText(tester, 'report-name'), 'สมหญิง แก้ไข');
+    expect(_fieldText(tester, 'report-phone'), '0899999999');
   });
 
   testWidgets(
-    'server ส่งมาแค่เบอร์ที่ mask ดึงเบอร์จากแชทในเครื่องและกรอกชื่อกับเบอร์ให้',
+    'server ส่งมาแค่เบอร์ที่ mask ดึงเบอร์จากแชทในเครื่องและกรอกเบอร์ให้',
     (tester) async {
       final service = FakeCheckService();
       await _pumpPage(tester, service);
@@ -143,11 +142,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(_fieldText(tester, 'report-name'), 'สมหญิง ใจดี');
       expect(_fieldText(tester, 'report-phone'), '0812345678');
       expect(
         tester.widget<Text>(_aiMessage).data,
-        'กรอกชื่อและเบอร์โทรให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
+        'กรอกเบอร์โทรให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
       );
     },
   );
@@ -171,11 +169,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(_fieldText(tester, 'report-name'), 'สมหญิง ใจดี');
       expect(_fieldText(tester, 'report-phone'), isEmpty);
       expect(
         tester.widget<Text>(_aiMessage).data,
-        'กรอกชื่อให้แล้ว พบเบอร์ 081-XXX-5678 กรุณากรอกเบอร์เต็มเอง',
+        'พบเบอร์ 081-XXX-5678 กรุณากรอกเบอร์เต็มเอง',
       );
     },
   );
@@ -185,7 +182,7 @@ void main() {
   ) async {
     final service = FakeCheckService();
     await _pumpPage(tester, service);
-    await tester.enterText(find.byKey(const Key('report-name')), 'กรอกเองก่อน');
+    await tester.enterText(find.byKey(const Key('report-phone')), '0811111111');
 
     await tester.enterText(_chatField, 'ส่งของด่วนนะคะ');
     await _tapExtract(tester);
@@ -193,8 +190,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('ไม่พบเบอร์โทรในข้อความ กรุณากรอกเอง'), findsOneWidget);
-    expect(_fieldText(tester, 'report-name'), 'กรอกเองก่อน');
-    expect(_fieldText(tester, 'report-phone'), isEmpty);
+    expect(_fieldText(tester, 'report-phone'), '0811111111');
     expect(_extractEnabled(tester), isTrue);
   });
 
@@ -235,7 +231,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'), findsOneWidget);
-    expect(_fieldText(tester, 'report-name'), isEmpty);
+    expect(_fieldText(tester, 'report-phone'), isEmpty);
     expect(_extractEnabled(tester), isTrue);
 
     await tester.pump(const Duration(seconds: 1));

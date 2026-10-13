@@ -19,10 +19,10 @@ interface SupabaseRpcFilterBuilder {
 }
 
 interface SupabaseQueryBuilder {
-  select<T = any>(columns?: string): SupabaseQueryBuilder & Promise<{ data: T | null; error: any }>;
-  insert<T = any>(values: any): SupabaseQueryBuilder & Promise<{ data: T | null; error: any }>;
-  update<T = any>(values: any): SupabaseQueryBuilder & Promise<{ data: T | null; error: any }>;
-  delete<T = any>(): SupabaseQueryBuilder & Promise<{ data: T | null; error: any }>;
+  select<T = any>(columns?: string, options?: any): SupabaseQueryBuilder & Promise<{ data: T | null; error: any; count?: number | null }>;
+  insert<T = any>(values: any, options?: any): SupabaseQueryBuilder & Promise<{ data: T | null; error: any; count?: number | null }>;
+  update<T = any>(values: any, options?: any): SupabaseQueryBuilder & Promise<{ data: T | null; error: any; count?: number | null }>;
+  delete<T = any>(options?: any): SupabaseQueryBuilder & Promise<{ data: T | null; error: any; count?: number | null }>;
   eq(column: string, value: any): SupabaseQueryBuilder;
   in(column: string, values: any[]): SupabaseQueryBuilder;
   single<T = any>(): Promise<{ data: T | null; error: any }>;

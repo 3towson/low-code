@@ -42,10 +42,17 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasKeystore) {
-                signingConfigs.getByName("release")
+            if (hasKeystore) {
+                signingConfig = signingConfigs.getByName("release")
             } else {
-                signingConfigs.getByName("debug")
+                gradle.taskGraph.whenReady {
+                    if (allTasks.any { it.name.contains("Release", ignoreCase = true) }) {
+                        throw GradleException(
+                            "Cannot build release: 'android/key.properties' not found. " +
+                            "Please configure release signing credentials in android/key.properties (see android/key.properties.example)."
+                        )
+                    }
+                }
             }
         }
     }

@@ -315,6 +315,42 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
                   ),
                   const SizedBox(height: 18),
 
+                  // Alert if suspended
+                  if (widget.initialInfo?.isSuspended == true) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.block_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'บัญชีร้านค้านี้ถูกระงับการใช้งาน: ${widget.initialInfo?.rejectionReason ?? "ละเมิดข้อกำหนด UGC"}\nไม่สามารถยื่นยืนยันตัวตนได้ กรุณาติดต่อ support@codcheck.app',
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: Color(0xFFEF4444),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // 2. Alert if rejected previously
                   if (widget.initialInfo?.isRejected == true &&
                       widget.initialInfo?.rejectionReason != null) ...[
@@ -623,7 +659,7 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
                       const SizedBox(width: 8),
                       FilledButton.icon(
                         key: const Key('kyc-submit-button'),
-                        onPressed: _submitting ? null : _submit,
+                        onPressed: (_submitting || widget.initialInfo?.isSuspended == true) ? null : _submit,
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF2563EB),
                           padding: const EdgeInsets.symmetric(

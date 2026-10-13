@@ -10,24 +10,21 @@
 **Login Required:** Yes, part of the app requires login for merchant fraud reporting, while customer COD delivery risk checking is accessible to all users (including Guest Mode).
 
 #### Test Account Credentials:
+*(Please provide the actual password securely in Google Play Console "App access" instructions; do not commit passwords to source control)*
 
 1. **Primary Merchant Account (KYC Approved):**
    - **Email:** `reviewer_approved@codcheck.app`
-   - **Password:** `Password123!`
+   - **Password:** [Enter the reviewer password configured in Google Play Console]
    - **Status:** Verified Merchant (KYC Approved)
    - **Features to Test:** Check customer COD delivery risk, view protected parcel statistics, and submit problematic customer reports with photo evidence.
 
 2. **Secondary Merchant Account (Unverified / KYC Pending):**
    - **Email:** `reviewer_unverified@codcheck.app`
-   - **Password:** `Password123!`
+   - **Password:** [Enter the reviewer password configured in Google Play Console]
    - **Status:** Unverified Merchant
    - **Features to Test:** Demonstrates user onboarding and the Merchant KYC verification workflow required before submitting customer reports.
 
-3. **System Administrator Account:**
-   - **Email:** `admin@codcheck.app`
-   - **Password:** `Password123!`
-   - **Role:** Administrator
-   - **Features to Test:** Access the moderation dashboard to inspect and approve/reject reports and review merchant KYC applications.
+*(Note: Admin moderation features are demonstrated via recorded video upon request to avoid exposing administrative access credentials).*
 
 ---
 

@@ -114,7 +114,6 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
   }
 
   bool get _hasUnsavedChanges =>
-      _nameController.text.trim().isNotEmpty ||
       _phoneController.text.trim().isNotEmpty ||
       _amountController.text.trim().isNotEmpty ||
       _chatController.text.trim().isNotEmpty ||
@@ -262,7 +261,6 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
 
     final result = await widget.reportService.submit(
       ReportInput(
-        customerName: _nameController.text,
         phone: _phoneController.text,
         platform: _platform!,
         reason: _reason!,
@@ -352,22 +350,16 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     String originalText,
   ) {
     final resolvedPhone = phone ?? extractFirstThaiMobile(originalText);
-    if (name != null) _nameController.text = name.trim();
     if (resolvedPhone != null) _phoneController.text = resolvedPhone.trim();
 
-    final filled = [
-      if (name != null) 'ชื่อ',
-      if (resolvedPhone != null) 'เบอร์โทร',
-    ].join('และ');
     if (resolvedPhone != null) {
-      return _AiMessage(
-        'กรอก$filledให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
+      return const _AiMessage(
+        'กรอกเบอร์โทรให้แล้ว กรุณาตรวจสอบก่อนบันทึก',
         _AiTone.success,
       );
     }
-    final prefix = filled.isEmpty ? '' : 'กรอก$filledให้แล้ว ';
     return _AiMessage(
-      '$prefixพบเบอร์ $phoneMasked กรุณากรอกเบอร์เต็มเอง',
+      'พบเบอร์ $phoneMasked กรุณากรอกเบอร์เต็มเอง',
       _AiTone.warning,
     );
   }
@@ -577,41 +569,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
                           if (widget.checkService != null)
                             _buildAiCard(context),
 
-                          Text(
-                            '${strings.customerNameLabel} *',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? const Color(0xFFF1F5F9)
-                                  : const Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          TextFormField(
-                            key: const Key('report-name'),
-                            controller: _nameController,
-                            enabled: !_submitting,
-                            maxLength: maxCustomerNameLength,
-                            buildCounter: (
-                              _, {
-                              required currentLength,
-                              required isFocused,
-                              maxLength,
-                            }) => null,
-                            decoration: InputDecoration(
-                              hintText: strings.customerNameHint,
-                              prefixIcon: const Icon(
-                                Icons.person_outline,
-                                size: 18,
-                              ),
-                              filled: true,
-                              fillColor: fieldBg,
-                            ),
-                            textInputAction: TextInputAction.next,
-                            validator: (v) => validateCustomerName(v),
-                          ),
-                          const SizedBox(height: 14),
+
 
                           Text(
                             '${strings.phoneLabel} *',

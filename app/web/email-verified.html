@@ -142,11 +142,13 @@
       <h1>ยินดีต้อนรับสู่ COD Risk Shield</h1>
       <p class="subtext">อีเมลของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถเปิดแอปพลิเคชันและเข้าสู่ระบบเพื่อเริ่มใช้งานได้ทันที</p>
 
-      <a href="codcheck://login" class="action-btn" id="openAppBtn">เปิดแอป COD Risk Shield</a>
+      <div style="padding: 16px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 14px; font-size: 15px; font-weight: 500; color: #93C5FD; margin-bottom: 20px;">
+        📱 กรุณาสลับกลับไปเปิดแอปพลิเคชัน <strong>COD Risk Shield</strong> เพื่อเข้าสู่ระบบ
+      </div>
 
       <div class="info-box">
         💡 <strong>ขั้นตอนถัดไปในแอป:</strong><br>
-        1. กลับไปที่หน้าแอปพลิเคชัน <strong>COD Risk Shield</strong><br>
+        1. สลับกลับไปที่หน้าแอปพลิเคชัน <strong>COD Risk Shield</strong><br>
         2. เข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่คุณได้ลงทะเบียนไว้<br>
         3. ยื่นยืนยันตัวตนร้านค้า (Merchant KYC) ในหน้าการตั้งค่าเพื่อเริ่มรายงานลูกค้าที่มีปัญหา
       </div>
@@ -156,17 +158,5 @@
       </div>
     </div>
   </div>
-
-  <script>
-    // สคริปต์พยายามเปิดแอปอัตโนมัติหากเปิดผ่านเบราว์เซอร์บนมือถือ
-    window.onload = function() {
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        setTimeout(function() {
-          window.location.href = "codcheck://login";
-        }, 800);
-      }
-    };
-  </script>
 </body>
 </html>
