@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ศูนย์รับเรื่องโต้แย้งและใช้สิทธิเจ้าของข้อมูล (Customer Dispute Portal) — COD Customer Check</title>
+  <title>ศูนย์รับเรื่องโต้แย้งและใช้สิทธิเจ้าของข้อมูล (Customer Dispute Portal) — COD Risk Shield</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -223,13 +223,13 @@
       </div>
 
       <p>
-        แอปพลิเคชัน <strong>COD Customer Check</strong> มีวัตถุประสงค์เพื่อป้องกันการปฏิเสธรับพัสดุเก็บเงินปลายทาง (COD Fraud Prevention) โดยยึดหลักการลดข้อมูลส่วนบุคคลให้เหลือน้อยที่สุด (Data Minimization):
+        แอปพลิเคชัน <strong>COD Risk Shield</strong> มีวัตถุประสงค์เพื่อป้องกันการปฏิเสธรับพัสดุเก็บเงินปลายทาง (COD Fraud Prevention) โดยยึดหลักการลดข้อมูลส่วนบุคคลให้เหลือน้อยที่สุด (Data Minimization):
       </p>
 
       <div class="notice-box">
         🛡️ <strong>นโยบายความเป็นส่วนตัวและความปลอดภัยของข้อมูล:</strong>
         <ul style="margin-left: 20px; margin-top: 6px;">
-          <li>ระบบ<strong>ไม่จัดเก็บเบอร์โทรศัพท์จริง</strong> ข้อมูลทั้งหมดถูกแปลงเป็น One-Way Hash (SHA-256 ร่วมกับ Secret Salt) ทันที</li>
+          <li>ระบบ<strong>ไม่จัดเก็บเบอร์โทรศัพท์จริง</strong> ข้อมูลทั้งหมดถูกแปลงเป็น One-Way Hash (HMAC-SHA256 ด้วย Server Secret Key) ทันที</li>
           <li>ระบบ<strong>ไม่จัดเก็บชื่อจริงของลูกค้าปลายทาง</strong> ลงในฐานข้อมูลรายงาน</li>
           <li>หากท่านเห็นว่ามีข้อมูลรายงานที่ไม่ถูกต้อง ถูกแอบอ้างเบอร์โทรศัพท์ หรือประสงค์ขอลบข้อมูลตามสิทธิ PDPA ท่านสามารถยื่นเรื่องผ่านแบบฟอร์มนี้ได้โดยตรง</li>
         </ul>
