@@ -70,5 +70,7 @@
 	<string>ใช้เพื่อแนบภาพหลักฐานการรายงานลูกค้าและการยืนยันตัวตนร้านค้า</string>
 	<key>NSCameraUsageDescription</key>
 	<string>ใช้สำหรับถ่ายภาพหลักฐานการรายงานลูกค้าและการยืนยันตัวตนร้านค้า</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
