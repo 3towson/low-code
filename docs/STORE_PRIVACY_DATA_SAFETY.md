@@ -1,7 +1,7 @@
 # แนวทางการกรอก App Privacy (Apple) และ Data Safety (Google Play)
-## COD Customer Check (COD Risk Shield)
+## COD Risk Shield
 
-เอกสารนี้ใช้สำหรับกรอกข้อมูลใน **Apple App Store Connect** และ **Google Play Console** ให้สอดคล้องกับ [app/web/privacy-policy.html](file:///c:/Users/deku/low-code/app/web/privacy-policy.html) และการทำงานจริงของระบบ
+เอกสารนี้ใช้สำหรับกรอกข้อมูลใน **Apple App Store Connect** และ **Google Play Console** ให้สอดคล้องกับ [app/web/privacy-policy.html](../app/web/privacy-policy.html) และการทำงานจริงของระบบ
 
 ---
 
@@ -23,9 +23,13 @@
 | **ข้อมูลส่วนบุคคล (Personal Info)** | | | | | |
 | • ชื่อ (Name) | เก็บ (Collected) | ไม่แชร์ (No) | ไม่ (No) | การทำงานของแอป (App functionality), ป้องกันการฉ้อโกง (Fraud prevention) | ใช่ (ร้านค้า) / ไม่ (ชื่อลูกค้าปลายทาง) |
 | • ที่อยู่อีเมล (Email) | เก็บ (Collected) | ไม่แชร์ (No) | ไม่ (No) | การจัดการบัญชี (Account management), ป้องกันการฉ้อโกง | ใช่ (Linked to user) |
-| • หมายเลขโทรศัพท์ (Phone number) | เก็บ (Collected) | ไม่แชร์ (No) | ไม่ (No) | ติดต่อร้านค้า (Merchant KYC) *หมายเหตุ: เบอร์ลูกค้าไม่ได้เก็บจริง แปลงเป็นแฮช SHA-256 ทันที* | ใช่ (สำหรับเบอร์ร้านค้า) |
+| • หมายเลขโทรศัพท์ (Phone number) | เก็บ (Collected) | ไม่แชร์ (No) | ไม่ (No) | ติดต่อร้านค้า (Merchant KYC) *หมายเหตุ: เบอร์ลูกค้าไม่ได้เก็บจริง แปลงเป็นแฮช HMAC-SHA256 ด้วย Server Secret Key ทันที* | ใช่ (สำหรับเบอร์ร้านค้า) |
 | **รูปภาพและวิดีโอ (Photos and videos)** | | | | | |
 | • รูปภาพ (Photos) | เก็บ (Collected) | ไม่แชร์ (No) | ไม่ (No) | การทำงานของแอป, การยืนยันตัวตนร้านค้า (KYC), หลักฐานการรายงานลูกค้า | ใช่ (Linked to merchant user) |
+| **เนื้อหาที่ผู้ใช้สร้าง (User-generated content)** | | | | | |
+| • ข้อมูลรายงาน (Other user-generated content) | เก็บ (Collected) | ไม่แชร์ (No) | ไม่ (No) | ป้องกันการฉ้อโกง (Fraud prevention), รายละเอียดเหตุการณ์รายงานลูกค้า | ใช่ (Linked to merchant user) |
+| **ข้อมูลอุปกรณ์หรือรหัสระบุ (Device or other IDs)** | | | | | |
+| • IP Address (Guest Mode) | เก็บชั่วคราว (Collected) | ไม่แชร์ (No) | ใช่ (Ephemeral) | ป้องกันการฉ้อโกงและการใช้งานเกินโควตา (Rate limiting) แปลงเป็นแฮช HMAC-SHA256 ทันที ไม่เก็บ IP ดิบ | ไม่เชื่อมโยง (Not linked to user) |
 | **ข้อมูลแอปและประสิทธิภาพ (App info and performance)** | | | | | |
 | • บันทึกข้อขัดข้อง (Crash logs) | ไม่เก็บ (No) | ไม่แชร์ (No) | — | — | — |
 

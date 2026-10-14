@@ -12,15 +12,15 @@
 | **Package Name / Application ID (Android)** | `com.codcheck.app` | ตั้งค่าใน `android/app/build.gradle.kts` |
 | **Bundle Identifier (iOS)** | `com.codcheck.app` | ตั้งค่าใน `Runner.xcodeproj` และ `Info.plist` |
 | **Target Device Family (iOS)** | `1` (iPhone Only) | เวอร์ชันแรกจำกัดเฉพาะ iPhone เพื่อตัดภาระภาพหน้าจอและการทดสอบบน iPad |
-| **Target SDK (Android)** | `36` (Android 15) | ผ่านเกณฑ์ข้อบังคับ Google Play (บังคับ target SDK 36 ตั้งแต่ 31 ส.ค. 2026) |
+| **Target SDK (Android)** | `36` (Android 16) | ผ่านเกณฑ์ข้อบังคับ Google Play (บังคับ target SDK 36 ตั้งแต่ 31 ส.ค. 2026) |
 | **Min SDK** | Android: `21` (5.0) / iOS: `15.0` | ครอบคลุมผู้ใช้อุปกรณ์ส่วนใหญ่ |
-| **Version** | `1.0.0+1` | กำหนดใน `pubspec.yaml` (ต้องเพิ่มเลข build เช่น `+2`, `+3` ทุกครั้งที่อัปโหลดไฟล์ใหม่) |
+| **Version** | `1.0.1+2` | กำหนดใน `pubspec.yaml` (ต้องเพิ่มเลข build เช่น `+2`, `+3` ทุกครั้งที่อัปโหลดไฟล์ใหม่) |
 
 ---
 
 ## 2. การตั้งค่าไอคอน (App Icons)
 
-- ภาพต้นฉบับอยู่ที่: [app/assets/icon/app_icon.png](file:///c:/Users/deku/low-code/app/assets/icon/app_icon.png) (ขนาด 1024×1024, 24bpp RGB, **ไม่มี alpha channel** ตามเกณฑ์ Apple App Store)
+- ภาพต้นฉบับอยู่ที่: [app/assets/icon/app_icon.png](../app/assets/icon/app_icon.png) (ขนาด 1024×1024, 24bpp RGB, **ไม่มี alpha channel** ตามเกณฑ์ Apple App Store)
 - ปลั๊กอิน: `flutter_launcher_icons`
 - หากต้องการอัปเดตไอคอนในอนาคต:
   1. วางไฟล์ใหม่ที่ `app/assets/icon/app_icon.png` (1024×1024)
@@ -52,7 +52,7 @@ keytool -genkey -v -keystore app/upload-keystore.jks -keyalg RSA -keysize 2048 -
 *(เก็บรหัสผ่าน `storePassword` และ `keyPassword` ไว้ในที่ปลอดภัย และสำรองไฟล์ `upload-keystore.jks` ไว้นอกโฟลเดอร์ git เสมอ)*
 
 ### 4.2 สร้างไฟล์ `android/key.properties`
-คัดลอกไฟล์ [app/android/key.properties.example](file:///c:/Users/deku/low-code/app/android/key.properties.example) เป็น `app/android/key.properties`:
+คัดลอกไฟล์ [app/android/key.properties.example](../app/android/key.properties.example) เป็น `app/android/key.properties`:
 ```properties
 storePassword=รหัสผ่านที่ตั้งตอนรัน_keytool
 keyPassword=รหัสผ่าน_alias

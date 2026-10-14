@@ -22,10 +22,10 @@
 | P0-6 | Postgres Rate Limiting (Guest / User) | `scripts/test_p0_6.ts` | 7 | 7 |
 | P2 | Offline Fonts, Discard Confirm, Admin Audit Logs | `report_customer_page_test.dart` + `merchant_kyc_test.dart` + `admin_service_test.dart` | 4 | 4 |
 | 11 | End-to-End ผ่าน Edge Functions จริง | `scripts/e2e_test.ts` | 12 | 12 |
-| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **220** | **220 (100%)** |
+| | **Flutter Test Suite รวมทั้งหมด** | `cd app && flutter test` | **246** | **246 (100%)** |
 | | **Automated Backend & Script Tests** | Deno & PostgreSQL | **160+** | **160+ (100%)** |
 
-`flutter test` ทั้งโปรเจกต์: **220/220 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
+`flutter test` ทั้งโปรเจกต์: **246/246 ผ่าน 100%** และ `flutter analyze`: **No issues found (100% สะอาด)**
 
 ---
 

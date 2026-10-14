@@ -7,7 +7,7 @@
 
 ### 1. App Access Instructions for Google Play Reviewers
 
-**Login Required:** Yes, part of the app requires login for merchant fraud reporting, while customer COD delivery risk checking is accessible to all users (including Guest Mode).
+**Login Required:** Yes, part of the app requires login for merchant fraud reporting, while customer COD delivery risk checking is accessible to all users (including Guest Mode with a quota of 20 checks and 5 AI text extractions per day per IP, resetting 24 hours from the first check).
 
 #### Test Account Credentials:
 *(Please provide the actual password securely in Google Play Console "App access" instructions; do not commit passwords to source control)*
@@ -31,7 +31,7 @@
 ### 2. Data Safety & Privacy Disclosures
 
 - **No Raw Phone Numbers Stored:**
-  Phone numbers are processed ephemerally on Edge Functions and immediately converted into an irreversible salted SHA-256 hash (`phone_hash`). No raw phone numbers are ever saved to the database.
+  Phone numbers are processed ephemerally on Edge Functions and immediately converted into an irreversible HMAC-SHA256 hash (`phone_hash`) using a server-side secret key. No raw phone numbers are ever saved to the database.
 
 - **No Customer Personal Names Stored:**
   Customer names are not stored in the database (`customer_name` is NULL in all records).

@@ -2,11 +2,11 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://3towson.github.io/low-code/)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-[![Target SDK](https://img.shields.io/badge/Android%20Target%20SDK-36%20(Android%2015)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
+[![Target SDK](https://img.shields.io/badge/Android%20Target%20SDK-36%20(Android%2016)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
 [![Supabase](https://img.shields.io/badge/Supabase-Cloud-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Google Gemini AI](https://img.shields.io/badge/Google%20Gemini-AI-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev)
 [![TypeScript Deno](https://img.shields.io/badge/TypeScript-Deno-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://deno.land)
-[![Tests Passing](https://img.shields.io/badge/Tests-244%20Flutter%20%7C%20160%2B%20Backend%20Passed-brightgreen?style=for-the-badge&logo=checkmarx)](docs/TEST_REPORT.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-246%20Flutter%20%7C%20160%2B%20Backend%20Passed-brightgreen?style=for-the-badge&logo=checkmarx)](docs/TEST_REPORT.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 > **แอปพลิเคชัน Multi-platform (Web, Android, iOS, Desktop) สำหรับร้านค้าออนไลน์รายย่อย เพื่อใช้ตรวจสอบความเสี่ยงของลูกค้าปลายทางแบบเก็บเงินปลายทาง (Cash on Delivery: COD) แจ้งเตือนประวัติการปฏิเสธรับสินค้าหรือพัสดุตีกลับ ช่วยลดต้นทุนค่าขนส่งและปกป้องธุรกิจจากออเดอร์แกล้งสั่ง พัฒนาตามมาตรฐานความปลอดภัยและความเป็นส่วนตัวสูงสุด สอดคล้องตามเกณฑ์ Apple App Store Review Guidelines, Google Play Data Safety และ พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)**
@@ -40,7 +40,7 @@
 - รองรับทั้งการค้นหาด้วยเบอร์โทรศัพท์โดยตรง หรือ **วางข้อความออเดอร์ดิบ (Raw Order Text)** จากแชทลูกค้า
 - **Smart Order Parser & Gemini AI Extract**: ตัดแบ่งหลายออเดอร์พร้อมกันอัตโนมัติ (Multi-order Splitting) และสกัดเบอร์โทรศัพท์ด้วย **Google Gemini AI API** พร้อมระบบตรวจจับเบอร์ด้วย Regular Expression แบบ Fallback ทันทีเมื่อออฟไลน์หรือ AI ไม่พร้อมใช้งาน
 - แสดงผลระดับความเสี่ยงอย่างชัดเจน (**เขียว / เหลือง / แดง**) พร้อมคำแนะนำการจัดส่ง จำนวนครั้ง และช่วงเวลาที่เคยถูกรายงาน
-- ใช้งานโหมดผู้เยี่ยมชม (Guest Mode) ได้ทันที พร้อมระบบ **Postgres Rate Limiting** ป้องกันการขูดข้อมูล (Scraping)
+- ใช้งานโหมดผู้เยี่ยมชม (Guest Mode) ได้ทันที (โควตาตรวจรวม 20 ครั้ง/วัน และ AI สกัดข้อความ 5 ครั้ง/วัน ต่อ IP รีเซ็ตเมื่อครบ 24 ชั่วโมง) พร้อมระบบ **Postgres Rate Limiting** ป้องกันการขูดข้อมูล (Scraping)
 
 ### 2. 🛡️ สถาปัตยกรรม Privacy-First ไร้การเก็บเบอร์โทรจริง (Zero Raw Phone Storage)
 - **ไม่เก็บเบอร์โทรศัพท์จริงและชื่อลูกค้าลงฐานข้อมูลโดยเด็ดขาด** เพื่อสอดคล้องตามเกณฑ์ Apple Guideline 5.1.1(viii) และ PDPA
@@ -66,12 +66,12 @@
 - **Admin Audit Logs**: ตารางบันทึกประวัติการกระทำของแอดมินทุกขั้นตอน ตรวจสอบย้อนหลังได้อย่างโปร่งใส
 
 ### 6. 🧹 ระบบล้างข้อมูลและหลักฐานเก่าอัตโนมัติ (Automated Evidence Retention Purge)
-- ฟังก์ชัน **`purge-old-evidence`** ทำงานผ่าน Scheduled Cron รันทุกวัน เพื่อลบภาพหลักฐานและรายงานที่หมดอายุเกิน 12 เดือนโดยอัตโนมัติ สอดคล้องตามกฎหมาย PDPA และช่วยประหยัดพื้นที่จัดเก็บข้อมูล
+- ฟังก์ชัน **`purge-old-evidence`** ทำงานผ่าน Scheduled Cron (pg_cron + pg_net ผ่าน Supabase Vault) รันทุกวันเวลา 03:00 น. เพื่อลบภาพหลักฐานที่เก่ากว่า 12 เดือน และลบแถว `cod_reports` ที่เก่ากว่า 24 เดือนโดยอัตโนมัติ สอดคล้องตามกฎหมาย PDPA และช่วยประหยัดพื้นที่จัดเก็บข้อมูล
 
 ### 7. 📱 ฟังก์ชันและมาตรฐานเพื่อการปล่อยขึ้น App Store & Google Play
 - **ระบบลบบัญชีผู้ใช้ถาวร (Permanent Account Deletion)** ในแอปและ Edge Function สอดคล้องตามเกณฑ์ Apple Guideline 5.1.1(v) และ Google Play Data Safety
-- **ระบบกู้คืนรหัสผ่าน 3 ขั้นตอน (Password Recovery Flow)**: ส่งอีเมล OTP / ลิงก์ Reset Token รองรับทั้ง Mobile Deep Link และหน้า Landing Page (`reset-password.html`, `email-verified.html`)
-- **Android Target SDK 36 (Android 15)** พร้อมการตั้งค่า Package Name `com.codcheck.app`, Release Keystore และ ProGuard
+- **ระบบกู้คืนรหัสผ่าน 3 ขั้นตอน (Password Recovery Flow)**: ส่งอีเมล OTP 6 หลักสำหรับยืนยันการตั้งรหัสผ่านใหม่ทางอีเมลที่ลงทะเบียน พร้อมหน้า Landing Page (`reset-password.html`, `email-verified.html`)
+- **Android Target SDK 36 (Android 16)** พร้อมการตั้งค่า Package Name `com.codcheck.app`, Release Keystore และการย่อ/Obfuscate โค้ดผ่าน R8 ตามค่าเริ่มต้นของ Flutter
 - **Offline Font Bundling**: ฝังฟอนต์ `Prompt` ในแอป ทำงานได้สมบูรณ์แม้ไม่มีการเชื่อมต่อเครือข่ายภายนอก
 - **Discard Confirmation Dialogs**: แจ้งเตือนยืนยันก่อนปิดหน้าจอเมื่อมีข้อมูลค้าง ป้องกันข้อมูลสูญหาย
 
@@ -388,7 +388,7 @@ deno run --allow-net --allow-read --allow-env scripts/e2e_test.ts
 | **Edge Functions & Rate Limiting** | ทดสอบ `check-customer`, `report-customer`, `delete-account`, `purge-old-evidence` และ Rate Limit | ✅ ผ่าน 35/35 |
 | **Merchant KYC & Moderation** | การยื่น KYC, แอดมินอนุมัติ/ปฏิเสธร้านค้า, การระงับร้านค้า และ Anti-KYC Bypass | ✅ ผ่าน 25/25 |
 | **Account & Password Recovery** | การลบบัญชีผู้ใช้ถาวร, การกู้คืนรหัสผ่าน 3 ขั้นตอน, Deep Link Handling | ✅ ผ่าน 30/30 |
-| **Flutter UI & Widgets** | CheckPanel, RiskCard, ReportForm, Settings, Localization, AdminDashboard | ✅ ผ่าน 244/244 |
+| **Flutter UI & Widgets** | CheckPanel, RiskCard, ReportForm, Settings, Localization, AdminDashboard | ✅ ผ่าน 246/246 |
 | **End-to-End Flow** | ตรวจสอบวงจรจริง: สมัครร้านค้า -> KYC -> ตรวจสอบเบอร์ -> ส่งรายงาน -> ตรวจสอบซ้ำ | ✅ ผ่าน 12/12 |
 
 ---
@@ -397,10 +397,10 @@ deno run --allow-net --allow-read --allow-env scripts/e2e_test.ts
 
 | รายการความพร้อม | มาตรฐานที่รองรับ | รายละเอียดการดำเนินงาน |
 | :--- | :--- | :--- |
-| **Apple Guideline 5.1.1(viii)** | Data Minimization | ไม่เก็บเบอร์โทรจริง ไม่เก็บชื่อลูกค้า ใช้ HMAC-SHA256 แบบ Salting และ Mask ข้อมูลเสมอ |
+| **Apple Guideline 5.1.1(viii)** | Data Minimization | ไม่เก็บเบอร์โทรจริง ไม่เก็บชื่อลูกค้า ใช้ HMAC-SHA256 ด้วย Server Secret Key และ Mask ข้อมูลเสมอ |
 | **Apple Guideline 5.1.1(v)** | Account Deletion | มีปุ่มลบบัญชีถาวรในแอป ทำงานผ่าน Edge Function ลบข้อมูลส่วนตัวและ Soft Delete ให้สถิติรวมยังถูกต้อง |
 | **Apple Guideline 1.2** | UGC Safety | ร้านค้าต้องผ่าน KYC ก่อนรายงานได้, รายงานต้องผ่านการตรวจจากแอดมิน, มีระบบระงับร้านค้าที่ทำผิดกฎ |
-| **Google Play Target SDK** | Target SDK 36 (Android 15) | ตั้งค่าใน `build.gradle.kts` ผ่านเกณฑ์บังคับของ Google Play ในปี 2026 เรียบร้อย |
+| **Google Play Target SDK** | Target SDK 36 (Android 16) | ตั้งค่าใน `build.gradle.kts` ผ่านเกณฑ์บังคับของ Google Play ในปี 2026 เรียบร้อย |
 | **Google Play Data Safety** | Data Safety Section | จัดทำเอกสารสรุปประเภทข้อมูลและการเข้ารหัสใน [docs/STORE_PRIVACY_DATA_SAFETY.md](docs/STORE_PRIVACY_DATA_SAFETY.md) |
 | **Reviewer Credentials** | Demo Accounts | สคริปต์ `seed_reviewer_accounts.ts` จัดเตรียมบัญชีพร้อมทดสอบสำหรับทีมงาน Review |
 | **Offline Performance** | Offline Font Bundling | ฝังฟอนต์ `Prompt` ในตัวแอป ใช้งานได้แม้อยู่ในพื้นที่สัญญาณอินเทอร์เน็ตจำกัด |

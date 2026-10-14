@@ -4,6 +4,8 @@
 supabase/.temp/
 supabase/.branches/
 app/build/
+app/android/build/
+.gradle/
 key.properties
 *.jks
 *.keystore

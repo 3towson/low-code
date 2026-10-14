@@ -1,5 +1,5 @@
 # Apple App Store Review Notes (Guideline 5.1.1(viii) Compliance)
-## App: COD Customer Check (COD Risk Shield)
+## App: COD Risk Shield
 
 > **Instructions for Submitter:** Copy the content below into the **"App Review Information — Notes"** field in Apple App Store Connect when submitting the app for review.
 
@@ -9,7 +9,7 @@
 
 **Dear Apple App Review Team,**
 
-Thank you for reviewing **COD Customer Check (COD Risk Shield)**.
+Thank you for reviewing **COD Risk Shield**.
 
 We would like to proactively provide technical and operational details regarding how our app strictly complies with **App Store Review Guideline 5.1.1(viii)** (*Data Collection and Storage — Compiling Personal Information*), Privacy Best Practices, and data minimization standards.
 
@@ -18,7 +18,7 @@ We would like to proactively provide technical and operational details regarding
 ### 1. Purpose of the Application (Fraud Prevention)
 In Southeast Asia, **Cash on Delivery (COD)** is a predominant payment method for independent online merchants. However, sellers face severe fraud and financial losses from fraudulent orders, fake addresses, and intentional parcel refusals (incurring double logistics fees and lost perishable goods).
 
-COD Customer Check is a risk-mitigation tool designed exclusively to help verified merchants evaluate COD delivery risks before dispatching goods.
+COD Risk Shield is a risk-mitigation tool designed exclusively to help verified merchants evaluate COD delivery risks before dispatching goods.
 
 ---
 
@@ -28,7 +28,7 @@ To respect the privacy of end-consumers and avoid accumulating personal informat
 
 #### A. Zero Storage of Raw Phone Numbers (One-Way Cryptographic Hashing)
 - The app **NEVER stores actual customer phone numbers** in the database.
-- When an order is checked or reported, the phone number is processed ephemerally on a secure serverless Edge Function and immediately converted into an irreversible **SHA-256 cryptographic hash salted with a server-side secret key** (`phone_hash`).
+- When an order is checked or reported, the phone number is processed ephemerally on a secure serverless Edge Function and immediately converted into an irreversible **HMAC-SHA256 cryptographic hash using a server-side secret key** (`phone_hash`).
 - Only this irreversible hash is queried or referenced. Neither the system administrators nor other merchants can ever reverse the hash to recover the real phone number.
 
 #### B. Zero Storage of Customer Names
@@ -44,8 +44,9 @@ To respect the privacy of end-consumers and avoid accumulating personal informat
 - Reports submitted by merchants are **NOT published immediately**.
 - Every report is held in a `pending` state and requires manual review by an administrator who inspects the uploaded transaction/order evidence before the report can contribute to the risk score.
 
-#### E. Automatic 12-Month Data Expiration
+#### E. Automatic Data Expiration & Retention
 - Reports contribute to risk evaluation only within a **12-month rolling window**. Older records expire automatically and do not impact risk scores.
+- Evidence images are permanently deleted from secure storage after **12 months**, and report rows in the database are permanently purged after **24 months** via automated daily background jobs.
 
 ---
 
@@ -99,6 +100,6 @@ To assist with your testing, please use the following pre-configured credentials
 If you require any further technical clarifications or demonstration, please do not hesitate to contact us.
 
 Warm regards,  
-**COD Customer Check Team**  
+**COD Risk Shield Team**  
 codriskshield.support@gmail.com
 
