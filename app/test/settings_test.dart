@@ -279,10 +279,10 @@ void main() {
       expect(find.byKey(const Key('settings-contact-email-button')),
           findsOneWidget);
       expect(find.byKey(const Key('settings-contact-line-button')),
-          findsOneWidget);
+          findsNothing);
       expect(find.byKey(const Key('settings-terms-button')), findsOneWidget);
       expect(find.text(AppUrls.supportEmail), findsOneWidget);
-      expect(find.text('@codcheck'), findsOneWidget);
+      expect(find.text('@codcheck'), findsNothing);
       expect(find.text('ติดต่อเรา & แจ้งปัญหา'), findsOneWidget);
     });
   });

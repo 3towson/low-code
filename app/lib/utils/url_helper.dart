@@ -23,9 +23,7 @@ class AppUrls {
   static const String supportEmailMailto =
       'mailto:codriskshield.support@gmail.com?subject=COD%20Risk%20Shield%20Support';
 
-  static const String supportLineUrl = 'https://line.me/R/ti/p/@codcheck';
 
-  static const String supportLineId = '@codcheck';
 }
 
 /// Helper function สำหรับเปิด URL ภายนอกอย่างปลอดภัย
