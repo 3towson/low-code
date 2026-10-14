@@ -124,3 +124,26 @@ flutter build ipa --release
    - HTTP Method: `POST`
    - Headers: ใส่ `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
 4. ทดสอบกด **Invoke** เพื่อให้มั่นใจว่าฟังก์ชันทำงานและตอบกลับ `200 OK`
+
+---
+
+## 8. จัดการคำโต้แย้ง (Dispute Resolution)
+
+เมื่อเจ้าของหมายเลขโทรศัพท์ยื่นคำร้องขอโต้แย้งผ่านหน้าเว็บ Dispute Portal (`dispute.html`) หรือส่งคำร้องขอใช้สิทธิลบข้อมูล (Right to Erasure) ตามกฎหมาย PDPA มายังอีเมลฝ่ายสนับสนุน ผู้ดูแลระบบสามารถถอนรายงานของเบอร์นั้นออกจากระบบได้ทันทีผ่านสคริปต์ความปลอดภัยสูง (Zero-Knowledge / Data Minimization):
+
+### คำสั่งดำเนินการ:
+```bash
+deno run --allow-net --allow-read --allow-env scripts/withdraw_reports.ts <หมายเลขโทรศัพท์>
+```
+*ตัวอย่าง:*
+```bash
+deno run --allow-net --allow-read --allow-env scripts/withdraw_reports.ts 0812345678
+```
+
+### การทำงานด้านความปลอดภัยและความเป็นส่วนตัว:
+1. สคริปต์จะนำหมายเลขโทรศัพท์มาแปลงให้อยู่ในรูปแบบมาตรฐานด้วย `normalizeThaiPhone`
+2. เข้ารหัสด้วย `hashPhone` (HMAC-SHA256) โดยใช้ `PHONE_HASH_SECRET` จากไฟล์ `.env`
+3. เปลี่ยนสถานะของรายงานทั้งหมดใน `cod_reports` ที่เป็น `active` หรือ `pending` ให้กลายเป็น `rejected` พร้อมระบุเหตุผล `reject_reason = 'ถอนตามคำโต้แย้งของเจ้าของข้อมูล'`
+4. บันทึกประวัติการถอนลงตาราง `admin_audit_logs` (action: `withdraw_by_dispute`) โดยระบุเฉพาะจำนวนรายงานที่ถูกถอน
+5. **ข้อกำหนดความปลอดภัย:** สคริปต์จะไม่แสดงหรือบันทึกหมายเลขโทรศัพท์จริงหรือค่าแฮชออกทางหน้าจอหรือ log ใด ๆ ทั้งสิ้น โดยจะแสดงเพียงจำนวนรายงานที่ถูกถอนเท่านั้น
+
