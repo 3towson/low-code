@@ -112,9 +112,11 @@ Deno.serve(async (req: Request) => {
     let identifier: string;
     if (isGuest) {
       const ipSecret =
-        Deno.env.get("IP_HASH_SECRET") ??
-        Deno.env.get("PHONE_HASH_SECRET") ??
-        "codriskshield_ip_secret";
+        Deno.env.get("IP_HASH_SECRET") ||
+        Deno.env.get("PHONE_HASH_SECRET");
+      if (!ipSecret) {
+        throw new Error("IP_HASH_SECRET หรือ PHONE_HASH_SECRET ไม่ได้ถูกกำหนด");
+      }
       identifier = await hashIp(clientIp, ipSecret);
     } else {
       identifier = userId!;

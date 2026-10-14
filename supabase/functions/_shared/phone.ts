@@ -41,11 +41,11 @@ export function maskPhone(normalized: string): string {
 
 // HMAC-SHA256(secret, ip) คืนค่าเป็น hex ตัวเล็ก 64 ตัวอักษร สำหรับ key ของ rate limit (P1-6)
 export async function hashIp(ip: string, secret: string): Promise<string> {
-  const effectiveSecret = secret || "codriskshield_ip_default_secret";
+  if (!secret) throw new Error("IP_HASH_SECRET หรือ PHONE_HASH_SECRET ว่าง");
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
-    enc.encode(effectiveSecret),
+    enc.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],

@@ -92,5 +92,14 @@ Deno.test("hashIp: คืนค่า hex 64 ตัวอักษร และ�
   // IP ต่างกัน -> hash ต่างกัน
   const hDiffIp = await hashIp("192.168.1.101", SECRET_A);
   assertNotEquals(h, hDiffIp);
+
+  // secret ว่าง -> ต้อง throw
+  let emptyErr = false;
+  try {
+    await hashIp(ip, "");
+  } catch {
+    emptyErr = true;
+  }
+  assert(emptyErr, "secret ว่างต้อง throw");
 });
 
