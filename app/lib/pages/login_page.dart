@@ -543,7 +543,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                       ),
                                       Text(
-                                        ' และ ',
+                                        strings.andConjunction,
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: isDark

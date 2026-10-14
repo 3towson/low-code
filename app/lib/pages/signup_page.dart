@@ -201,7 +201,7 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         Text(
-                          ' และ ',
+                          context.strings.andConjunction,
                           style: TextStyle(
                             fontSize: 12,
                             color: app.muted,

@@ -25,6 +25,17 @@ class FakeAuthService implements AuthService {
     lastResetEmail = email;
   }
 
+  int signUpCalls = 0;
+
+  @override
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String shopName,
+  }) async {
+    signUpCalls++;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError(invocation.memberName.toString());
@@ -111,5 +122,45 @@ void main() {
     expect(auth.lastResetEmail, 'user@example.com');
     expect(find.byKey(const Key('reset-password-code-field')), findsOneWidget);
     expect(find.byKey(const Key('reset-password-email-notice')), findsOneWidget);
+  });
+
+  testWidgets(
+      'แท็บสมัครสมาชิก: ไม่สามารถสมัครได้ถ้าไม่ติ๊ก checkbox Terms และ Privacy',
+      (tester) async {
+    final auth = FakeAuthService();
+    await tester.pumpWidget(MaterialApp(home: LoginPage(authService: auth)));
+
+    // สลับไปยังแท็บสมัครสมาชิก
+    await tester.tap(find.byKey(const Key('auth-tab-signup')));
+    await tester.pumpAndSettle();
+
+    // กรอกข้อมูลฟอร์มสมัคร: ชื่อร้าน, อีเมล, รหัสผ่าน
+    final fields = find.byType(TextFormField);
+    expect(fields, findsNWidgets(3));
+    await tester.enterText(fields.at(0), 'ร้านค้าของฉัน');
+    await tester.enterText(fields.at(1), 'shop@example.com');
+    await tester.enterText(fields.at(2), 'password123');
+
+    // ไม่ติ๊ก checkbox แล้วกดปุ่มสมัครสมาชิก
+    await tester.tap(find.byKey(const Key('auth-submit-button')));
+    await tester.pumpAndSettle();
+
+    // ต้องแสดงข้อความแจ้งเตือน และไม่เรียก signUp
+    expect(
+      find.text('กรุณายอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก'),
+      findsOneWidget,
+    );
+    expect(auth.signUpCalls, 0);
+
+    // ติ๊ก checkbox ยอมรับข้อกำหนด
+    await tester.tap(find.byKey(const Key('login-privacy-checkbox')));
+    await tester.pumpAndSettle();
+
+    // กดปุ่มสมัครสมาชิกอีกครั้ง
+    await tester.tap(find.byKey(const Key('auth-submit-button')));
+    await tester.pumpAndSettle();
+
+    // ต้องเรียก signUp สำเร็จ 1 ครั้ง
+    expect(auth.signUpCalls, 1);
   });
 }

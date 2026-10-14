@@ -103,6 +103,7 @@ class AppStrings {
     required this.deleteAccountFailed,
     required this.privacyPolicy,
     required this.termsOfUse,
+    required this.andConjunction,
     required this.agreeToPrivacyPolicy,
     required this.privacyPolicyRequired,
     required this.termsAndPrivacyRequired,
@@ -231,6 +232,7 @@ class AppStrings {
   final String deleteAccountFailed;
   final String privacyPolicy;
   final String termsOfUse;
+  final String andConjunction;
   final String agreeToPrivacyPolicy;
   final String privacyPolicyRequired;
   final String termsAndPrivacyRequired;
@@ -397,6 +399,7 @@ class AppStrings {
     deleteAccountFailed: 'ลบบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
     privacyPolicy: 'นโยบายความเป็นส่วนตัว',
     termsOfUse: 'ข้อกำหนดการใช้งาน',
+    andConjunction: ' และ ',
     agreeToPrivacyPolicy: 'ฉันได้อ่านและยอมรับ',
     privacyPolicyRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก',
     termsAndPrivacyRequired:
@@ -534,6 +537,7 @@ class AppStrings {
     deleteAccountFailed: 'Failed to delete account. Please try again.',
     privacyPolicy: 'Privacy Policy',
     termsOfUse: 'Terms of Use',
+    andConjunction: ' and ',
     agreeToPrivacyPolicy: 'I have read and agree to the',
     privacyPolicyRequired: 'Please agree to the Privacy Policy before signing up',
     termsAndPrivacyRequired:
