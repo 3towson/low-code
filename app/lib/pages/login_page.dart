@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_tab == AuthTab.signup && !_acceptedPrivacy) {
-      setState(() => _error = context.strings.privacyPolicyRequired);
+      setState(() => _error = context.strings.termsAndPrivacyRequired);
       return;
     }
 
@@ -519,6 +519,31 @@ class _LoginPageState extends State<LoginPage> {
                                     children: [
                                       Text(
                                         '${strings.agreeToPrivacyPolicy} ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        key: const Key('login-terms-link'),
+                                        onTap: () => launchExternalUrl(
+                                          AppUrls.terms,
+                                        ),
+                                        child: Text(
+                                          strings.termsOfUse,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF3B82F6),
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        ' และ ',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: isDark

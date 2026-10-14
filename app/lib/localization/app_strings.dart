@@ -102,8 +102,12 @@ class AppStrings {
     required this.deleteAccountSuccess,
     required this.deleteAccountFailed,
     required this.privacyPolicy,
+    required this.termsOfUse,
     required this.agreeToPrivacyPolicy,
     required this.privacyPolicyRequired,
+    required this.termsAndPrivacyRequired,
+    required this.certifyTruth,
+    required this.certifyTruthRequired,
     required this.aboutSection,
     required this.disputePortal,
     required this.contactSection,
@@ -226,8 +230,12 @@ class AppStrings {
   final String deleteAccountSuccess;
   final String deleteAccountFailed;
   final String privacyPolicy;
+  final String termsOfUse;
   final String agreeToPrivacyPolicy;
   final String privacyPolicyRequired;
+  final String termsAndPrivacyRequired;
+  final String certifyTruth;
+  final String certifyTruthRequired;
   final String aboutSection;
   final String disputePortal;
   final String contactSection;
@@ -388,8 +396,14 @@ class AppStrings {
     deleteAccountSuccess: 'ลบบัญชีผู้ใช้สำเร็จ',
     deleteAccountFailed: 'ลบบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
     privacyPolicy: 'นโยบายความเป็นส่วนตัว',
+    termsOfUse: 'ข้อกำหนดการใช้งาน',
     agreeToPrivacyPolicy: 'ฉันได้อ่านและยอมรับ',
     privacyPolicyRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก',
+    termsAndPrivacyRequired:
+        'กรุณายอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก',
+    certifyTruth: 'ข้าพเจ้ารับรองว่าข้อมูลและหลักฐานเป็นความจริง',
+    certifyTruthRequired:
+        'กรุณารับรองว่าข้อมูลและหลักฐานเป็นความจริงก่อนส่งรายงาน',
     aboutSection: 'เกี่ยวกับและนโยบาย',
     disputePortal: 'ศูนย์รับเรื่องโต้แย้งข้อมูล (Dispute Portal)',
     contactSection: 'ติดต่อเรา & แจ้งปัญหา',
@@ -519,8 +533,14 @@ class AppStrings {
     deleteAccountSuccess: 'Account deleted successfully',
     deleteAccountFailed: 'Failed to delete account. Please try again.',
     privacyPolicy: 'Privacy Policy',
+    termsOfUse: 'Terms of Use',
     agreeToPrivacyPolicy: 'I have read and agree to the',
     privacyPolicyRequired: 'Please agree to the Privacy Policy before signing up',
+    termsAndPrivacyRequired:
+        'Please accept the Terms of Use and Privacy Policy before signing up',
+    certifyTruth: 'I certify that this information and evidence are truthful',
+    certifyTruthRequired:
+        'Please certify that the information and evidence are truthful before submitting',
     aboutSection: 'About & Legal',
     disputePortal: 'Customer Dispute Portal',
     contactSection: 'Support & Contact',

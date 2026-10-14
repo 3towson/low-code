@@ -85,6 +85,7 @@ void main() {
 
       expect(find.byKey(const Key('login-privacy-checkbox')), findsNothing);
       expect(find.byKey(const Key('login-privacy-link')), findsNothing);
+      expect(find.byKey(const Key('login-terms-link')), findsNothing);
     });
 
     testWidgets('LoginPage - Signup tab requires privacy checkbox acceptance',
@@ -100,6 +101,7 @@ void main() {
       // Checkbox and link should now be visible
       expect(find.byKey(const Key('login-privacy-checkbox')), findsOneWidget);
       expect(find.byKey(const Key('login-privacy-link')), findsOneWidget);
+      expect(find.byKey(const Key('login-terms-link')), findsOneWidget);
 
       // Fill in signup fields: shop name, email, password
       final fields = find.byType(TextFormField);
@@ -112,7 +114,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should show warning banner and NOT call signUp
-      expect(find.text('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก'),
+      expect(
+          find.text(
+              'กรุณายอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก'),
           findsOneWidget);
       expect(auth.signUpCalls, 0);
 
@@ -143,6 +147,7 @@ void main() {
 
       expect(find.byKey(const Key('signup-privacy-checkbox')), findsOneWidget);
       expect(find.byKey(const Key('signup-privacy-link')), findsOneWidget);
+      expect(find.byKey(const Key('signup-terms-link')), findsOneWidget);
 
       // Fill valid credentials: shop name, email, password, confirm password
       final textFields = find.byType(TextFormField);
@@ -155,7 +160,9 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'สมัครสมาชิก'));
       await tester.pumpAndSettle();
 
-      expect(find.text('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก'),
+      expect(
+          find.text(
+              'กรุณายอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก'),
           findsOneWidget);
       expect(auth.signUpCalls, 0);
 

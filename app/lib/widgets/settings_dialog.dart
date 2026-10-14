@@ -336,6 +336,50 @@ class SettingsDialog extends StatelessWidget {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
+                  key: const Key('settings-terms-button'),
+                  onTap: () => launchExternalUrl(AppUrls.terms),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: app.neutralBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: app.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 18,
+                          color: colors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            strings.termsOfUse,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 16,
+                          color: app.muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
                   key: const Key('settings-dispute-portal-button'),
                   onTap: () => launchExternalUrl(AppUrls.disputePortal),
                   borderRadius: BorderRadius.circular(12),

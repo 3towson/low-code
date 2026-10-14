@@ -43,7 +43,7 @@ class _SignupPageState extends State<SignupPage> {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptedPrivacy) {
-      setState(() => _error = context.strings.privacyPolicyRequired);
+      setState(() => _error = context.strings.termsAndPrivacyRequired);
       return;
     }
 
@@ -182,6 +182,26 @@ class _SignupPageState extends State<SignupPage> {
                       children: [
                         Text(
                           '${context.strings.agreeToPrivacyPolicy} ',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: app.muted,
+                          ),
+                        ),
+                        GestureDetector(
+                          key: const Key('signup-terms-link'),
+                          onTap: () => launchExternalUrl(AppUrls.terms),
+                          child: Text(
+                            context.strings.termsOfUse,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF3B82F6),
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          ' และ ',
                           style: TextStyle(
                             fontSize: 12,
                             color: app.muted,

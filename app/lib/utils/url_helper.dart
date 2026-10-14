@@ -7,6 +7,9 @@ class AppUrls {
   static const String privacyPolicy =
       'https://3towson.github.io/low-code/privacy-policy.html';
 
+  static const String terms =
+      'https://3towson.github.io/low-code/terms.html';
+
   static const String accountDeletion =
       'https://3towson.github.io/low-code/delete-account.html';
 

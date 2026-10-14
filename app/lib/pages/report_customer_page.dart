@@ -87,6 +87,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
   ];
   final Map<EvidenceFile, String> _uploadedEvidencePaths = {};
   String? _evidenceError;
+  bool _certifiedTruth = false;
+  String? _certifiedTruthError;
   bool _submitting = false;
   bool _extracting = false;
   _AiMessage? _aiMessage;
@@ -107,6 +109,7 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
       _chatController.text.trim().isNotEmpty ||
       _otherPlatformController.text.trim().isNotEmpty ||
       _otherReasonController.text.trim().isNotEmpty ||
+      _certifiedTruth ||
       _selectedEvidences.isNotEmpty;
 
   Future<bool> _confirmDiscard() async {
@@ -197,7 +200,13 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
     } else {
       setState(() => _evidenceError = null);
     }
-    if (!formValid || _selectedEvidences.isEmpty) return;
+    if (!_certifiedTruth) {
+      setState(() => _certifiedTruthError =
+          context.strings.certifyTruthRequired);
+    } else {
+      setState(() => _certifiedTruthError = null);
+    }
+    if (!formValid || _selectedEvidences.isEmpty || !_certifiedTruth) return;
 
     setState(() => _submitting = true);
     final evidencePaths = <String>[];
@@ -273,6 +282,8 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
         _selectedEvidences.clear();
         _uploadedEvidencePaths.clear();
         _evidenceError = null;
+        _certifiedTruth = false;
+        _certifiedTruthError = null;
         _aiMessage = null;
       }
     });
@@ -826,6 +837,65 @@ class _ReportCustomerPageState extends State<ReportCustomerPage> {
 
                           const SizedBox(height: 16),
                           _buildEvidenceSection(context),
+
+                          const SizedBox(height: 16),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  key: const Key('report-certify-truth-checkbox'),
+                                  value: _certifiedTruth,
+                                  activeColor: const Color(0xFF2563EB),
+                                  onChanged: _submitting
+                                      ? null
+                                      : (val) => setState(() {
+                                          _certifiedTruth = val ?? false;
+                                          if (_certifiedTruth) {
+                                            _certifiedTruthError = null;
+                                          }
+                                        }),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: _submitting
+                                      ? null
+                                      : () => setState(() {
+                                          _certifiedTruth = !_certifiedTruth;
+                                          if (_certifiedTruth) {
+                                            _certifiedTruthError = null;
+                                          }
+                                        }),
+                                  child: Text(
+                                    strings.certifyTruth,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? const Color(0xFFE2E8F0)
+                                          : const Color(0xFF334155),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_certifiedTruthError != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              _certifiedTruthError!,
+                              key: const Key('report-certify-truth-error'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: app.danger,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
 
                           const SizedBox(height: 24),
 

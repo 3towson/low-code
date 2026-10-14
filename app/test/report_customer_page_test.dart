@@ -97,6 +97,10 @@ Future<void> _fillValid(WidgetTester tester,
   await _select(tester, 'report-platform', 'Shopee');
   await _select(tester, 'report-reason', 'ปฏิเสธรับสินค้า');
   await tester.enterText(find.byKey(const Key('report-amount')), '1,500');
+  await tester
+      .ensureVisible(find.byKey(const Key('report-certify-truth-checkbox')));
+  await tester.tap(find.byKey(const Key('report-certify-truth-checkbox')));
+  await tester.pumpAndSettle();
 }
 
 bool _buttonEnabled(WidgetTester tester) =>
@@ -114,6 +118,24 @@ void main() {
     expect(find.text('กรุณาเลือกเหตุผล'), findsOneWidget);
     expect(
         find.text('กรุณาแนบภาพแคปหน้าจอหลักฐาน (แชท/สลิป/ประวัติจัดส่ง)'),
+        findsOneWidget);
+    expect(
+        find.text('กรุณารับรองว่าข้อมูลและหลักฐานเป็นความจริงก่อนส่งรายงาน'),
+        findsOneWidget);
+    expect(service.inputs, isEmpty);
+  });
+
+  testWidgets('ไม่ได้ติ๊กรับรองความจริง แสดงข้อความเตือนและไม่ส่ง', (tester) async {
+    final service = FakeReportService();
+    await _pumpPage(tester, service, attachEvidence: true);
+    await tester.enterText(find.byKey(const Key('report-phone')), '081-234-5678');
+    await _select(tester, 'report-platform', 'Shopee');
+    await _select(tester, 'report-reason', 'ปฏิเสธรับสินค้า');
+    await tester.enterText(find.byKey(const Key('report-amount')), '1,500');
+
+    await _tapSubmit(tester);
+
+    expect(find.text('กรุณารับรองว่าข้อมูลและหลักฐานเป็นความจริงก่อนส่งรายงาน'),
         findsOneWidget);
     expect(service.inputs, isEmpty);
   });
@@ -290,6 +312,10 @@ void main() {
         find.byKey(const Key('report-platform-other')), 'Instagram');
     await tester.enterText(
         find.byKey(const Key('report-reason-other')), 'เปลี่ยนใจไม่รับ');
+    await tester
+        .ensureVisible(find.byKey(const Key('report-certify-truth-checkbox')));
+    await tester.tap(find.byKey(const Key('report-certify-truth-checkbox')));
+    await tester.pumpAndSettle();
 
     await _tapSubmit(tester);
     expect(service.inputs, hasLength(1));
