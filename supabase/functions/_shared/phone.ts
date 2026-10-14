@@ -38,3 +38,19 @@ export function maskPhone(normalized: string): string {
   if (!THAI_MOBILE.test(normalized)) throw new Error("เบอร์โทรยังไม่ได้ normalize");
   return `${normalized.slice(0, 3)}-XXX-${normalized.slice(6)}`;
 }
+
+// HMAC-SHA256(secret, ip) คืนค่าเป็น hex ตัวเล็ก 64 ตัวอักษร สำหรับ key ของ rate limit (P1-6)
+export async function hashIp(ip: string, secret: string): Promise<string> {
+  const effectiveSecret = secret || "codriskshield_ip_default_secret";
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(effectiveSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode((ip ?? "").trim())));
+  return Array.from(sig, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+

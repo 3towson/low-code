@@ -6,7 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { extractOrderInfo, geminiClientFromEnv } from "../_shared/extract.ts";
 import { reportPeriod } from "../_shared/period.ts";
-import { hashPhone, maskPhone, normalizeThaiPhone } from "../_shared/phone.ts";
+import { hashIp, hashPhone, maskPhone, normalizeThaiPhone } from "../_shared/phone.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -107,9 +107,18 @@ Deno.serve(async (req: Request) => {
 
     const isTextMode = nonEmpty(text);
 
-    // 2.1) ตรวจ Rate Limit ใน Postgres ผ่าน RPC hit_rate_limit (P0-6, N2)
+    // 2.1) ตรวจ Rate Limit ใน Postgres ผ่าน RPC hit_rate_limit (P0-6, N2, P1-6)
     const clientIp = getClientIp(req);
-    const identifier = isGuest ? clientIp : userId!;
+    let identifier: string;
+    if (isGuest) {
+      const ipSecret =
+        Deno.env.get("IP_HASH_SECRET") ??
+        Deno.env.get("PHONE_HASH_SECRET") ??
+        "codriskshield_ip_secret";
+      identifier = await hashIp(clientIp, ipSecret);
+    } else {
+      identifier = userId!;
+    }
     const prefix = isGuest ? `guest:${identifier}` : `user:${identifier}`;
 
     // A) Rate limit ต่อนาที (Window 60 วินาที)

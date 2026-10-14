@@ -1,7 +1,7 @@
 // รัน: deno test supabase/functions/_shared/phone.test.ts
 
 import { assert, assertEquals, assertNotEquals, assertThrows } from "jsr:@std/assert@1";
-import { hashPhone, maskPhone, normalizeThaiPhone } from "./phone.ts";
+import { hashIp, hashPhone, maskPhone, normalizeThaiPhone } from "./phone.ts";
 
 const SECRET_A = "unit-test-secret-a";
 const SECRET_B = "unit-test-secret-b";
@@ -73,3 +73,24 @@ Deno.test("maskPhone 0812345678 -> 081-XXX-5678", () => {
   assertEquals(maskPhone("0998765432"), "099-XXX-5432");
   assertThrows(() => maskPhone("12345"));
 });
+
+Deno.test("hashIp: คืนค่า hex 64 ตัวอักษร และไม่เก็บ IP ดิบ", async () => {
+  const ip = "192.168.1.100";
+  const h = await hashIp(ip, SECRET_A);
+  assertEquals(h.length, 64);
+  assert(/^[0-9a-f]{64}$/.test(h), "ต้องเป็น hex ตัวเล็ก");
+  assert(!h.includes(ip), "ต้องไม่มี IP ดิบในผลลัพธ์");
+
+  // IP เดียวกัน secret เดียวกัน -> hash เดียวกัน
+  const hSame = await hashIp(ip, SECRET_A);
+  assertEquals(h, hSame);
+
+  // secret ต่างกัน -> hash ต่างกัน
+  const hDiffSecret = await hashIp(ip, SECRET_B);
+  assertNotEquals(h, hDiffSecret);
+
+  // IP ต่างกัน -> hash ต่างกัน
+  const hDiffIp = await hashIp("192.168.1.101", SECRET_A);
+  assertNotEquals(h, hDiffIp);
+});
+
