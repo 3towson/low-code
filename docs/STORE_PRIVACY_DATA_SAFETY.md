@@ -55,4 +55,4 @@
 
 - **Privacy Policy URL:** `https://3towson.github.io/low-code/privacy-policy.html`
 - **Account Deletion URL:** `https://3towson.github.io/low-code/delete-account.html`
-- **Support Contact Email:** `support@codcheck.app`
+- **Support Contact Email:** `codriskshield.support@gmail.com`

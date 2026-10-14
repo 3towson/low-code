@@ -50,5 +50,5 @@
 ---
 
 ### 3. Contact & Support
-- **Support Email:** `support@codcheck.app`
-- **Dispute Email:** `dispute@codcheck.app`
+- **Support Email:** `codriskshield.support@gmail.com`
+- **Dispute Email:** `codriskshield.support@gmail.com`

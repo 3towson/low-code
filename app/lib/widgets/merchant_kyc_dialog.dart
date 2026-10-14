@@ -5,6 +5,7 @@ import '../pages/report_customer_page.dart' show EvidenceFile;
 import '../services/app_settings.dart';
 import '../services/merchant_kyc_service.dart';
 import '../utils/phone_utils.dart';
+import '../utils/url_helper.dart';
 
 const List<String> kShopCategories = [
   'เสื้อผ้าและแฟชั่น',
@@ -337,7 +338,7 @@ class _MerchantKycDialogState extends State<MerchantKycDialog> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'บัญชีร้านค้านี้ถูกระงับการใช้งาน: ${widget.initialInfo?.rejectionReason ?? "ละเมิดข้อกำหนด UGC"}\nไม่สามารถยื่นยืนยันตัวตนได้ กรุณาติดต่อ support@codcheck.app',
+                              'บัญชีร้านค้านี้ถูกระงับการใช้งาน: ${widget.initialInfo?.rejectionReason ?? "ละเมิดข้อกำหนด UGC"}\nไม่สามารถยื่นยืนยันตัวตนได้ กรุณาติดต่อ ${AppUrls.supportEmail}',
                               style: const TextStyle(
                                 fontSize: 12.5,
                                 color: Color(0xFFEF4444),

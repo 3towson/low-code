@@ -61,8 +61,7 @@ We respect the rights of data subjects and provide transparent, accessible chann
    - Dedicated dispute SLA: investigated and resolved by administrators within 3 business days.
 
 2. **Dedicated Privacy & Dispute Email:**
-   - `dispute@codcheck.app`
-   - `privacy@codcheck.app`
+   - `codriskshield.support@gmail.com`
 
 3. **Public Privacy Policy:**
    👉 **https://3towson.github.io/low-code/privacy-policy.html**
@@ -101,5 +100,5 @@ If you require any further technical clarifications or demonstration, please do 
 
 Warm regards,  
 **COD Customer Check Team**  
-support@codcheck.app
+codriskshield.support@gmail.com
 

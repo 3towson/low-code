@@ -173,7 +173,7 @@ Deno.serve(async (req: Request) => {
       return json(403, {
         status: isSuspended ? "SUSPENDED_MERCHANT" : "UNVERIFIED_MERCHANT",
         error: isSuspended
-          ? "บัญชีร้านค้าของคุณถูกระงับการใช้งาน กรุณาติดต่อฝ่ายสนับสนุนที่ support@codcheck.app"
+          ? "บัญชีร้านค้าของคุณถูกระงับการใช้งาน กรุณาติดต่อฝ่ายสนับสนุนที่ codriskshield.support@gmail.com"
           : "ร้านค้าของคุณยังไม่ผ่านการยืนยันตัวตน (Verified Merchant) จึงยังไม่สามารถส่งรายงานได้",
       });
     }

@@ -144,9 +144,9 @@ try {
     resSuspended.status === 403 &&
     resSuspended.body?.status === "SUSPENDED_MERCHANT" &&
     typeof resSuspended.body?.error === "string" &&
-    resSuspended.body?.error.includes("support@codcheck.app");
+    resSuspended.body?.error.includes("codriskshield.support@gmail.com");
   record(
-    "5. ร้านค้า suspended ส่งรายงานไม่ได้ และได้รับคำแนะนำติดต่อ support@codcheck.app",
+    "5. ร้านค้า suspended ส่งรายงานไม่ได้ และได้รับคำแนะนำติดต่อ codriskshield.support@gmail.com",
     "HTTP 403 SUSPENDED_MERCHANT พร้อมช่องทางติดต่อ",
     `HTTP ${resSuspended.status} ${resSuspended.body?.status}: ${resSuspended.body?.error}`,
     suspendedBlockedOk,

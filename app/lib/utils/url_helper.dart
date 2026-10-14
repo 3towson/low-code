@@ -13,10 +13,12 @@ class AppUrls {
   static const String disputePortal =
       'https://3towson.github.io/low-code/dispute.html';
 
-  static const String supportEmail = 'support@codcheck.app';
+  static const String supportEmail = 'codriskshield.support@gmail.com';
+  static const String disputeEmail = 'codriskshield.support@gmail.com';
+  static const String privacyEmail = 'codriskshield.support@gmail.com';
 
   static const String supportEmailMailto =
-      'mailto:support@codcheck.app?subject=COD%20Check%20Support';
+      'mailto:codriskshield.support@gmail.com?subject=COD%20Risk%20Shield%20Support';
 
   static const String supportLineUrl = 'https://line.me/R/ti/p/@codcheck';
 

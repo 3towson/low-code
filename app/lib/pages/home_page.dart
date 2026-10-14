@@ -11,6 +11,7 @@ import '../services/check_service.dart';
 import '../services/merchant_kyc_service.dart';
 import '../services/report_service.dart';
 import '../theme.dart';
+import '../utils/url_helper.dart';
 import '../widgets/check_panel.dart';
 import '../widgets/delete_account_dialog.dart';
 import '../widgets/merchant_kyc_dialog.dart';
@@ -236,7 +237,7 @@ class _HomePageState extends State<HomePage> {
               'ร้านค้าของคุณถูกระงับสิทธิ์การรายงานลูกค้า COD ชั่วคราว '
               'เนื่องจากละเมิดข้อกำหนดการใช้งาน UGC หรือสร้างรายงานเท็จ\n\n'
               'เหตุผล: ${info?.rejectionReason ?? "ละเมิดข้อกำหนดการใช้งาน UGC"}\n\n'
-              'หากเห็นว่าเป็นข้อผิดพลาด สามารถติดต่อทีมงานได้ที่ support@codcheck.app',
+              'หากเห็นว่าเป็นข้อผิดพลาด สามารถติดต่อทีมงานได้ที่ ${AppUrls.supportEmail}',
             ),
             actions: [
               FilledButton(

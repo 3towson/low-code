@@ -3,6 +3,7 @@ import 'package:cod_customer_check/services/app_settings.dart';
 import 'package:cod_customer_check/services/auth_service.dart';
 import 'package:cod_customer_check/services/check_service.dart';
 import 'package:cod_customer_check/services/report_service.dart';
+import 'package:cod_customer_check/utils/url_helper.dart';
 import 'package:cod_customer_check/widgets/settings_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -279,7 +280,7 @@ void main() {
           findsOneWidget);
       expect(find.byKey(const Key('settings-contact-line-button')),
           findsOneWidget);
-      expect(find.text('support@codcheck.app'), findsOneWidget);
+      expect(find.text(AppUrls.supportEmail), findsOneWidget);
       expect(find.text('@codcheck'), findsOneWidget);
       expect(find.text('ติดต่อเรา & แจ้งปัญหา'), findsOneWidget);
     });
