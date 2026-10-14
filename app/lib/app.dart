@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'pages/home_page.dart';
+import 'pages/reset_password_page.dart';
 import 'services/admin_service.dart';
 import 'services/app_settings.dart';
 import 'services/auth_service.dart';
@@ -130,13 +131,60 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   late Session? _session = widget.authService.currentSession;
   late final StreamSubscription<AuthState> _subscription;
+  bool _inRecovery = false;
+  bool _recoveryPageOpen = false;
+
+  ValueNotifier<bool>? _recoveryNotifier;
+
+  bool get _isInPasswordRecovery {
+    try {
+      return widget.authService.inPasswordRecovery.value;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    try {
+      _recoveryNotifier = widget.authService.inPasswordRecovery;
+      _recoveryNotifier?.addListener(_onRecoveryChanged);
+    } catch (_) {
+      // Fake AuthService without inPasswordRecovery
+    }
+
     _subscription = widget.authService.onAuthStateChange.listen(
       (state) {
         final wasSignedIn = _session != null;
+
+        // เมื่อผู้ใช้ได้รับ event passwordRecovery
+        if (state.event == AuthChangeEvent.passwordRecovery) {
+          _inRecovery = true;
+          try {
+            widget.authService.inPasswordRecovery.value = true;
+          } catch (_) {}
+          _session = state.session;
+          setState(() {});
+          _openResetPasswordPage();
+          return;
+        }
+
+        if (state.event == AuthChangeEvent.signedOut) {
+          _inRecovery = false;
+          try {
+            widget.authService.inPasswordRecovery.value = false;
+          } catch (_) {}
+          _recoveryPageOpen = false;
+        }
+
+        // เก็บ flag กันไม่ให้ event signedIn ที่มาตามหลังพาไปหน้า Home
+        if ((_inRecovery || _isInPasswordRecovery) &&
+            state.event == AuthChangeEvent.signedIn) {
+          _session = state.session;
+          return;
+        }
+
         setState(() => _session = state.session);
         // ออกจากระบบ (เช่น session หมดอายุตอนอยู่หน้ารายงาน) ให้ปิดหน้าที่ซ้อนอยู่ทั้งหมด
         // ตอน login ไม่ต้องปิด หน้า Login ที่เปิดจากหน้า Home จะพาไปหน้าถัดไปเอง
@@ -149,21 +197,57 @@ class _AuthGateState extends State<AuthGate> {
     );
   }
 
+  void _onRecoveryChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _openResetPasswordPage() {
+    if (_recoveryPageOpen) return;
+    _recoveryPageOpen = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final nav = widget.navigatorKey.currentState ?? Navigator.maybeOf(context);
+      if (nav == null) return;
+      // ปิด modal/dialog ที่ค้างอยู่ทั้งหมดก่อนเปิดหน้าตั้งรหัสผ่านใหม่
+      nav.popUntil((route) => route.isFirst);
+      nav.push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (context) => ResetPasswordPage(
+            authService: widget.authService,
+            initialStep: 3,
+            onComplete: () {
+              _inRecovery = false;
+              try {
+                widget.authService.inPasswordRecovery.value = false;
+              } catch (_) {}
+              _recoveryPageOpen = false;
+              if (mounted) setState(() {});
+            },
+          ),
+        ),
+      );
+    });
+  }
+
   @override
   void dispose() {
+    _recoveryNotifier?.removeListener(_onRecoveryChanged);
     _subscription.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final inRecovery = _inRecovery || _isInPasswordRecovery;
     return HomePage(
       authService: widget.authService,
       checkService: widget.checkService,
       reportService: widget.reportService,
       adminService: widget.adminService,
       kycService: widget.kycService,
-      signedIn: _session != null,
+      signedIn: _session != null && !inRecovery,
       animatePulse: widget.animatePulse,
     );
   }

@@ -89,6 +89,7 @@ create policy evidence_read_owner_or_admin
   );
 
 -- 4) RPC Functions สำหรับ Admin Backoffice
+drop function if exists public.admin_get_pending_reports(int, int);
 create or replace function public.admin_get_pending_reports(
   p_limit int default 50,
   p_offset int default 0

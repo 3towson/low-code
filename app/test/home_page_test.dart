@@ -60,7 +60,8 @@ class FakeAuthService implements AuthService {
   User? get currentUser => _session?.user;
 
   @override
-  Future<void> signOut() async => expire();
+  Future<void> signOut({SignOutScope scope = SignOutScope.local}) async =>
+      expire();
 
   @override
   Future<void> deleteAccount() async => expire();

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// ห่อ Supabase Auth ไว้ที่เดียว หน้าอื่นเรียกผ่าน class นี้เท่านั้น
@@ -16,6 +17,9 @@ class AuthService {
   final Future<dynamic> Function(String fn, {Map<String, dynamic>? params})?
       rpcCaller;
   bool? _isAdminCached;
+
+  /// ติดตามสถานะระหว่างกู้คืนรหัสผ่าน เพื่อป้องกัน AuthGate นำทางเข้าหน้า Home
+  final ValueNotifier<bool> inPasswordRecovery = ValueNotifier<bool>(false);
 
   Stream<AuthState> get onAuthStateChange => _auth.onAuthStateChange;
 
@@ -84,20 +88,38 @@ class AuthService {
     await _auth.signInWithPassword(email: email.trim(), password: password);
   }
 
-  /// ส่งอีเมลลิงก์สำหรับรีเซ็ตรหัสผ่าน (Forgot Password)
-  Future<void> resetPassword({required String email, String? redirectTo}) async {
-    await _auth.resetPasswordForEmail(
-      email.trim(),
-      redirectTo: redirectTo ?? 'https://3towson.github.io/low-code/reset-password.html',
-    );
+  /// ส่งรหัส 6 หลักไปที่อีเมลสำหรับรีเซ็ตรหัสผ่าน โดยไม่ส่ง redirectTo
+  Future<void> resetPassword(String email) async {
+    await _auth.resetPasswordForEmail(email.trim());
+  }
+
+  /// ยืนยันรหัส OTP จากอีเมลสำหรับการกู้คืนรหัสผ่าน
+  Future<AuthResponse> verifyRecoveryCode(String email, String code) async {
+    inPasswordRecovery.value = true;
+    try {
+      return await _auth.verifyOTP(
+        email: email.trim(),
+        token: code.trim(),
+        type: OtpType.recovery,
+      );
+    } catch (_) {
+      inPasswordRecovery.value = false;
+      rethrow;
+    }
+  }
+
+  /// อัปเดตรหัสผ่านใหม่ของผู้ใช้ (ใช้ตอนรีเซ็ตรหัสผ่าน)
+  Future<UserResponse> updatePassword(String newPassword) async {
+    return await _auth.updateUser(UserAttributes(password: newPassword));
   }
 
   /// ล้าง session ในเครื่องก่อนแล้วค่อยแจ้ง server ถ้าแจ้ง server ไม่สำเร็จ
   /// (เช่นไม่มีเน็ต) ผู้ใช้ก็ออกจากระบบในเครื่องแล้ว จึงไม่ต้องแสดง error
-  Future<void> signOut() async {
+  Future<void> signOut({SignOutScope scope = SignOutScope.local}) async {
     _isAdminCached = null;
+    inPasswordRecovery.value = false;
     try {
-      await _auth.signOut();
+      await _auth.signOut(scope: scope);
     } on AuthException {
       // ignore
     }
@@ -148,7 +170,24 @@ String authErrorMessage(Object error) {
         message.contains('email not confirmed')) {
       return 'ยังไม่ได้ยืนยันอีเมล กรุณากดลิงก์ยืนยันในอีเมลก่อนเข้าสู่ระบบ';
     }
+    if (code == 'otp_expired' ||
+        message.contains('otp expired') ||
+        message.contains('token has expired') ||
+        message.contains('token is expired') ||
+        message.contains('invalid token')) {
+      return 'รหัสหมดอายุหรือไม่ถูกต้อง กรุณาขอรหัสใหม่';
+    }
+    if (code == 'same_password' ||
+        message.contains('same password') ||
+        message.contains('new password should be different') ||
+        message.contains('different from the old password')) {
+      return 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม';
+    }
     switch (code) {
+      case 'otp_expired':
+        return 'รหัสหมดอายุหรือไม่ถูกต้อง กรุณาขอรหัสใหม่';
+      case 'same_password':
+        return 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม';
       case 'user_already_exists':
       case 'email_exists':
         return 'อีเมลนี้ถูกใช้สมัครแล้ว';

@@ -34,5 +34,16 @@ void main() {
       const e = AuthApiException('Something odd', statusCode: '400', code: 'x');
       expect(authErrorMessage(e), 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
     });
+    test('รหัสผ่านใหม่ซ้ำกับรหัสเดิม (มี code same_password)', () {
+      const e = AuthApiException('same_password',
+          statusCode: '422', code: 'same_password');
+      expect(authErrorMessage(e), 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม');
+    });
+    test('รหัสผ่านใหม่ซ้ำกับรหัสเดิม (server ส่งข้อความ New password should be different from the old password)', () {
+      const e = AuthException(
+          'New password should be different from the old password',
+          statusCode: '422');
+      expect(authErrorMessage(e), 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม');
+    });
   });
 }

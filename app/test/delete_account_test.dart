@@ -43,7 +43,7 @@ class _FakeAuthService implements AuthService {
   }
 
   @override
-  Future<void> signOut() async {
+  Future<void> signOut({SignOutScope scope = SignOutScope.local}) async {
     signOutCalls++;
   }
 

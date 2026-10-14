@@ -1,10 +1,14 @@
 import 'package:cod_customer_check/pages/login_page.dart';
+import 'package:cod_customer_check/pages/reset_password_page.dart';
 import 'package:cod_customer_check/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// ไม่ต่อ Supabase จริง นับแค่ว่ามีการเรียก signIn หรือไม่
 class FakeAuthService implements AuthService {
+  @override
+  final ValueNotifier<bool> inPasswordRecovery = ValueNotifier<bool>(false);
+
   int signInCalls = 0;
 
   @override
@@ -16,7 +20,7 @@ class FakeAuthService implements AuthService {
   String? lastResetEmail;
 
   @override
-  Future<void> resetPassword({required String email, String? redirectTo}) async {
+  Future<void> resetPassword(String email) async {
     resetPasswordCalls++;
     lastResetEmail = email;
   }
@@ -70,7 +74,7 @@ void main() {
     expect(auth.signInCalls, 1);
   });
 
-  testWidgets('ปุ่มลืมรหัสผ่านแสดงในแท็บเข้าสู่ระบบ และเมื่อกดจะเปิด dialog รีเซ็ตรหัสผ่าน',
+  testWidgets('ปุ่มลืมรหัสผ่านแสดงในแท็บเข้าสู่ระบบ และเมื่อกดจะเปิด ResetPasswordPage',
       (tester) async {
     final auth = FakeAuthService();
     await tester.pumpWidget(MaterialApp(home: LoginPage(authService: auth)));
@@ -81,28 +85,31 @@ void main() {
     await tester.tap(forgotBtn);
     await tester.pumpAndSettle();
 
-    expect(find.text('รีเซ็ตรหัสผ่าน'), findsOneWidget);
-    expect(find.byKey(const Key('forgot-password-email-field')), findsOneWidget);
-    expect(find.byKey(const Key('forgot-password-submit-button')), findsOneWidget);
+    expect(find.byType(ResetPasswordPage), findsOneWidget);
+    expect(find.byKey(const Key('reset-password-email-field')), findsOneWidget);
+    expect(find.byKey(const Key('reset-password-send-code-button')), findsOneWidget);
   });
 
-  testWidgets('กรอกอีเมลใน dialog รีเซ็ตรหัสผ่านแล้วส่งสำเร็จ จะเรียก resetPassword',
+  testWidgets('ส่งอีเมลใน ResetPasswordPage แล้วจะเรียก resetPassword และไปขั้น 2',
       (tester) async {
     final auth = FakeAuthService();
     await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: LoginPage(authService: auth))));
+      MaterialApp(home: Scaffold(body: LoginPage(authService: auth))),
+    );
 
     await tester.tap(find.byKey(const Key('auth-forgot-password-button')));
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.byKey(const Key('forgot-password-email-field')), 'user@example.com');
-    await tester.tap(find.byKey(const Key('forgot-password-submit-button')));
+      find.byKey(const Key('reset-password-email-field')),
+      'user@example.com',
+    );
+    await tester.tap(find.byKey(const Key('reset-password-send-code-button')));
     await tester.pumpAndSettle();
 
     expect(auth.resetPasswordCalls, 1);
     expect(auth.lastResetEmail, 'user@example.com');
-    expect(find.text('ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลเรียบร้อยแล้ว'), findsOneWidget);
+    expect(find.byKey(const Key('reset-password-code-field')), findsOneWidget);
+    expect(find.byKey(const Key('reset-password-email-notice')), findsOneWidget);
   });
 }
-

@@ -22,7 +22,7 @@ class _FakeAuthService implements AuthService {
   Future<void> signIn({required String email, required String password}) async {}
 
   @override
-  Future<void> signOut() async {}
+  Future<void> signOut({SignOutScope scope = SignOutScope.local}) async {}
 
   @override
   Future<void> deleteAccount() async {}

@@ -115,6 +115,27 @@ class AppStrings {
     required this.forgotPasswordDesc,
     required this.forgotPasswordSend,
     required this.forgotPasswordSuccess,
+    required this.setNewPasswordTitle,
+    required this.setNewPasswordSubtitle,
+    required this.newPasswordLabel,
+    required this.confirmNewPasswordLabel,
+    required this.saveNewPassword,
+    required this.savingNewPassword,
+    required this.setNewPasswordSuccess,
+    required this.cancel,
+    required this.samePasswordError,
+    required this.resetPasswordEmailNotice,
+    required this.verifyCodeTitle,
+    required this.verifyCodeSubtitle,
+    required this.recoveryCodeLabel,
+    required this.recoveryCodeRequired,
+    required this.recoveryCodeInvalid,
+    required this.verifyCodeButton,
+    required this.verifyingCode,
+    required this.resendCode,
+    required this.resendCodeSuccess,
+    required this.backToEmail,
+    required this.otpExpiredError,
   });
 
   final AppLanguage language;
@@ -218,6 +239,32 @@ class AppStrings {
   final String forgotPasswordDesc;
   final String forgotPasswordSend;
   final String forgotPasswordSuccess;
+  final String setNewPasswordTitle;
+  final String setNewPasswordSubtitle;
+  final String newPasswordLabel;
+  final String confirmNewPasswordLabel;
+  final String saveNewPassword;
+  final String savingNewPassword;
+  final String setNewPasswordSuccess;
+  final String cancel;
+  final String samePasswordError;
+  final String resetPasswordEmailNotice;
+  final String verifyCodeTitle;
+  final String verifyCodeSubtitle;
+  final String recoveryCodeLabel;
+  final String recoveryCodeRequired;
+  final String recoveryCodeInvalid;
+  final String verifyCodeButton;
+  final String verifyingCode;
+  final String resendCode;
+  final String resendCodeSuccess;
+  final String backToEmail;
+  final String otpExpiredError;
+
+  String resendCodeIn(int seconds) =>
+      language == AppLanguage.th
+          ? 'ส่งรหัสใหม่ (${seconds}s)'
+          : 'Resend code (${seconds}s)';
 
   bool get isThai => language == AppLanguage.th;
 
@@ -354,6 +401,28 @@ class AppStrings {
     forgotPasswordDesc: 'กรอกอีเมลของคุณเพื่อรับลิงก์สำหรับตั้งรหัสผ่านใหม่',
     forgotPasswordSend: 'ส่งลิงก์รีเซ็ต',
     forgotPasswordSuccess: 'ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลเรียบร้อยแล้ว',
+    setNewPasswordTitle: 'ตั้งรหัสผ่านใหม่',
+    setNewPasswordSubtitle: 'กำหนดรหัสผ่านใหม่สำหรับเข้าสู่ระบบ',
+    newPasswordLabel: 'รหัสผ่านใหม่',
+    confirmNewPasswordLabel: 'ยืนยันรหัสผ่านใหม่',
+    saveNewPassword: 'บันทึกรหัสผ่านใหม่',
+    savingNewPassword: 'กำลังบันทึก...',
+    setNewPasswordSuccess: 'ตั้งรหัสผ่านใหม่สำเร็จ กรุณาเข้าสู่ระบบ',
+    cancel: 'ยกเลิก',
+    samePasswordError: 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม',
+    resetPasswordEmailNotice:
+        'ถ้ามีบัญชีนี้ในระบบ เราได้ส่งรหัสไปที่อีเมลแล้ว',
+    verifyCodeTitle: 'กรอกรหัสยืนยัน',
+    verifyCodeSubtitle: 'กรอกรหัสยืนยันที่ได้รับทางอีเมล',
+    recoveryCodeLabel: 'รหัสยืนยัน (6-8 หลัก)',
+    recoveryCodeRequired: 'กรุณากรอกรหัสยืนยัน',
+    recoveryCodeInvalid: 'รหัสยืนยันต้องมีอย่างน้อย 6 หลัก',
+    verifyCodeButton: 'ยืนยันรหัส',
+    verifyingCode: 'กำลังตรวจสอบ...',
+    resendCode: 'ส่งรหัสใหม่',
+    resendCodeSuccess: 'ส่งรหัสยืนยันใหม่เรียบร้อยแล้ว',
+    backToEmail: 'เปลี่ยนอีเมล',
+    otpExpiredError: 'รหัสหมดอายุหรือไม่ถูกต้อง กรุณาขอรหัสใหม่',
   );
 
   static const AppStrings en = AppStrings._(
@@ -464,6 +533,28 @@ class AppStrings {
     forgotPasswordDesc: 'Enter your email to receive a password reset link',
     forgotPasswordSend: 'Send Reset Link',
     forgotPasswordSuccess: 'Password reset link sent to your email',
+    setNewPasswordTitle: 'Set New Password',
+    setNewPasswordSubtitle: 'Set a new password for your account',
+    newPasswordLabel: 'New Password',
+    confirmNewPasswordLabel: 'Confirm New Password',
+    saveNewPassword: 'Save New Password',
+    savingNewPassword: 'Saving...',
+    setNewPasswordSuccess: 'Password reset successfully. Please sign in.',
+    cancel: 'Cancel',
+    samePasswordError: 'New password must not be the same as the old password',
+    resetPasswordEmailNotice:
+        'If an account exists for this email, we have sent a verification code to it.',
+    verifyCodeTitle: 'Enter Verification Code',
+    verifyCodeSubtitle: 'Enter the verification code received via email',
+    recoveryCodeLabel: 'Verification Code (6-8 digits)',
+    recoveryCodeRequired: 'Please enter verification code',
+    recoveryCodeInvalid: 'Verification code must be at least 6 digits',
+    verifyCodeButton: 'Verify Code',
+    verifyingCode: 'Verifying...',
+    resendCode: 'Resend Code',
+    resendCodeSuccess: 'New verification code sent',
+    backToEmail: 'Change Email',
+    otpExpiredError: 'Code expired or invalid. Please request a new code.',
   );
 
   static AppStrings of(AppLanguage lang) {

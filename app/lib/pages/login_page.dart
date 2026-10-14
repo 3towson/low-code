@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../theme.dart';
 import '../utils/url_helper.dart';
 import '../utils/validators.dart';
+import 'reset_password_page.dart';
 
 enum AuthTab { signin, signup }
 
@@ -14,11 +15,13 @@ class LoginPage extends StatefulWidget {
     super.key,
     required this.authService,
     this.initialTab = AuthTab.signin,
+    this.initialEmail,
     this.onClose,
   });
 
   final AuthService authService;
   final AuthTab initialTab;
+  final String? initialEmail;
   final VoidCallback? onClose;
 
   @override
@@ -27,7 +30,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  late final _emailController =
+      TextEditingController(text: widget.initialEmail ?? '');
   final _passwordController = TextEditingController();
   final _shopNameController = TextEditingController();
 
@@ -110,156 +114,21 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _showForgotPasswordDialog() async {
-    final strings = context.strings;
-    final isDark = context.isDarkMode;
-    final emailCtrl = TextEditingController(text: _emailController.text.trim());
-    final formKey = GlobalKey<FormState>();
-    bool sending = false;
-    String? dialogError;
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final app = AppColors.of(context);
-            final dialogBg = isDark ? const Color(0xFF192640) : Colors.white;
-            final borderColor = isDark
-                ? const Color(0xFF22304A)
-                : const Color(0xFFE2E8F0);
-
-            return AlertDialog(
-              backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: borderColor),
-              ),
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.lock_reset_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      strings.forgotPasswordTitle,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      strings.forgotPasswordDesc,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF64748B),
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    if (dialogError != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: app.dangerBackground,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          dialogError!,
-                          style: TextStyle(fontSize: 12, color: app.danger),
-                        ),
-                      ),
-                    ],
-                    TextFormField(
-                      key: const Key('forgot-password-email-field'),
-                      controller: emailCtrl,
-                      enabled: !sending,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'example@shop.com',
-                        prefixIcon:
-                            const Icon(Icons.mail_outline_rounded, size: 18),
-                        filled: true,
-                        fillColor: isDark
-                            ? const Color(0xFF0B1120)
-                            : const Color(0xFFF8FAFF),
-                      ),
-                      validator: validateEmail,
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: sending ? null : () => Navigator.of(ctx).pop(),
-                  child: Text(strings.close),
-                ),
-                FilledButton(
-                  key: const Key('forgot-password-submit-button'),
-                  onPressed: sending
-                      ? null
-                      : () async {
-                          if (!formKey.currentState!.validate()) return;
-                          setDialogState(() {
-                            sending = true;
-                            dialogError = null;
-                          });
-                          try {
-                            await widget.authService.resetPassword(
-                              email: emailCtrl.text.trim(),
-                            );
-                            if (ctx.mounted) {
-                              Navigator.of(ctx).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(strings.forgotPasswordSuccess),
-                                  backgroundColor: const Color(0xFF10B981),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (ctx.mounted) {
-                              setDialogState(() {
-                                sending = false;
-                                dialogError = authErrorMessage(e);
-                              });
-                            }
-                          }
-                        },
-                  child: sending
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(strings.forgotPasswordSend),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  Future<void> _openResetPasswordPage() async {
+    final email = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => ResetPasswordPage(
+          authService: widget.authService,
+          initialEmail: _emailController.text.trim(),
+        ),
+      ),
     );
+    if (email != null && email.isNotEmpty && mounted) {
+      setState(() {
+        _emailController.text = email;
+        _tab = AuthTab.signin;
+      });
+    }
   }
 
   @override
@@ -602,7 +471,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: TextButton(
                                 key: const Key('auth-forgot-password-button'),
                                 onPressed:
-                                    _loading ? null : _showForgotPasswordDialog,
+                                    _loading ? null : _openResetPasswordPage,
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 4,

@@ -4,5 +4,6 @@
     "./scripts",
     "./supabase/functions"
   ],
-  "deno.lint": true
+  "deno.lint": true,
+  "java.jdt.ls.java.home": "C:\\Program Files\\Android\\Android Studio\\jbr"
 }
