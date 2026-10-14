@@ -95,7 +95,6 @@ To assist with your testing, please use the following pre-configured credentials
 ### 5. Authentication & Email Verification URLs
 - **Site URL (Email Confirmation Landing):** `https://3towson.github.io/low-code/email-verified.html`
 - **Password Reset URL:** `https://3towson.github.io/low-code/reset-password.html`
-- **Custom URL Scheme (Deep Link):** `codcheck://login`
 
 If you require any further technical clarifications or demonstration, please do not hesitate to contact us.
 
