@@ -535,7 +535,7 @@ class _HomePageState extends State<HomePage> {
                                   const SizedBox(height: 18),
                                   CheckPanel(
                                     checkService: widget.checkService,
-                                    onOpenLogin: _openLogin,
+                                    onOpenLogin: widget.signedIn ? null : _openLogin,
                                   ),
                                 ],
                               ),

@@ -445,6 +445,21 @@ void main() {
     // ต้องเปิด LoginPage
     expect(find.byType(LoginPage), findsOneWidget);
   });
+
+  testWidgets(
+      'เมื่อ user login แล้ว ตรวจแล้วได้ RATE_LIMITED จะไม่แสดงปุ่ม check-login-button',
+      (tester) async {
+    final auth = FakeAuthService(signedIn: true);
+    final check = _RateLimitedCheckService();
+    await _pumpApp(tester, auth, checkService: check);
+
+    // กรอกข้อความตรวจ
+    await tester.enterText(find.byKey(const Key('check-text')), 'ลูกค้า 0812345678');
+    await _tap(tester, find.byKey(const Key('check-submit')));
+
+    // ต้องไม่แสดงปุ่ม check-login-button
+    expect(find.byKey(const Key('check-login-button')), findsNothing);
+  });
 }
 
 class _RateLimitedCheckService extends FakeCheckService {

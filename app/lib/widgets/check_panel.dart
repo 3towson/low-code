@@ -373,12 +373,14 @@ class _CheckPanelState extends State<CheckPanel> {
       case CheckRateLimited(:final message):
         return _ErrorBox(
           message: message,
-          action: FilledButton.icon(
-            key: const Key('check-login-button'),
-            onPressed: widget.onOpenLogin ?? () {},
-            icon: const Icon(Icons.login_rounded),
-            label: const Text('เข้าสู่ระบบเพื่อตรวจต่อ'),
-          ),
+          action: widget.onOpenLogin != null
+              ? FilledButton.icon(
+                  key: const Key('check-login-button'),
+                  onPressed: widget.onOpenLogin,
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('เข้าสู่ระบบเพื่อตรวจต่อ'),
+                )
+              : null,
         );
       case CheckNoInternet(:final message):
       case CheckError(:final message):
