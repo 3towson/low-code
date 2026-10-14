@@ -137,11 +137,12 @@ Future<FakeCheckService> _pumpApp(
   FakeAuthService auth, {
   ThemeMode? themeMode,
   AdminService? adminService,
+  FakeCheckService? checkService,
 }) async {
   tester.view.physicalSize = const Size(360, 740);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final check = FakeCheckService();
+  final check = checkService ?? FakeCheckService();
   await tester.pumpWidget(themeMode == null
       ? CodCheckApp(
           authService: auth,
@@ -422,5 +423,36 @@ void main() {
     expect(find.text('ระบบจัดการผู้ดูแลระบบ (Admin Console)'), findsOneWidget);
     expect(find.byTooltip('กลับหน้าหลัก'), findsOneWidget);
   });
+
+  testWidgets(
+      'เมื่อ guest ตรวจแล้วได้ RATE_LIMITED จะแสดงปุ่มเข้าสู่ระบบเพื่อตรวจต่อ และกดแล้วเปิดหน้า LoginPage',
+      (tester) async {
+    final auth = FakeAuthService(signedIn: false);
+    final check = _RateLimitedCheckService();
+    await _pumpApp(tester, auth, checkService: check);
+
+    // กรอกข้อความตรวจ
+    await tester.enterText(find.byKey(const Key('check-text')), 'ลูกค้า 0812345678');
+    await _tap(tester, find.byKey(const Key('check-submit')));
+
+    // ต้องแสดงข้อความเตือนและปุ่มเข้าสู่ระบบเพื่อตรวจต่อ
+    expect(find.byKey(const Key('check-login-button')), findsOneWidget);
+    expect(find.text('เข้าสู่ระบบเพื่อตรวจต่อ'), findsOneWidget);
+
+    // กดปุ่มเข้าสู่ระบบ
+    await _tap(tester, find.byKey(const Key('check-login-button')));
+
+    // ต้องเปิด LoginPage
+    expect(find.byType(LoginPage), findsOneWidget);
+  });
+}
+
+class _RateLimitedCheckService extends FakeCheckService {
+  @override
+  Future<CheckResult> checkText(String text) async {
+    return const CheckRateLimited(
+      'คุณใช้โควตาตรวจสอบสำหรับผู้เยี่ยมชมครบ 20 ครั้งแล้ว (โควตารีเซ็ตเมื่อครบ 24 ชั่วโมงนับจากครั้งแรก) กรุณาเข้าสู่ระบบเพื่อตรวจต่อ',
+    );
+  }
 }
 

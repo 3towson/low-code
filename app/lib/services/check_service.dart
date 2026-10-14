@@ -107,6 +107,11 @@ class CheckError extends CheckResult {
   final String message;
 }
 
+/// เกินโควตาการตรวจสอบ (HTTP 429 RATE_LIMITED)
+class CheckRateLimited extends CheckError {
+  const CheckRateLimited(super.message);
+}
+
 const noPhoneMessage = 'ไม่พบเบอร์โทรในข้อความ กรุณากรอกเบอร์ลูกค้าเอง';
 const invalidPhoneMessage = 'เบอร์โทรไม่ถูกต้อง ต้องเป็นเบอร์มือถือไทย 10 หลัก';
 const _genericMessage = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
@@ -237,6 +242,12 @@ CheckResult checkResultFromError(int status, Object? details) {
   }
 
   if (body['status'] == 'INVALID_PHONE') return const CheckInvalidPhone();
+  if (status == 429 || body['status'] == 'RATE_LIMITED') {
+    return CheckRateLimited(
+      _nonEmptyString(body['error']) ??
+          'คุณใช้โควตาตรวจสอบครบกำหนดแล้ว กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ',
+    );
+  }
   // 400/401/405/429/500 server ส่งข้อความภาษาไทยมาใน error
   return CheckError(_nonEmptyString(body['error']) ?? _genericMessage);
 }

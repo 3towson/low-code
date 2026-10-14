@@ -137,7 +137,7 @@ void main() {
           'status': 'RATE_LIMITED',
           'error': 'คำขอถี่เกินไป กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง'
         }));
-    expect(r, isA<CheckError>());
+    expect(r, isA<CheckRateLimited>());
     expect((r as CheckError).message,
         'คำขอถี่เกินไป กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง');
   });
@@ -149,7 +149,7 @@ void main() {
         status: 429,
         details:
             '{"status":"RATE_LIMITED","error":"โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว"}'));
-    expect(r, isA<CheckError>());
+    expect(r, isA<CheckRateLimited>());
     expect((r as CheckError).message,
         'โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว');
   });

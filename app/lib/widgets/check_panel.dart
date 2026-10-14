@@ -11,9 +11,14 @@ enum _Mode { text, phone, multi }
 /// ช่องวางข้อความออเดอร์ ปุ่มตรวจสอบ และผลการตรวจในหน้าเดียวกัน
 /// วางหลายออเดอร์คั่นด้วยบรรทัดว่างได้ จะตรวจทีละออเดอร์และแสดงผลเป็นรายการ
 class CheckPanel extends StatefulWidget {
-  const CheckPanel({super.key, required this.checkService});
+  const CheckPanel({
+    super.key,
+    required this.checkService,
+    this.onOpenLogin,
+  });
 
   final CheckService checkService;
+  final VoidCallback? onOpenLogin;
 
   @override
   State<CheckPanel> createState() => _CheckPanelState();
@@ -365,6 +370,16 @@ class _CheckPanelState extends State<CheckPanel> {
         return const SizedBox.shrink();
       case CheckInvalidPhone(:final message):
         return _ErrorBox(message: message);
+      case CheckRateLimited(:final message):
+        return _ErrorBox(
+          message: message,
+          action: FilledButton.icon(
+            key: const Key('check-login-button'),
+            onPressed: widget.onOpenLogin ?? () {},
+            icon: const Icon(Icons.login_rounded),
+            label: const Text('เข้าสู่ระบบเพื่อตรวจต่อ'),
+          ),
+        );
       case CheckNoInternet(:final message):
       case CheckError(:final message):
         return _ErrorBox(

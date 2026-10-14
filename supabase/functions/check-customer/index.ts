@@ -128,7 +128,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // B) Rate limit ต่อวัน (Window 86,400 วินาที)
-    const dayLimit = isGuest ? 300 : 2000;
+    const dayLimit = isGuest ? 20 : 2000;
     const { data: dayAllowed, error: dayErr } = await admin.rpc("hit_rate_limit", {
       p_key: `${prefix}:day`,
       p_limit: dayLimit,
@@ -138,7 +138,7 @@ Deno.serve(async (req: Request) => {
       return json(429, {
         status: "RATE_LIMITED",
         error: isGuest
-          ? "คุณใช้โควตาตรวจสอบสำหรับผู้เยี่ยมชมครบ 300 ครั้งประจำวันแล้ว กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ"
+          ? "คุณใช้โควตาตรวจสอบสำหรับผู้เยี่ยมชมครบ 20 ครั้งแล้ว (โควตารีเซ็ตเมื่อครบ 24 ชั่วโมงนับจากครั้งแรก) กรุณาเข้าสู่ระบบเพื่อตรวจต่อ"
           : "คุณใช้โควตาตรวจสอบประจำวันครบแล้ว กรุณาลองใหม่ในวันพรุ่งนี้",
       });
     }
@@ -173,7 +173,7 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const textDayLimit = isGuest ? 60 : 500;
+      const textDayLimit = isGuest ? 5 : 500;
       const { data: tDayAllowed, error: tDayErr } = await admin.rpc("hit_rate_limit", {
         p_key: `${prefix}:text:day`,
         p_limit: textDayLimit,
@@ -183,7 +183,7 @@ Deno.serve(async (req: Request) => {
         return json(429, {
           status: "RATE_LIMITED",
           error: isGuest
-            ? "โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว (60 ครั้ง/วัน) กรุณาเข้าสู่ระบบ หรือกรอกเบอร์โทรโดยตรง"
+            ? "โควตา AI สกัดข้อความสำหรับผู้เยี่ยมชมหมดแล้ว (5 ครั้ง/วัน รีเซ็ตเมื่อครบ 24 ชั่วโมงนับจากครั้งแรก) กรุณาเข้าสู่ระบบ หรือกรอกเบอร์โทรโดยตรง"
             : "โควตา AI สกัดข้อความประจำวันครบแล้ว กรุณากรอกเบอร์โทรโดยตรง",
         });
       }
