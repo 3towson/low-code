@@ -354,3 +354,6 @@ deno run --allow-net --allow-read --allow-env scripts/eval_extract.ts
 cd app
 C:\flutter\bin\flutter.bat test
 ```
+
+## Known issues
+- Cron `purge-old-evidence-daily` ตั้งเวลาแล้วและเรียกฟังก์ชันได้ แต่ถูกปฏิเสธด้วย 401 เพราะ service role key ใน Vault ไม่ตรงกับค่าใน Edge Function runtime แผนแก้: ใช้ `CRON_SECRET` แยก (ยังไม่มีข้อมูลอายุเกิน 12 เดือน จึงไม่กระทบข้อมูลจริง)
