@@ -1,4 +1,7 @@
 {
+  "test": {
+    "include": ["supabase/functions/"]
+  },
   "lint": {
     "include": ["scripts/", "supabase/functions/"],
     "rules": {
