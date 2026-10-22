@@ -193,18 +193,6 @@ void main() {
     expect(_reportButton, findsOneWidget);
   });
 
-  testWidgets('แสดง stats 3 ตัวเลข', (tester) async {
-    await _pumpApp(tester, FakeAuthService());
-
-    for (final (value, label) in [
-      ('2,480+', 'ร้านค้า'),
-      ('18,340 ชิ้น', 'ป้องกันแล้ว'),
-      ('฿917,000', 'ประหยัดได้'),
-    ]) {
-      expect(find.text(value), findsOneWidget);
-      expect(find.text(label), findsOneWidget);
-    }
-  });
 
   testWidgets('ยังไม่ login แสดงปุ่มเข้าสู่ระบบ ไม่แสดงชื่อร้านและปุ่ม logout',
       (tester) async {

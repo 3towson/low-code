@@ -25,12 +25,6 @@ class AppStrings {
     required this.passwordLabel,
     required this.shopNameLabel,
     required this.checking,
-    required this.shopsCount,
-    required this.shopsLabel,
-    required this.protectedCount,
-    required this.protectedLabel,
-    required this.savedCount,
-    required this.savedLabel,
     required this.checkCustomer,
     required this.reportCustomer,
     required this.checkRiskButton,
@@ -154,12 +148,6 @@ class AppStrings {
   final String passwordLabel;
   final String shopNameLabel;
   final String checking;
-  final String shopsCount;
-  final String shopsLabel;
-  final String protectedCount;
-  final String protectedLabel;
-  final String savedCount;
-  final String savedLabel;
   final String checkCustomer;
   final String reportCustomer;
   final String checkRiskButton;
@@ -317,12 +305,6 @@ class AppStrings {
     passwordLabel: 'รหัสผ่าน',
     shopNameLabel: 'ชื่อร้านค้า',
     checking: 'กำลังตรวจสอบ...',
-    shopsCount: '2,480+',
-    shopsLabel: 'ร้านค้า',
-    protectedCount: '18,340 ชิ้น',
-    protectedLabel: 'ป้องกันแล้ว',
-    savedCount: '฿917,000',
-    savedLabel: 'ประหยัดได้',
     checkCustomer: 'ตรวจสอบลูกค้า',
     reportCustomer: 'รายงานลูกค้า',
     checkRiskButton: 'ตรวจสอบความเสี่ยง',
@@ -454,12 +436,6 @@ class AppStrings {
     passwordLabel: 'Password',
     shopNameLabel: 'Shop Name',
     checking: 'Checking...',
-    shopsCount: '2,480+',
-    shopsLabel: 'Shops',
-    protectedCount: '18,340 pcs',
-    protectedLabel: 'Protected',
-    savedCount: '฿917,000',
-    savedLabel: 'Saved',
     checkCustomer: 'Check Customer',
     reportCustomer: 'Report Customer',
     checkRiskButton: 'Check Risk',
